@@ -30,9 +30,9 @@ ENUM_FUNC_MAP = {
 
 
 @run_async
-#@bot_admin
-#@can_promote
-#@user_admin
+@bot_admin
+@can_promote
+@user_admin
 @loggable
 def promote(bot: Bot, update: Update, args: List[str]) -> str:
     chat_id = update.effective_chat.id
@@ -74,16 +74,20 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
     # set same perms as bot - bot can't assign higher perms than itself!
     bot_member = chat.get_member(bot.id)
 
-    bot.promoteChatMember(chat_id, user_id,
-                          # can_change_info=bot_member.can_change_info,
-                          can_post_messages=bot_member.can_post_messages,
-                          can_edit_messages=bot_member.can_edit_messages,
-                          can_delete_messages=bot_member.can_delete_messages,
-                          can_invite_users=bot_member.can_invite_users,
-                          can_restrict_members=bot_member.can_restrict_members,
-                          can_pin_messages=bot_member.can_pin_messages,
-                          # can_promote_members=bot_member.can_promote_members
-                         )
+    try:
+        bot.promoteChatMember(chat_id, user_id,
+                              # can_change_info=bot_member.can_change_info,
+                              can_post_messages=bot_member.can_post_messages,
+                              can_edit_messages=bot_member.can_edit_messages,
+                              can_delete_messages=bot_member.can_delete_messages,
+                              can_invite_users=bot_member.can_invite_users,
+                              can_restrict_members=bot_member.can_restrict_members,
+                              can_pin_messages=bot_member.can_pin_messages,
+                              # can_promote_members=bot_member.can_promote_members
+                             )
+    except BadRequest:
+        message.reply_text("Tidak dapat mempromosikan pengguna, mungkin saya bukan admin atau tidak punya izin untuk mempromosikan pengguna.")
+        return
 
     message.reply_text("💖 Berhasil dinaikan jabatannya!")
     
@@ -96,9 +100,9 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-#@bot_admin
-#@can_promote
-#@user_admin
+@bot_admin
+@can_promote
+@user_admin
 @loggable
 def demote(bot: Bot, update: Update, args: List[str]) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
@@ -165,9 +169,9 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-#@bot_admin
-#@can_pin
-#@user_admin
+@bot_admin
+@can_pin
+@user_admin
 @loggable
 def pin(bot: Bot, update: Update, args: List[str]) -> str:
     user = update.effective_user  # type: Optional[User]
@@ -221,9 +225,9 @@ def pin(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-#@bot_admin
-#@can_pin
-#@user_admin
+@bot_admin
+@can_pin
+@user_admin
 @loggable
 def unpin(bot: Bot, update: Update) -> str:
     chat = update.effective_chat
@@ -263,8 +267,8 @@ def unpin(bot: Bot, update: Update) -> str:
 
 
 @run_async
-#@bot_admin
-#@user_admin
+@bot_admin
+@user_admin
 def invite(bot: Bot, update: Update):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -350,6 +354,8 @@ def adminlist(bot: Bot, update: Update):
     update.effective_message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
+@can_pin
+@user_admin
 @run_async
 def permapin(bot: Bot, update: Update):
     chat = update.effective_chat  # type: Optional[Chat]
@@ -375,22 +381,23 @@ def permapin(bot: Bot, update: Update):
 
     text, data_type, content, buttons = get_message_type(message)
     tombol = build_keyboard_alternate(buttons)
-    if True:
+    try:
+        message.delete()
+    except BadRequest:
+        pass
+    if str(data_type) in ('Types.BUTTON_TEXT', 'Types.TEXT'):
         try:
-            message.delete()
-        except:
-            update.effective_message.reply_text("Saya bukan admin!")
-            return
-        if str(data_type) in ('Types.BUTTON_TEXT', 'Types.TEXT'):
-            try:
-                sendingmsg = bot.send_message(chat_id, text, parse_mode="markdown",
+            sendingmsg = bot.send_message(chat_id, text, parse_mode="markdown",
                                  disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
-            except BadRequest:
-                bot.send_message(chat_id, "Teks markdown salah!\nJika anda tidak tahu apa itu markdown, silahkan ketik `/markdownhelp` pada PM.", parse_mode="markdown")
-                return
-        else:
-            sendingmsg = ENUM_FUNC_MAP[str(data_type)](chat_id, content, caption=text, parse_mode="markdown", disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
+        except BadRequest:
+            bot.send_message(chat_id, "Teks markdown salah!\nJika anda tidak tahu apa itu markdown, silahkan ketik `/markdownhelp` pada PM.", parse_mode="markdown")
+            return
+    else:
+        sendingmsg = ENUM_FUNC_MAP[str(data_type)](chat_id, content, caption=text, parse_mode="markdown", disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
+    try:
         bot.pinChatMessage(chat_id, sendingmsg.message_id)
+    except BadRequest:
+        update.effective_message.reply_text("Saya tidak punya akses untuk pin pesan!")
 
 
 
@@ -439,14 +446,14 @@ __help__ = """
 
 __mod_name__ = "Admin"
 
-PIN_HANDLER = CommandHandler("pin", pin, pass_args=True)
-UNPIN_HANDLER = CommandHandler("unpin", unpin)
-PERMAPIN_HANDLER = CommandHandler("permapin", permapin)
+PIN_HANDLER = CommandHandler("pin", pin, pass_args=True, filters=Filters.group)
+UNPIN_HANDLER = CommandHandler("unpin", unpin, filters=Filters.group)
+PERMAPIN_HANDLER = CommandHandler("permapin", permapin, filters=Filters.group)
 
-INVITE_HANDLER = CommandHandler("invitelink", invite)
+INVITE_HANDLER = CommandHandler("invitelink", invite, filters=Filters.group)
 
-PROMOTE_HANDLER = CommandHandler("promote", promote, pass_args=True)
-DEMOTE_HANDLER = CommandHandler("demote", demote, pass_args=True)
+PROMOTE_HANDLER = CommandHandler("promote", promote, pass_args=True, filters=Filters.group)
+DEMOTE_HANDLER = CommandHandler("demote", demote, pass_args=True, filters=Filters.group)
 
 ADMINLIST_HANDLER = DisableAbleCommandHandler(["adminlist", "admins"], adminlist)
 
