@@ -12,9 +12,8 @@ import tg_bot.modules.sql.connection_sql as sql
 from tg_bot import dispatcher, SUDO_USERS, DEV_USERS
 from tg_bot.modules.helper_funcs import chat_status
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
-
+#from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 user_admin = chat_status.user_admin
-
 
 @user_admin
 @typing_action
@@ -63,7 +62,6 @@ def allow_connections(update, context) -> str:
             update.effective_message, "This command is for group only. Not in PM!"
         )
 
-
 @typing_action
 def connection_chat(update, context):
 
@@ -86,7 +84,6 @@ def connection_chat(update, context):
     else:
         message = "You are currently not connected in any group.\n"
     send_message(update.effective_message, message, parse_mode="markdown")
-
 
 @typing_action
 def connect_chat(update, context):  # sourcery no-metrics
@@ -247,7 +244,6 @@ def connect_chat(update, context):  # sourcery no-metrics
                 update.effective_message, "Connection to this chat is not allowed!"
             )
 
-
 def disconnect_chat(update, context):
 
     if update.effective_chat.type == "private":
@@ -316,7 +312,6 @@ CONN_HELP = """
  • Export and Imports of chat backup.
  • More in future!"""
 
-
 def help_connect_chat(update, context):
 
     args = context.args
@@ -326,7 +321,6 @@ def help_connect_chat(update, context):
         return
     else:
         send_message(update.effective_message, CONN_HELP, parse_mode="markdown")
-
 
 def connect_button(update, context):
 

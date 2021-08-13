@@ -27,6 +27,7 @@ from tg_bot import (
     SUDO_USERS,
     WHITELIST_USERS,
     GBAN_LOGS,
+    DEV_USERS,
     log,
 )
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
@@ -56,8 +57,6 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 # Time spended on updating version to v2 = 26+ hours by @AyraHikari
 #
 # Total spended for making this features is 68+ hours
-
-log.info("Original federation module by MrYacha, reworked by Mizukito Akito (@peaktogoo) on Telegram.")
 
 # TODO: Fix Loads of code duplication
 
@@ -114,7 +113,7 @@ def new_fed(update, context):
         x = sql.new_fed(user.id, fed_name, fed_id)
         if not x:
             update.effective_message.reply_text(
-                "Can't federate! Report in @YorkTownEagleUnion if the problem persists."
+                "Can't federate! Report in @TheBotsSupport if the problem persists."
             )
             return
 
@@ -234,7 +233,7 @@ def join_fed(update, context):
     fed_id = sql.get_fed_id(chat.id)
     args = context.args
 
-    if user.id in SUDO_USERS:
+    if user.id in DEV_USERS:
         pass
     else:
         for admin in administrators:
@@ -296,7 +295,7 @@ def leave_fed(update, context):
 
     # administrators = chat.get_administrators().status
     getuser = context.bot.get_chat_member(chat.id, user.id).status
-    if getuser in "creator" or user.id in SUDO_USERS:
+    if getuser in "creator" or user.id in DEV_USERS:
         if sql.chat_leave_fed(chat.id) is True:
             get_fedlog = sql.get_fed_log(fed_id)
             if get_fedlog:
@@ -337,7 +336,7 @@ def user_join_fed(update, context):
 
     fed_id = sql.get_fed_id(chat.id)
 
-    if is_user_fed_owner(fed_id, user.id) or user.id in SUDO_USERS:
+    if is_user_fed_owner(fed_id, user.id) or user.id is OWNER_ID:
         user_id = extract_user(msg, args)
         if user_id:
             user = context.bot.get_chat(user_id)
@@ -401,7 +400,7 @@ def user_demote_fed(update, context):
 
     fed_id = sql.get_fed_id(chat.id)
 
-    if is_user_fed_owner(fed_id, user.id):
+    if is_user_fed_owner(fed_id, user.id) or user.id is OWNER_ID:
         msg = update.effective_message  # type: Optional[Message]
         user_id = extract_user(msg, args)
         if user_id:
@@ -628,7 +627,7 @@ def fed_ban(update, context):  # sourcery no-metrics
             send_message(update.effective_message, excp.message)
             return
         elif not len(str(user_id)) == 9:
-            send_message(update.effective_message, "That's so not a user!")
+            send_message(update.effective_message, "That's not a user!")
             return
         isvalid = False
         fban_user_id = int(user_id)
@@ -637,7 +636,7 @@ def fed_ban(update, context):  # sourcery no-metrics
         fban_user_uname = None
 
     if isvalid and user_chat.type != "private":
-        send_message(update.effective_message, "That's so not a user!")
+        send_message(update.effective_message, "That's not a user!")
         return
 
     if isvalid:
@@ -2392,7 +2391,7 @@ def fed_help(update: Update, context: CallbackContext):
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton(text="Back", callback_data=f"help_module({__mod_name__.lower()})"),
-            InlineKeyboardButton(text='Report Error', url='https://t.me/YorkTownEagleUnion')]]
+            InlineKeyboardButton(text='Report Error', url='https://t.me/TheBotsSupport')]]
         ),
     )
     bot.answer_callback_query(query.id)

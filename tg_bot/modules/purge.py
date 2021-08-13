@@ -1,10 +1,10 @@
 import time
+from asyncio import sleep
 from telethon import events
-
+from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot import telethn
 from tg_bot.modules.helper_funcs.telethn.chatstatus import (
     can_delete_messages, user_is_admin)
-
 
 async def purge_messages(event):
     start = time.perf_counter()
@@ -44,7 +44,13 @@ async def purge_messages(event):
         pass
     time_ = time.perf_counter() - start
     text = f"Purged Successfully in {time_:0.2f} Second(s)"
-    await event.respond(text, parse_mode='markdown')
+    prmsg = await event.respond(text, parse_mode='markdown')
+
+    cleartime = get_clearcmd(event.chat_id, "purge")
+
+    if cleartime:
+        await sleep(cleartime.time)
+        await prmsg.delete()
 
 
 async def delete_messages(event):
@@ -78,8 +84,8 @@ def get_help(chat):
 
 
 
-PURGE_HANDLER = purge_messages, events.NewMessage(pattern="^[!/]purge$")
-DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/]del$")
+PURGE_HANDLER = purge_messages, events.NewMessage(pattern="^[!/>]purge$")
+DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/>]del$")
 
 telethn.add_event_handler(*PURGE_HANDLER)
 telethn.add_event_handler(*DEL_HANDLER)

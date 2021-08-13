@@ -198,7 +198,7 @@ def get(update, context, notename, show_none=True, no_format=False):
                 else:
                     message.reply_text(
                         "This note could not be sent, as it is incorrectly formatted. Ask in "
-                        f"@YorkTownEagleUnion if you can't figure out why!"
+                        f"@TheBotsSupport if you can't figure out why!"
                     )
                     log.exception(
                         "Could not parse message #%s in chat %s", notename, str(note_chat_id)
@@ -380,7 +380,6 @@ def list_notes(update: Update, context: CallbackContext):
             update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
             msg = ""
         msg += note_name
-
     if not note_list:
         update.effective_message.reply_text("No notes in this chat!")
 

@@ -31,3 +31,7 @@ tgcrypto
 tswift
 ujson
 zalgo-text
+gtts
+wikipedia
+youtube-search-python
+youtube_dl

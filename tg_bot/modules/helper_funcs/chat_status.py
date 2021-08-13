@@ -8,6 +8,7 @@ from tg_bot import (
     SARDEGNA_USERS,
     WHITELIST_USERS,
     dispatcher,
+    SYS_ADMIN,
 )
 from cachetools import TTLCache
 from telegram import Chat, ChatMember, ParseMode, Update
@@ -144,7 +145,7 @@ def sudo_plus(func):
                 pass
         else:
             update.effective_message.reply_text(
-                "Who dis non-admin telling me what to do?"
+                "This command is restricted to users with spacial access, you can't use it."
             )
 
     return is_sudo_plus_func
@@ -181,7 +182,7 @@ def whitelist_plus(func):
             return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
-                f"You don't have access to use this.\nVisit @YorkTownEagleUnion"
+                f"You don't have access to use this.\nVisit @TheBotsSupport"
             )
 
     return is_whitelist_plus_func
@@ -205,7 +206,7 @@ def user_admin(func):
                 pass
         else:
             update.effective_message.reply_text(
-                "Who dis non-admin telling me what to do?"
+                "Hmmm, how about you go ask an admin to perform this action for you? "
             )
 
     return is_admin
@@ -257,9 +258,9 @@ def bot_admin(func):
         message_chat_title = update.effective_message.chat.title
 
         if update_chat_title == message_chat_title:
-            not_admin = "I'm not admin! - REEEEEE"
+            not_admin = "I'm not an admin in this chat, how about you promote me first?"
         else:
-            not_admin = f"I'm not admin in <b>{update_chat_title}</b>! - REEEEEE"
+            not_admin = f"I'm not admin in <b>{update_chat_title}</b>, how about you promote me first?"
 
         if is_bot_admin(chat, bot.id):
             return func(update, context, *args, **kwargs)

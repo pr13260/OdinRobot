@@ -1,7 +1,7 @@
 # Language name in their native
 language: "English 🇺🇲"
 # name of people(s) who worked on this translation
-authors: "@dank_as_fuck"
+authors: "@AbOuLfOoOoOuF"
 
 # languages
 curr_chat_lang: "Hey. Your current language is {}, select the one you want from the buttons below :)"
@@ -10,7 +10,7 @@ set_chat_lang: "Great, {} it is from now on!"
 
 pm_start_text: |
    Hi {}, I'm {},
-   I am an Anime themed group management bot with some fun extras ;)
+   I am a modular group management bot with some fun extras ;)
    
    I can do a variety of things, most common of em are:
    - Restrict users with *ban permissions*.
@@ -23,24 +23,25 @@ pm_start_text: |
    to be promoted with proper admin permissions to function properly. 
    Else I won't be able to function as said.
    
+   All commands can be accessed by using: / ! or >
    *Click on help to learn more!*
    
-grp_start_text: "Hi, I'm Kigyo."
+grp_start_text: "Hi, I'm Ɩυκє's bot."
 
 pm_help_text: |
-   Hello there! My name is *Kigyo*. A part of *Eagle Union*.
+   Hello there! My name is *Ɩυκє's bot*.
    I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of
    the things I can help you with.
    *Main* commands available:
     • /start: Starts me, can be used to check I'm alive or not.
     • /help: PM's you this message.
-    • /language: Change bot language.
     • /settings:
       - in PM: will send you your settings for all supported modules.
       - in a group: will redirect you to pm, with all that chat's settings.
     Click on the buttons below to get documentation about specific modules!
+#    • /language: Change bot language.
 
-add_bot_to_group_btn: "Add Kigyo"
+add_bot_to_group_btn: "Add me!"
 support_chat_link_btn: "Support"
 updates_channel_link_btn: "Updates"
 src_btn: "Source code"
@@ -54,7 +55,15 @@ admin_help: |
    • `/invitelink`*:* gets invitelink
    • `/promote`*:* promotes the user replied to
    • `/demote`*:* demotes the user replied to
+   • `/admincache`*:* refreshes the admins cache
    • `/title <title here>`*:* sets a custom title for an admin that the bot promoted
+   • `/zombies`*:* removes the deleted accounts from the group
+   • `/import`*:* reply to a group butler backup file to import as much as possible, making the transfer super simple! Note \
+       that files/photos can't be imported due to telegram restrictions.
+   • `/export`*:* Export group data, which will be exported are: rules, notes (documents, images, music, video, audio, voice, text, text buttons)
+
+#   • /delete: deletes the message you replied to
+#   • /purge: deletes all messages between this and the replied to message.
 
 afk_help: |
    - /afk <reason>: mark yourself as AFK(away from keyboard).
@@ -96,12 +105,6 @@ approve_help: |
      • `/unapprove`*:* Unapprove of a user. They will now be subject to locks, blacklists, and antiflood again.
      • `/approved`*:* List all approved users.
      • `/unapproveall`*:* Unapprove *ALL* users in a chat. This cannot be undone.
-
-backup_help: |
-    *Admin only:*
-     - /import: reply to a group butler backup file to import as much as possible, making the transfer super simple! Note \
-       that files/photos can't be imported due to telegram restrictions.
-     - /export: Export group data, which will be exported are: rules, notes (documents, images, music, video, audio, voice, text, text buttons)
 
 bans_help: |
     - /kickme: kicks the user who issued the command
@@ -211,7 +214,7 @@ FED_USER_HELP: |
     • `/frules`*:* See Federation regulations
 
 formt_help_bse: |
-    Kigyo supports a large number of formatting options to make your messages more expressive. Take a look!
+    Ɩυκє's bot supports a large number of formatting options to make your messages more expressive. Take a look!
 
 md_help: |
     <b>Markdown Formatting</b>
@@ -242,30 +245,16 @@ filling_help: |
       - <code>{id}</code>: The user's ID.
       - <code>{chatname}</code>: The chat's name.
 
-fun_help: |
-     • /runs: reply a random string from an array of replies.
-     • /pat: pat a person, cool thing to have for cute ones :3
-     • /slap: slap a user, or get slapped if not a reply.
-     • /shrug : get shrug XD.
-     • /table : get flip/unflip :v.
-     • /decide : Randomly answers yes/no/maybe
-     • /toss : Tosses A coin
-     • /roll : Roll a dice.
-     • /rlg : Join ears,nose,mouth and create an emo ;-;
-     • /shout <keyword>: write anything you want to give loud shout.
-     • /stickerid: reply to a sticker to get its ID.
-     • /getsticker: reply to a sticker to get the raw PNG image.
-     • /steal: reply to a sticker or image to add it to your pack.
-
 antispam_help: |
      *Admins only:*
       • `/antispam <on/off/yes/no>`*:* Will toggle our antispam tech or return your current settings.
+      • `/gbanstat <on/off/yes/no>`*:* Will toggle our antispam tech or return your current settings.
 
      Anti-Spam, used by bot devs to ban spammers across all groups. This helps protect
      you and your groups by removing spam flooders as quickly as possible.
-     *Note:* Users can appeal gbans or report spammers at @YorkTownEagleUnion
+     *Note:* Users can appeal gbans or report spammers at @TheBotsSupport
 
-     Kigyo also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
+     Ɩυκє's bot also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
      *What is SpamWatch?*
      SpamWatch maintains a large constantly updated ban-list of spambots, trolls, bitcoin spammers and unsavoury characters.
      Constantly help banning spammers off from your group automatically So, you wont have to worry about spammers storming your group.
@@ -321,7 +310,7 @@ log_help: |
       • forwarding the `/setlog` to the group
 
 markdown_help_text: |
-      Markdown is a very powerful formatting tool supported by telegram. Kigyo has some enhancements, to make sure that
+      Markdown is a very powerful formatting tool supported by telegram. Ɩυκє's bot has some enhancements, to make sure that
       saved messages are correctly parsed, and to allow you to create buttons.
 
       - <code>_italic_</code>: wrapping text with '_' will produce italic text
@@ -347,6 +336,7 @@ misc_help: |
       • /id: get the current group id. If used by replying to a message, gets that user's id.
       • /gifid: reply to a gif to me to tell you its file ID.
       • /info: get information about a user.
+      • /pfp: get profile pic of a user.
       • /markdownhelp: quick summary of how markdown works in telegram - can only be called in private chats.
       • /ud <word>: Type the word or expression you want to search use.
       • /urban <word>: Same as /ud
@@ -358,14 +348,32 @@ misc_help: |
       • /cash : currency converter
         example syntax: /cash 1 USD INR
       • /getid : get IDs of chat, user and chat message.
-      • /spbinfo : get info about a user from @Intellivoid's SpamProtection API
-      ───────────────────────────────
-      *Last.FM*
-      Share what you're what listening to with the help of this module!
-      *Available commands:*
-      • /setuser <username>: sets your last.fm username.
-      • /clearuser: removes your last.fm username from the bot's database.
-      • /lastfm: returns what you're scrobbling on last.fm.
+      • /tts : converts the sent text or replied to message to audio.
+      • /weather <loaction>: Gets the weather of the location
+      • /youtube : Gets media from youtube in video or audio format
+      • /yt: Same as /youtube
+      • /runs: reply a random string from an array of replies.
+      • /pat: pat a person, cool thing to have for cute ones :3
+      • /slap: slap a user, or get slapped if not a reply.
+      • /shrug : get shrug XD.
+      • /table : get flip/unflip :v.
+      • /decide : Randomly answers yes/no/maybe
+      • /toss : Tosses A coin
+      • /roll : Roll a dice.
+      • /rlg : Join ears,nose,mouth and create an emo ;-;
+      • /shout <keyword>: write anything you want to give loud shout.
+      • /stickerid: reply to a sticker to get its ID.
+      • /getsticker: reply to a sticker to get the raw PNG image.
+      • /steal: reply to a sticker or image to add it to your pack.
+
+#      • /spbinfo : get info about a user from @Intellivoid's SpamProtection API
+#      ───────────────────────────────
+#      *Last.FM*
+#      Share what you're what listening to with the help of this module!
+#      *Available commands:*
+#      • /setuser <username>: sets your last.fm username.
+#      • /clearuser: removes your last.fm username from the bot's database.
+#      • /lastfm: returns what you're scrobbling on last.fm.
 
 muting_help: |
       *Admins only:*
@@ -393,8 +401,12 @@ notes_help: |
 purge_help: |
        *Admin only:*
         • /del: deletes the message you replied to
+        • /d: deletes the message you replied to
+        • /delete: deletes the message you replied to
         • /purge: deletes all messages between this and the replied to message.
+        • /p: deletes all messages between this and the replied to message.
         • /purge <integer X>: deletes the replied message, and X messages following it if replied to a message.
+        • /p <integer X>: deletes the replied message, and X messages following it if replied to a message.
 
 reports_help: |
         • `/report <reason>`*:* reply to a message to report it to admins.
@@ -412,22 +424,25 @@ rules_help: |
       • `/setrules <your rules here>`*:* set the rules for this chat.
       • `/clearrules`*:* clear the rules for this chat.
 
-userinfo_help: |
-      - /setbio <text>: while replying, will save another user's bio
-      - /bio: will get your or another user's bio. This cannot be set by yourself.
-      - /setme <text>: will set your info
-      - /me: will get your or another user's info
+#userinfo_help: |
+#      - /setbio <text>: while replying, will save another user's bio
+#      - /bio: will get your or another user's bio. This cannot be set by yourself.
+#      - /setme <text>: will set your info
+#      - /me: will get your or another user's info
 
 warns_help: |
       • `/warns <userhandle>`*:* get a user's number, and reason, of warns.
       • `/warnlist`*:* list of all current warning filters
+      • `/warnfilters`*:* list of all current warning filters
 
       *Admins only:*
       • `/warn <userhandle>`*:* warn a user. After 3 warns, the user will be banned from the group. Can also be used as a reply.
       • `/resetwarn <userhandle>`*:* reset the warns for a user. Can also be used as a reply.
+      • `/resetwarns <userhandle>`*:* reset the warns for a user. Can also be used as a reply.
       • `/addwarn <keyword> <reply message>`*:* set a warning filter on a certain keyword. If you want your keyword to
       be a sentence, encompass it with quotes, as such: `/addwarn "very angry" This is an angry user`.
       • `/nowarn <keyword>`*:* stop a warning filter
+      • `/stopwarn <keyword>`*:* stop a warning filter
       • `/warnlimit <num>`*:* set the warning limit
       • `/strongwarn <on/yes/off/no>`*:* If set to on, exceeding the warn limit will result in a ban. Else, will just kick.
 
@@ -451,13 +466,20 @@ greetings_help: |
        • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
 
 nation_help: |
-      - /eagle - Lists all Eagle Union members.
-      - /royals - Lists all Royal Nations.
-      - /sakuras - Lists all Sakura Nations.
-      - /sardegnas - Lists all Sardegnas Nations.
-      - /neptunians - Lists all Neptunia Nations.
-      Note: These commands list users with special bot priveleges and can only be used by them.
-      You can visit @YorktownEagleUnion to query more about these.
+      Some users have access levels we call as *"Nation Levels"*
+      They are users with special bot priveleges and have commands that can only be used by them.
+      
+      *God* - Only one exists, bot owner.
+      Owner has complete bot access, including bot adminship in chats this bot is at.
+      *Devs* - Devs who can access the bots server and can execute, edit, modify bot code. Can manage other Nations
+      *Royals* - Have super user access to the bot.
+      *Sakuras* - Have access to globally ban users across the bot.
+      *Sardegnas* - Same as Neptunians but can unban themselves if banned.
+      *Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
+      *Disclaimer*: The Nation levels in the bot are there for troubleshooting, support, banning potential scammers.
+
+      Report abuse or ask us more on these at the Support chat.
+      You can visit @TheBotsSupport to query more about these.
 
 nlp_help: |
 
@@ -468,3 +490,50 @@ nlp_help: |
        it [here](https://docs.intellivoid.net/coffeehouse/v1/nlp/spam_prediction/chatroom)
        *Command:*
         • `/nlpstat <on/off/yes/no>`*:* toggle NLP in your chat.
+
+stickers_help: |
+      • `/stickerid`*:* gets the id of the replied sticker.
+      • `/getsticker`*:* get the replied sticker in an image format.
+      • `/kang`*:* add the replied sticker to your pack.
+      • `/steal`*:* add the replied sticker to your pack.
+github_help: |
+      *Github module. This module will fetch github releases*
+      *Available commands:*
+       • `/git <user>/<repo>`: will fetch the most recent release from that repo.
+       • `/git <user>/<repo> <number>`: will fetch releases in past.
+       • `/fetch <reponame> or &reponame`: same as `/git`, but you can use a saved repo shortcut
+       • `/listrepo`: lists all repo shortcuts in chat
+       • `/gitver`: returns the current API version
+       • `/changelog <reponame>`: gets the changelog of a saved repo shortcut
+       
+      *Admin only:*
+       • `/saverepo <name> <user>/<repo> <number (optional)>`: saves a repo value as shortcut
+       • `/delrepo <name>`: deletes a repo shortcut
+
+
+android_help: |
+       *Available commands:*
+       *Magisk:* 
+       • `/magisk`, `/su`, `/root`: fetches latest magisk
+       *OrangeFox Recovery Project:* 
+       • `/orangefox` `<devicecodename>`: fetches lastest OrangeFox Recovery available for a given device codename
+       *TWRP:* 
+       • `/twrp <devicecodename>`: fetches lastest TWRP available for a given device codename
+       *MIUI:*
+       • `/miui <devicecodename>`- fetches latest firmware info for a given device codename
+       *Phh:* 
+       • `/phh`: get lastest phh builds from github
+       *Samsung:*
+       • `/checkfw <model> <csc>` - Samsung only - shows the latest firmware info for the given device, taken from samsung servers
+       • `/getfw <model> <csc>` - Samsung only - gets firmware download links from samfrew, sammobile and sfirmwares for the given device
+
+lockdown_help: |
+       *Available commands:*
+       *Group owner only!*
+       *Lockdown:* 
+       • `/lockdown` : check the current lockdown status
+       • `/setlockdown (on/off)` : toggles the group lockdown status
+
+       Ever had your group raided by spammers or bots?
+       By enabling *lockdown* the bot will kick every user on joining the group.
+       When the raid is done you can toggle back lockdown and everything will be back to normal.

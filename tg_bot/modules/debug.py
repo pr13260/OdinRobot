@@ -6,10 +6,11 @@ from telegram.ext import CallbackContext, CommandHandler
 
 from tg_bot import telethn, dispatcher
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 DEBUG_MODE = False
 
-
+@kigcmd(command='debug')
 @dev_plus
 def debug(update: Update, context: CallbackContext):
     global DEBUG_MODE
@@ -46,9 +47,17 @@ async def i_do_nothing_yes(event):
                 )
 
 
-DEBUG_HANDLER = CommandHandler("debug", debug)
-dispatcher.add_handler(DEBUG_HANDLER)
+@kigcmd(command='logs')
+@dev_plus
+def logs(update: Update, context: CallbackContext):
+    user = update.effective_user
+    with open("log.txt", "rb") as f:
+        context.bot.send_document(document=f, filename=f.name, chat_id=user.id)
+
+
+'''DEBUG_HANDLER = CommandHandler("debug", debug)
+dispatcher.add_handler(DEBUG_HANDLER)'''
 
 __mod_name__ = "Debug"
-__command_list__ = ["debug"]
-__handlers__ = [DEBUG_HANDLER]
+'''__command_list__ = ["debug"]
+__handlers__ = [DEBUG_HANDLER]'''

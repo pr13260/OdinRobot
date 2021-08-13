@@ -26,6 +26,7 @@ from tg_bot.modules.sql import antiflood_sql as sql
 from telegram.error import BadRequest
 from telegram.ext import (
     Filters,
+    MessageHandler,
     CallbackContext,
 )
 from telegram.utils.helpers import mention_html, escape_markdown
@@ -40,11 +41,10 @@ from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import antiflood_sql as sql
 from tg_bot.modules.connection import connected
 from tg_bot.modules.helper_funcs.alternate import send_message
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
 
 FLOOD_GROUP = -5
 
-@kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups), group=FLOOD_GROUP)
 @connection_status
 @loggable
 def check_flood(update, context) -> str:
@@ -54,7 +54,7 @@ def check_flood(update, context) -> str:
     if not user:  # ignore channels
         return ""
 
-    # ignore admins and whitelists
+     #ignore admins and whitelists
     if (
         is_user_admin(chat, user.id)
         or user.id in WHITELIST_USERS
@@ -421,3 +421,17 @@ def get_help(chat):
     return gs(chat, "antiflood_help")
 
 __mod_name__ = "Anti-Flood"
+
+
+FLOOD_BAN_HANDLER = MessageHandler(
+    Filters.all & ~Filters.status_update & Filters.chat_type.groups,
+    check_flood,
+    run_async=True,
+)
+
+dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
+
+
+__handlers__ = [
+    (FLOOD_BAN_HANDLER, FLOOD_GROUP),
+]

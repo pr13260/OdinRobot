@@ -1,4 +1,3 @@
-"""""""""""""""""""""""""""""""""""""""""
 from time import sleep
 
 import tg_bot.modules.sql.antispam_sql as gban_sql
@@ -8,7 +7,7 @@ from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.error import BadRequest, Unauthorized
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler
-
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
 def get_invalid_chats(update: Update, context: CallbackContext, remove: bool = False):
     bot = context.bot
@@ -80,7 +79,7 @@ def get_invalid_gban(update: Update, context: CallbackContext, remove: bool = Fa
 
     return ungbanned_users
 
-
+@kigcmd(command='dbcleanup')
 @dev_plus
 def dbcleanup(update: Update, context: CallbackContext):
     msg = update.effective_message
@@ -100,7 +99,7 @@ def dbcleanup(update: Update, context: CallbackContext):
         reply, reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-
+@kigcallback(pattern="db_.*")
 def callback_button(update: Update, context: CallbackContext):
     bot = context.bot
     query = update.callback_query
@@ -132,12 +131,11 @@ def callback_button(update: Update, context: CallbackContext):
         bot.sendMessage(chat_id, reply)
 
 
-DB_CLEANUP_HANDLER = CommandHandler("dbcleanup", dbcleanup, run_async=True)
+'''DB_CLEANUP_HANDLER = CommandHandler("dbcleanup", dbcleanup, run_async=True)
 BUTTON_HANDLER = CallbackQueryHandler(callback_button, pattern="db_.*", run_async=True)
 
 dispatcher.add_handler(DB_CLEANUP_HANDLER)
-dispatcher.add_handler(BUTTON_HANDLER)
+dispatcher.add_handler(BUTTON_HANDLER)'''
 
 __mod_name__ = "DB Cleanup"
-__handlers__ = [DB_CLEANUP_HANDLER, BUTTON_HANDLER]
-"""""""""""""""""""""""""""""""""""""""""
+'''__handlers__ = [DB_CLEANUP_HANDLER, BUTTON_HANDLER]'''

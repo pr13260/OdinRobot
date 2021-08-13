@@ -179,7 +179,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
         return
 
-    message.reply_text("On it!")
+    message.reply_text("Blowing the dust off the BANHAMMER!")
 
     start_time = time.time()
     datetime_fmt = "%Y-%m-%dT%H:%M"
@@ -279,7 +279,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
             "#GBAN"
             "You have been marked as Malicious and as such have been banned from any future groups we manage."
             f"\n<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
-            f"</b>Appeal Chat:</b> @YorkTownEagleUnion",
+            f"</b>Appeal Chat:</b> @TheBotsSupport",
             parse_mode=ParseMode.HTML,
         )
     except:
@@ -471,7 +471,7 @@ def check_and_ban(update, user_id, should_message=True):
             text = (
                 f"<b>Alert</b>: this user is globally banned.\n"
                 f"<code>*bans them from here*</code>.\n"
-                f"<b>Appeal chat</b>: @YorkTownEagleUnion\n"
+                f"<b>Appeal chat</b>: @TheBotsSupport\n"
                 f"<b>User ID</b>: <code>{user_id}</code>"
             )
             user = sql.get_gbanned_user(user_id)
@@ -505,7 +505,7 @@ def enforce_gban(update: Update, context: CallbackContext):
             if user and not is_user_admin(chat, user.id):
                 check_and_ban(update, user.id, should_message=False)
 
-@kigcmd(command="antispam")
+@kigcmd(command=["antispam", "gbanstat"])
 @user_admin
 def gbanstat(update: Update, context: CallbackContext):
     args = context.args
@@ -542,7 +542,7 @@ def __user_info__(user_id):
         return ""
 
     is_gbanned = sql.is_user_gbanned(user_id)
-    text = "Gbanned: <b>{}</b>"
+    text = "\nGbanned: <b>{}</b>"
     if user_id in [777000, 1087968824]:
         return ""
     if user_id == dispatcher.bot.id:
@@ -554,7 +554,7 @@ def __user_info__(user_id):
         user = sql.get_gbanned_user(user_id)
         if user.reason:
             text += f"\n<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
-        text += f"\n<b>Appeal Chat:</b> @YorkTownEagleUnion"
+        text += f"\n<b>Appeal Chat:</b> @TheBotsSupport"
     else:
         text = text.format("No")
     return text

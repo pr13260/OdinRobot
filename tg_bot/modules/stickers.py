@@ -369,3 +369,11 @@ def makepack_internal(
         )
     else:
         msg.reply_text("Failed to create sticker pack. Possibly due to blek mejik.")
+
+
+from tg_bot.modules.language import gs
+
+def get_help(chat):
+    return gs(chat, "stickers_help")
+
+__mod_name__ = "Stickers"

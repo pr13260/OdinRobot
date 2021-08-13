@@ -41,6 +41,21 @@ LOCK_TYPES = {
     "rtl": "rtl",
     "button": "button",
     "inline": "inline",
+    "apk" : Filters.document.mime_type("application/vnd.android.package-archive"),
+    "doc" : Filters.document.mime_type("application/msword"),
+    "docx" : Filters.document.mime_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    "exe" : Filters.document.mime_type("application/x-ms-dos-executable"),
+    "gif" : Filters.document.mime_type("video/mp4"),
+    "jpg" : Filters.document.mime_type("image/jpeg"),
+    "mp3" : Filters.document.mime_type("audio/mpeg"),
+    "pdf" : Filters.document.mime_type("application/pdf"),
+    "py" : Filters.document.mime_type("text/x-python"),
+    "svg" : Filters.document.mime_type("image/svg+xml"),
+    "txt" : Filters.document.mime_type("text/plain"),
+    "targz" : Filters.document.mime_type("application/x-compressed-tar"),
+    "wav" : Filters.document.mime_type("audio/x-wav"),
+    "xml" : Filters.document.mime_type("application/xml"),
+    "zip" : Filters.document.mime_type("application/zip"),
 }
 
 LOCK_CHAT_RESTRICTION = {
@@ -353,6 +368,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                     check = ad.detect_alphabet(u"{}".format(message.caption))
                     if "ARABIC" in check:
                         try:
+                            replyyy = "This action is restricted to admins only!"
+                            message.reply_text(replyyy)
                             message.delete()
                         except BadRequest as excp:
                             if excp.message != "Message to delete not found":
@@ -362,6 +379,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                     check = ad.detect_alphabet(u"{}".format(message.text))
                     if "ARABIC" in check:
                         try:
+                            replyyy = "This action is restricted to admins only!"
+                            message.reply_text(replyyy)
                             message.delete()
                         except BadRequest as excp:
                             if excp.message != "Message to delete not found":
@@ -376,6 +395,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                 and message.reply_markup.inline_keyboard
             ):
                 try:
+                    replyyy = "This action is restricted to admins only!"
+                    message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
@@ -390,6 +411,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                 and message.via_bot
             ):
                 try:
+                    replyyy = "This action is restricted to admins only!"
+                    message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
@@ -421,6 +444,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                         break
             else:
                 try:
+                    replyyy = "This action is restricted to admins only!"
+                    message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
@@ -453,6 +478,20 @@ def build_lock_message(chat_id):
         locklist.append("button = `{}`".format(locks.button))
         locklist.append("egame = `{}`".format(locks.egame))
         locklist.append("inline = `{}`".format(locks.inline))
+        locklist.append("apk = `{}`".format(locks.apk))
+        locklist.append("doc = `{}`".format(locks.doc))
+        locklist.append("docx = `{}`".format(locks.docx))
+        locklist.append("exe = `{}`".format(locks.exe))
+        locklist.append("jpg = `{}`".format(locks.jpg))
+        locklist.append("mp3 = `{}`".format(locks.mp3))
+        locklist.append("pdf = `{}`".format(locks.pdf))
+        locklist.append("py = `{}`".format(locks.py))
+        locklist.append("svg = `{}`".format(locks.svg))
+        locklist.append("txt = `{}`".format(locks.txt))
+        locklist.append("targz = `{}`".format(locks.targz))
+        locklist.append("wav = `{}`".format(locks.wav))
+        locklist.append("xml = `{}`".format(locks.xml))
+        locklist.append("zip = `{}`".format(locks.zip))
     permissions = dispatcher.bot.get_chat(chat_id).permissions
     permslist.append("messages = `{}`".format(permissions.can_send_messages))
     permslist.append("media = `{}`".format(permissions.can_send_media_messages))

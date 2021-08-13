@@ -24,14 +24,13 @@ fileConfig('logging.ini')
 
 log = logging.getLogger('[Enterprise]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
-log.info("[KIGYO] Kigyo is starting. | An Eagle Union Project. | Licensed under GPLv3.")
-log.info("[KIGYO] Not affiliated to Azur Lane or Yostar in any way whatsoever.")
-log.info("[KIGYO] Project maintained by: github.com/Dank-del (t.me/dank_as_fuck)")
+log.info("[Ɩυκє's bot] Ɩυκє's bot is starting. | Licensed under GPLv3.")
+log.info("[Ɩυκє's bot] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/abOuLfOoOoOuF)")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     log.error(
-        "[KIGYO] You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
+        "[Ɩυκє's bot] You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
     )
     quit(1)
 
@@ -55,7 +54,7 @@ class KigyoINIT:
         self.DEL_CMDS = self.parser.getboolean("DEL_CMDS", False)
         self.STRICT_GBAN = self.parser.getboolean("STRICT_GBAN", False)
         self.ALLOW_EXCL = self.parser.getboolean("ALLOW_EXCL", False)
-        self.CUSTOM_CMD = ['/', '!']
+        self.CUSTOM_CMD = ['/', '!', ">"]
         self.BAN_STICKER = self.parser.get("BAN_STICKER", None)
         self.TOKEN = self.parser.get("TOKEN")
         self.DB_URI = self.parser.get("SQLALCHEMY_DATABASE_URI")
@@ -68,13 +67,15 @@ class KigyoINIT:
         self.spamwatch_api = self.parser.get('spamwatch_api', None)
         self.CASH_API_KEY = self.parser.get('CASH_API_KEY', None)
         self.TIME_API_KEY = self.parser.get('TIME_API_KEY', None)
-        self.WALL_API = self.parser.get('WALL_API', None)
+        #self.WALL_API = self.parser.get('WALL_API', None)
         self.LASTFM_API_KEY = self.parser.get('LASTFM_API_KEY', None)
+        self.WEATHER_API = self.parser.get('WEATHER_API', None)
         self.CF_API_KEY =  self.parser.get("CF_API_KEY", None)
         self.bot_id = 0 #placeholder
-        self.bot_name = "Kigyo" #placeholder
-        self.bot_username = "KigyoRobot" #placeholder
-
+        self.bot_name = "Ɩυκє's" #placeholder
+        self.bot_username = "L4K3bot" #placeholder
+        self.ALLOW_CHATS =  self.parser.getboolean("ALLOW_CHATS", True)
+        self.SUPPORT_GROUP =  self.parser.get("SUPPORT_GROUP", 0)
 
     def init_sw(self):
         if self.spamwatch_api is None:
@@ -92,7 +93,6 @@ class KigyoINIT:
 
 KInit = KigyoINIT(parser=kigconfig)
 
-SYS_ADMIN = KInit.SYS_ADMIN
 OWNER_ID = KInit.OWNER_ID
 OWNER_USERNAME = KInit.OWNER_USERNAME
 APP_ID = KInit.APP_ID
@@ -112,6 +112,8 @@ LOAD = KInit.LOAD
 MESSAGE_DUMP = KInit.MESSAGE_DUMP
 GBAN_LOGS = KInit.GBAN_LOGS
 NO_LOAD = KInit.NO_LOAD
+OWNER_USER = [OWNER_ID]
+SYS_ADMIN = KInit.SYS_ADMIN
 SUDO_USERS = [OWNER_ID] + get_user_list("sudos")
 DEV_USERS = [OWNER_ID] + get_user_list("devs")
 SUPPORT_USERS = get_user_list("supports")
@@ -121,11 +123,13 @@ SPAMMERS = get_user_list("spammers")
 spamwatch_api = KInit.spamwatch_api
 CASH_API_KEY = KInit.CASH_API_KEY
 TIME_API_KEY = KInit.TIME_API_KEY
-WALL_API = KInit.WALL_API
+#WALL_API = KInit.WALL_API
 LASTFM_API_KEY = KInit.LASTFM_API_KEY
+WEATHER_API = KInit.WEATHER_API
 CF_API_KEY = KInit.CF_API_KEY
-
+ALLOW_CHATS = KInit.ALLOW_CHATS
 SPB_MODE = kigconfig.getboolean('SPB_MODE', False)
+SUPPORT_GROUP = KInit.SUPPORT_GROUP
 
 # SpamWatch
 sw = KInit.init_sw()

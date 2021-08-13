@@ -10,6 +10,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
     can_restrict,
     is_user_admin,
     user_admin,
+    can_delete,
     user_admin_no_reply,
 )
 from tg_bot.modules.helper_funcs.extraction import (
@@ -36,17 +37,16 @@ from telegram import (
 from telegram.error import BadRequest
 from telegram.ext import (
     CallbackContext,
-    CallbackQueryHandler,
-    CommandHandler,
     DispatcherHandlerStop,
     Filters,
-    MessageHandler,
 )
 from telegram.utils.helpers import mention_html
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
+
 
 WARN_HANDLER_GROUP = 9
 CURRENT_WARNING_FILTER_STRING = "<b>Current warning filters in this chat:</b>\n"
-
+WARNS_GROUP = 2
 
 # Not async
 def warn(
@@ -153,7 +153,227 @@ def warn(
             raise
     return log_reason
 
+# Not async
+def swarn(
+    user: User, chat: Chat, reason: str, message: Message, warner: User = None
+) -> str:  # sourcery no-metrics
+    if is_user_admin(chat, user.id):
+        # message.reply_text("Damn admins, They are too far to be kicked!")
+        return
 
+    if user.id in SARDEGNA_USERS:
+        if warner:
+            message.reply_text("SARDEGNAs cant be warned.")
+        else:
+            message.reply_text(
+                "Sardegna triggered an auto warn filter!\n I can't warn Sardegnas but they should avoid abusing this."
+            )
+        return
+
+    if user.id in WHITELIST_USERS:
+        if warner:
+            message.reply_text("Whitelisted users are warn immune.")
+        else:
+            message.reply_text(
+                "Neptunian triggered an auto warn filter!\nI can't warn Neptunians users but they should avoid abusing this."
+            )
+        return
+
+    if warner:
+        warner_tag = mention_html(warner.id, warner.first_name)
+    else:
+        warner_tag = "Automated warn filter."
+
+    limit, soft_warn = sql.get_warn_setting(chat.id)
+    num_warns, reasons = sql.warn_user(user.id, chat.id, reason)
+    if num_warns >= limit:
+        sql.reset_warns(user.id, chat.id)
+        if soft_warn:  # kick
+            chat.unban_member(user.id)
+            reply = (
+                f"<code>❕</code><b>Kick Event</b>\n"
+                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<code> </code><b>•  Count:</b> {limit}"
+            )
+
+        else:  # ban
+            chat.kick_member(user.id)
+            reply = (
+                f"<code>❕</code><b>Ban Event</b>\n"
+                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<code> </code><b>•  Count:</b> {limit}"
+            )
+
+        for warn_reason in reasons:
+            reply += f"\n - {html.escape(warn_reason)}"
+
+        # message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
+        keyboard = None
+        log_reason = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#WARN_BAN\n"
+            f"<b>Admin:</b> {warner_tag}\n"
+            f"<b>User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<b>Reason:</b> {reason}\n"
+            f"<b>Counts:</b> <code>{num_warns}/{limit}</code>"
+        )
+
+    else:
+        keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "🔘 Remove warn", callback_data="rm_warn({})".format(user.id)
+                    )
+                ]
+            ]
+        )
+
+        reply = (
+            f"<code>❕</code><b>Warn Event</b>\n"
+            f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+        )
+        if reason:
+            reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"
+
+        log_reason = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#WARN\n"
+            f"<b>Admin:</b> {warner_tag}\n"
+            f"<b>User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<b>Reason:</b> {reason}\n"
+            f"<b>Counts:</b> <code>{num_warns}/{limit}</code>"
+        )
+
+    try:
+        if message.reply_to_message:
+            message.reply_to_message.delete()
+        message.reply_text(reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+        message.delete()
+    except BadRequest as excp:
+        if excp.message == "Reply message not found":
+            # Do not reply
+            if message.reply_to_message:
+                message.reply_to_message.delete()
+            message.reply_text(
+                reply, reply_markup=keyboard, parse_mode=ParseMode.HTML, quote=False
+            )
+            message.delete()
+        else:
+            raise
+    return log_reason
+
+# Not async
+def dwarn(
+    user: User, chat: Chat, reason: str, message: Message, warner: User = None
+) -> str:  # sourcery no-metrics
+    if is_user_admin(chat, user.id):
+        # message.reply_text("Damn admins, They are too far to be kicked!")
+        return
+
+    if user.id in SARDEGNA_USERS:
+        if warner:
+            message.reply_text("SARDEGNAs cant be warned.")
+        else:
+            message.reply_text(
+                "Sardegna triggered an auto warn filter!\n I can't warn Sardegnas but they should avoid abusing this."
+            )
+        return
+
+    if user.id in WHITELIST_USERS:
+        if warner:
+            message.reply_text("Whitelisted users are warn immune.")
+        else:
+            message.reply_text(
+                "Neptunian triggered an auto warn filter!\nI can't warn Neptunians users but they should avoid abusing this."
+            )
+        return
+
+    if warner:
+        warner_tag = mention_html(warner.id, warner.first_name)
+    else:
+        warner_tag = "Automated warn filter."
+
+    limit, soft_warn = sql.get_warn_setting(chat.id)
+    num_warns, reasons = sql.warn_user(user.id, chat.id, reason)
+    if num_warns >= limit:
+        sql.reset_warns(user.id, chat.id)
+        if soft_warn:  # kick
+            chat.unban_member(user.id)
+            reply = (
+                f"<code>❕</code><b>Kick Event</b>\n"
+                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<code> </code><b>•  Count:</b> {limit}"
+            )
+
+        else:  # ban
+            chat.kick_member(user.id)
+            reply = (
+                f"<code>❕</code><b>Ban Event</b>\n"
+                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<code> </code><b>•  Count:</b> {limit}"
+            )
+
+        for warn_reason in reasons:
+            reply += f"\n - {html.escape(warn_reason)}"
+
+        # message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
+        keyboard = None
+        log_reason = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#WARN_BAN\n"
+            f"<b>Admin:</b> {warner_tag}\n"
+            f"<b>User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<b>Reason:</b> {reason}\n"
+            f"<b>Counts:</b> <code>{num_warns}/{limit}</code>"
+        )
+
+    else:
+        keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "🔘 Remove warn", callback_data="rm_warn({})".format(user.id)
+                    )
+                ]
+            ]
+        )
+
+        reply = (
+            f"<code>❕</code><b>Warn Event</b>\n"
+            f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+        )
+        if reason:
+            reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"
+
+        log_reason = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#WARN\n"
+            f"<b>Admin:</b> {warner_tag}\n"
+            f"<b>User:</b> {mention_html(user.id, user.first_name)}\n"
+            f"<b>Reason:</b> {reason}\n"
+            f"<b>Counts:</b> <code>{num_warns}/{limit}</code>"
+        )
+
+    try:
+        if message.reply_to_message:
+            message.reply_to_message.delete()
+        message.reply_text(reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    except BadRequest as excp:
+        if excp.message == "Reply message not found":
+            # Do not reply
+            if message.reply_to_message:
+                message.reply_to_message.delete()
+            message.reply_text(
+                reply, reply_markup=keyboard, parse_mode=ParseMode.HTML, quote=False
+            )
+        else:
+            raise
+    return log_reason
+
+@kigcallback(pattern=r"rm_warn")
 @user_admin_no_reply
 @bot_admin
 @loggable
@@ -184,7 +404,9 @@ def button(update: Update, context: CallbackContext) -> str:
 
     return ""
 
-
+@kigcmd(command='swarn', filters=Filters.chat_type.groups)
+@kigcmd(command='dwarn', filters=Filters.chat_type.groups)
+@kigcmd(command='warn', filters=Filters.chat_type.groups)
 @user_admin
 @can_restrict
 @loggable
@@ -195,26 +417,72 @@ def warn_user(update: Update, context: CallbackContext) -> str:
     warner: Optional[User] = update.effective_user
 
     user_id, reason = extract_user_and_text(message, args)
-
-    if user_id:
-        if (
-            message.reply_to_message
-            and message.reply_to_message.from_user.id == user_id
-        ):
-            return warn(
-                message.reply_to_message.from_user,
-                chat,
-                reason,
-                message.reply_to_message,
-                warner,
-            )
-        else:
-            return warn(chat.get_member(user_id).user, chat, reason, message, warner)
+    if message.text.startswith('/s'):
+        silent = True
+        if not can_delete(chat, context.bot.id):
+            return ""
     else:
-        message.reply_text("That looks like an invalid User ID to me.")
+        silent = False
+    if message.text.startswith('/d'):
+        delban = True
+        if not can_delete(chat, context.bot.id):
+            return ""
+    else:
+        delban = False
+    if silent:
+        if user_id:
+            if (
+                message.reply_to_message
+                and message.reply_to_message.from_user.id == user_id
+            ):
+                return swarn(
+                    message.reply_to_message.from_user,
+                    chat,
+                    reason,
+                    message.reply_to_message,
+                    warner,
+                )
+            else:
+                return swarn(chat.get_member(user_id).user, chat, reason, message, warner)
+        else:
+            message.reply_text("That looks like an invalid User ID to me.")
+    elif delban:
+        if user_id:
+            if (
+                message.reply_to_message
+                and message.reply_to_message.from_user.id == user_id
+            ):
+                return dwarn(
+                    message.reply_to_message.from_user,
+                    chat,
+                    reason,
+                    message.reply_to_message,
+                    warner,
+                )
+            else:
+                return dwarn(chat.get_member(user_id).user, chat, reason, message, warner)
+        else:
+            message.reply_text("That looks like an invalid User ID to me.")
+    else:
+        if user_id:
+            if (
+                message.reply_to_message
+                and message.reply_to_message.from_user.id == user_id
+            ):
+                return warn(
+                    message.reply_to_message.from_user,
+                    chat,
+                    reason,
+                    message.reply_to_message,
+                    warner,
+                )
+            else:
+                return warn(chat.get_member(user_id).user, chat, reason, message, warner)
+        else:
+            message.reply_text("That looks like an invalid User ID to me.")
     return ""
 
-
+@kigcmd(command=['restwarn', 'resetwarns'], filters=Filters.chat_type.groups)
 @user_admin
 @bot_admin
 @loggable
@@ -240,7 +508,7 @@ def reset_warns(update: Update, context: CallbackContext) -> str:
         message.reply_text("No user has been designated!")
     return ""
 
-
+@kigcmd(command='warns', filters=Filters.chat_type.groups, can_disable=True)
 def warns(update: Update, context: CallbackContext):
     args = context.args
     message: Optional[Message] = update.effective_message
@@ -269,7 +537,7 @@ def warns(update: Update, context: CallbackContext):
     else:
         update.effective_message.reply_text("This user doesn't have any warns!")
 
-
+@kigcmd(command='addwarn', filters=Filters.chat_type.groups, run_async=False)
 # Dispatcher handler stop - do not async
 @user_admin
 def add_warn_filter(update: Update, context: CallbackContext):
@@ -302,7 +570,7 @@ def add_warn_filter(update: Update, context: CallbackContext):
     update.effective_message.reply_text(f"Warn handler added for '{keyword}'!")
     raise DispatcherHandlerStop
 
-
+@kigcmd(command=['nowarn', 'stopwarn'], filters=Filters.chat_type.groups)
 @user_admin
 def remove_warn_filter(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
@@ -338,7 +606,7 @@ def remove_warn_filter(update: Update, context: CallbackContext):
         "That's not a current warning filter - run /warnlist for all active warning filters."
     )
 
-
+@kigcmd(command=['warnlist', 'warnfilters'], filters=Filters.chat_type.groups, can_disable=True)
 def list_warn_filters(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
     all_handlers = sql.get_chat_warn_triggers(chat.id)
@@ -359,7 +627,7 @@ def list_warn_filters(update: Update, context: CallbackContext):
     if filter_list != CURRENT_WARNING_FILTER_STRING:
         update.effective_message.reply_text(filter_list, parse_mode=ParseMode.HTML)
 
-
+@kigmsg((CustomFilters.has_text & Filters.chat_type.groups), group=WARNS_GROUP)
 @loggable
 def reply_filter(update: Update, context: CallbackContext) -> str:
     chat: Optional[Chat] = update.effective_chat
@@ -387,7 +655,7 @@ def reply_filter(update: Update, context: CallbackContext) -> str:
             return warn(user, chat, warn_filter.reply, message)
     return ""
 
-
+@kigcmd(command='warnlimit', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def set_warn_limit(update: Update, context: CallbackContext) -> str:
@@ -417,7 +685,7 @@ def set_warn_limit(update: Update, context: CallbackContext) -> str:
         msg.reply_text("The current warn limit is {}".format(limit))
     return ""
 
-
+@kigcmd(command='strongwarn', filters=Filters.chat_type.groups)
 @user_admin
 def set_warn_strength(update: Update, context: CallbackContext):
     args = context.args
@@ -496,7 +764,7 @@ def get_help(chat):
 
 __mod_name__ = "Warnings"
 
-WARN_HANDLER = CommandHandler("warn", warn_user, filters=Filters.chat_type.groups)
+'''WARN_HANDLER = CommandHandler("warn", warn_user, filters=Filters.chat_type.groups)
 RESET_WARN_HANDLER = CommandHandler(
     ["resetwarn", "resetwarns"], reset_warns, filters=Filters.chat_type.groups
 )
@@ -535,4 +803,4 @@ dispatcher.add_handler(RM_WARN_HANDLER)
 dispatcher.add_handler(LIST_WARN_HANDLER)
 dispatcher.add_handler(WARN_LIMIT_HANDLER)
 dispatcher.add_handler(WARN_STRENGTH_HANDLER)
-dispatcher.add_handler(WARN_FILTER_HANDLER, WARN_HANDLER_GROUP)
+dispatcher.add_handler(WARN_FILTER_HANDLER, WARN_HANDLER_GROUP)'''

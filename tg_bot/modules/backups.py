@@ -10,7 +10,7 @@ from tg_bot.modules.helper_funcs.alternate import typing_action
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 # from tg_bot.modules.rules import get_rules
 import tg_bot.modules.sql.rules_sql as rulessql
-from tg_bot.modules.language import gs
+
 # from tg_bot.modules.sql import warns_sql as warnssql
 import tg_bot.modules.sql.blacklist_sql as blacklistsql
 from tg_bot.modules.sql import disable_sql as disabledsql
@@ -20,10 +20,6 @@ from tg_bot.modules.sql import disable_sql as disabledsql
 import tg_bot.modules.sql.locks_sql as locksql
 from tg_bot.modules.connection import connected
 
-def get_help(chat):
-    return gs(chat, "backup_help")
-
-__mod_name__ = "Backup"
 
 @kigcmd(command='import')
 @user_admin
@@ -99,7 +95,7 @@ def import_data(update, context):
                 mod.__import_data__(str(chat.id), data)
         except Exception:
             msg.reply_text(
-                f"An error occurred while recovering your data. The process failed. If you experience a problem with this, please take it to @YorkTownEagleUnion",
+                f"An error occurred while recovering your data. The process failed. If you experience a problem with this, please take it to @TheBotsSupport",
             )
 
             LOGGER.exception(
@@ -324,21 +320,21 @@ def export_data(update, context):  # sourcery no-metrics
         },
     }
     baccinfo = json.dumps(backup, indent=4)
-    with open("KigyoRobot{}.json".format(chat_id), "w") as f:
+    with open("Ɩυκє's bot{}.json".format(chat_id), "w") as f:
         f.write(str(baccinfo))
     context.bot.sendChatAction(current_chat_id, "upload_document")
     tgl = time.strftime("%H:%M:%S - %d/%m/%Y", time.localtime(time.time()))
     context.bot.sendDocument(
         current_chat_id,
-        document=open("KigyoRobot{}.json".format(chat_id), "rb"),
-        caption="*Successfully Exported backup:*\nChat: `{}`\nChat ID: `{}`\nOn: `{}`\n\nNote: This `KigyoRobot-Backup` was specially made for notes.".format(
+        document=open("Ɩυκє's bot{}.json".format(chat_id), "rb"),
+        caption="*Successfully Exported backup:*\nChat: `{}`\nChat ID: `{}`\nOn: `{}`\n\nNote: This `Ɩυκє's bot-Backup` was specially made for notes.".format(
             chat.title, chat_id, tgl,
         ),
         timeout=360,
         reply_to_message_id=msg.message_id,
         parse_mode=ParseMode.MARKDOWN,
     )
-    os.remove("KigyoRobot{}.json".format(chat_id))  # Cleaning file
+    os.remove("Ɩυκє's bot{}.json".format(chat_id))  # Cleaning file
 
 
 # Temporary data

@@ -2,16 +2,17 @@ import os
 import subprocess
 import sys
 from time import sleep
-from tg_bot import dispatcher, telethn, OWNER_ID
+from tg_bot import dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from telegram import TelegramError, Update, ParseMode
-from telegram.ext import CallbackContext, CommandHandler
+from telegram.ext import CallbackContext, CommandHandler, Filters
 import asyncio
 from statistics import mean
 from time import monotonic as time
 from telethon import events
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
-
+@kigcmd(command='leave')
 @dev_plus
 def leave(update: Update, context: CallbackContext):
     bot = context.bot
@@ -26,7 +27,7 @@ def leave(update: Update, context: CallbackContext):
     else:
         update.effective_message.reply_text("Send a valid chat ID")
 
-
+@kigcmd(command='gitpull')
 @dev_plus
 def gitpull(update: Update, context: CallbackContext):
     sent_msg = update.effective_message.reply_text(
@@ -45,7 +46,7 @@ def gitpull(update: Update, context: CallbackContext):
     os.system("restart.bat")
     os.execv("start.bat", sys.argv)
 
-
+@kigcmd(command='restart')
 @dev_plus
 def restart(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
@@ -94,14 +95,14 @@ telethn.add_event_handler(inline_queries, events.InlineQuery())
 telethn.add_event_handler(callback_queries, events.CallbackQuery())
 
 
-@telethn.on(events.NewMessage(pattern=r"/getstats", from_users=OWNER_ID))
+@telethn.on(events.NewMessage(pattern=r"/getstats", from_users=SYS_ADMIN))
 async def getstats(event):
     await event.reply(
         f"**__KIGYO EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",
         parse_mode='md'
     )
 
-
+@kigcmd(command='pipinstall')
 @dev_plus
 def pip_install(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -125,16 +126,24 @@ def pip_install(update: Update, context: CallbackContext):
 
         message.reply_text(text=reply, parse_mode=ParseMode.MARKDOWN)
 
+@kigcmd(command='lockgroups')
+@dev_plus
+def allow_groups(update: Update, context: CallbackContext):
+    args = context.args
+    if not args:
+        state = "Lockgroups is " + "on" if not ALLOW_CHATS else "off"
+        update.effective_message.reply_text(f"Current state: {state}")
+        return
+    if args[0].lower() in ["off", "no"]:
+        ALLOW_CHATS = True
+    elif args[0].lower() in ["yes", "on"]:
+        ALLOW_CHATS = False
+    else:
+        update.effective_message.reply_text("Format: /lockgroups Yes/No or Off/On")
+        return
+    update.effective_message.reply_text("Done! Lockgroups value toggled.")
 
-PIP_INSTALL_HANDLER = CommandHandler("install", pip_install, run_async=True)
-LEAVE_HANDLER = CommandHandler("leave", leave, run_async=True)
-GITPULL_HANDLER = CommandHandler("gitpull", gitpull, run_async=True)
-RESTART_HANDLER = CommandHandler("reboot", restart, run_async=True)
 
-dispatcher.add_handler(LEAVE_HANDLER)
-dispatcher.add_handler(GITPULL_HANDLER)
-dispatcher.add_handler(RESTART_HANDLER)
-dispatcher.add_handler(PIP_INSTALL_HANDLER)
 
 __mod_name__ = "Dev"
-__handlers__ = [LEAVE_HANDLER, GITPULL_HANDLER, RESTART_HANDLER, PIP_INSTALL_HANDLER]
+

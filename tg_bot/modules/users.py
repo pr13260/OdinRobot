@@ -2,12 +2,13 @@ from io import BytesIO
 from time import sleep
 
 import tg_bot.modules.sql.users_sql as sql
-from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher
+from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher, SYS_ADMIN
 from tg_bot.modules.helper_funcs.chat_status import dev_plus, sudo_plus
 from tg_bot.modules.sql.users_sql import get_all_users
 from telegram import TelegramError, Update
 from telegram.error import BadRequest
-from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler
+from telegram.ext import CallbackContext, Filters
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
 USERS_GROUP = 4
 CHAT_GROUP = 5
@@ -44,7 +45,7 @@ def get_user_id(username):
     return None
 
 
-@dev_plus
+@kigcmd(command='broadcast', filters=Filters.user(SYS_ADMIN))
 def broadcast(update: Update, context: CallbackContext):
     to_send = update.effective_message.text.split(None, 1)
 
@@ -89,7 +90,7 @@ def broadcast(update: Update, context: CallbackContext):
             f"Broadcast complete.\nGroups failed: {failed}.\nUsers failed: {failed_user}."
         )
 
-
+@kigmsg((Filters.all & Filters.chat_type.groups), group=USERS_GROUP)
 def log_user(update: Update, context: CallbackContext):
     chat = update.effective_chat
     msg = update.effective_message
@@ -107,7 +108,7 @@ def log_user(update: Update, context: CallbackContext):
     if msg.forward_from:
         sql.update_user(msg.forward_from.id, msg.forward_from.username)
 
-
+@kigcmd(command='chatlist')
 @sudo_plus
 def chats(update: Update, context: CallbackContext):
     all_chats = sql.get_all_chats() or []
@@ -133,7 +134,7 @@ def chats(update: Update, context: CallbackContext):
             caption="Here be the list of groups in my database.",
         )
 
-
+@kigmsg((Filters.all & Filters.chat_type.groups), group=USERS_GROUP)
 def chat_checker(update: Update, context: CallbackContext):
     bot = context.bot
     if update.effective_message.chat.get_member(bot.id).can_send_messages is False:
@@ -159,21 +160,5 @@ def __migrate__(old_chat_id, new_chat_id):
 
 __help__ = ""  # no help string
 
-BROADCAST_HANDLER = CommandHandler(
-    ["broadcastall", "broadcastusers", "broadcastgroups"], broadcast, run_async=True
-)
-USER_HANDLER = MessageHandler(
-    Filters.all & Filters.chat_type.groups, log_user, run_async=True
-)
-CHAT_CHECKER_HANDLER = MessageHandler(
-    Filters.all & Filters.chat_type.groups, chat_checker, run_async=True
-)
-# CHATLIST_HANDLER = CommandHandler("chatlist", chats, run_async=True)
-
-dispatcher.add_handler(USER_HANDLER, USERS_GROUP)
-dispatcher.add_handler(BROADCAST_HANDLER)
-# dispatcher.add_handler(CHATLIST_HANDLER)
-dispatcher.add_handler(CHAT_CHECKER_HANDLER, CHAT_GROUP)
-
 __mod_name__ = "Users"
-__handlers__ = [(USER_HANDLER, USERS_GROUP), BROADCAST_HANDLER]
+

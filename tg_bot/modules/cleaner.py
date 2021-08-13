@@ -16,6 +16,7 @@ from telegram.ext import (
     Filters,
     MessageHandler,
 )
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
 CMD_STARTERS = ("/", "!") if ALLOW_EXCL else "/"
 BLUE_TEXT_CLEAN_GROUP = 13
@@ -40,7 +41,7 @@ for handler_list in dispatcher.handlers:
         if any(isinstance(handler, cmd_handler) for cmd_handler in CommandHandlerList):
             command_list += handler.command
 
-
+@kigmsg((Filters.command & Filters.chat_type.groups), group=BLUE_TEXT_CLEAN_GROUP)
 def clean_blue_text_must_click(update: Update, context: CallbackContext):
     bot = context.bot
     chat = update.effective_chat
@@ -62,7 +63,7 @@ def clean_blue_text_must_click(update: Update, context: CallbackContext):
             if command[0] not in command_list:
                 message.delete()
 
-
+@kigcmd(command='cleanbluetext', pass_args=True)
 @connection_status
 @bot_can_delete
 @user_admin
@@ -97,7 +98,7 @@ def set_blue_text_must_click(update: Update, context: CallbackContext):
         )
         message.reply_text(reply, parse_mode=ParseMode.HTML)
 
-
+@kigcmd(command='ignorecleanbluetext', pass_args=True)
 @user_admin
 def add_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -118,7 +119,7 @@ def add_bluetext_ignore(update: Update, context: CallbackContext):
         reply = "No command supplied to be ignored."
         message.reply_text(reply)
 
-
+@kigcmd(command='unignorecleanbluetext', pass_args=True)
 @user_admin
 def remove_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -141,8 +142,8 @@ def remove_bluetext_ignore(update: Update, context: CallbackContext):
         reply = "No command supplied to be unignored."
         message.reply_text(reply)
 
-
-@user_admin
+@kigcmd(command='ignoreglobalcleanbluetext', pass_args=True)
+@dev_plus
 def add_bluetext_ignore_global(update: Update, context: CallbackContext):
     message = update.effective_message
     args = context.args
@@ -161,7 +162,7 @@ def add_bluetext_ignore_global(update: Update, context: CallbackContext):
         reply = "No command supplied to be ignored."
         message.reply_text(reply)
 
-
+@kigcmd(command='unignoreglobalcleanbluetext', pass_args=True)
 @dev_plus
 def remove_bluetext_ignore_global(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -181,7 +182,7 @@ def remove_bluetext_ignore_global(update: Update, context: CallbackContext):
         reply = "No command supplied to be unignored."
         message.reply_text(reply)
 
-
+@kigcmd(command='listcleanbluetext')
 @dev_plus
 def bluetext_ignore_list(update: Update, context: CallbackContext):
 
@@ -216,7 +217,7 @@ from tg_bot.modules.language import gs
 def get_help(chat):
     return gs(chat, "cleaner_help")
 
-SET_CLEAN_BLUE_TEXT_HANDLER = CommandHandler(
+'''SET_CLEAN_BLUE_TEXT_HANDLER = CommandHandler(
     "cleanbluetext", set_blue_text_must_click, pass_args=True, run_async=True
 )
 ADD_CLEAN_BLUE_TEXT_HANDLER = CommandHandler(
@@ -252,10 +253,10 @@ dispatcher.add_handler(REMOVE_CLEAN_BLUE_TEXT_HANDLER)
 dispatcher.add_handler(ADD_CLEAN_BLUE_TEXT_GLOBAL_HANDLER)
 dispatcher.add_handler(REMOVE_CLEAN_BLUE_TEXT_GLOBAL_HANDLER)
 dispatcher.add_handler(LIST_CLEAN_BLUE_TEXT_HANDLER)
-dispatcher.add_handler(CLEAN_BLUE_TEXT_HANDLER, BLUE_TEXT_CLEAN_GROUP)
+dispatcher.add_handler(CLEAN_BLUE_TEXT_HANDLER, BLUE_TEXT_CLEAN_GROUP)'''
 
 __mod_name__ = "Cleaner"
-__handlers__ = [
+'''__handlers__ = [
     SET_CLEAN_BLUE_TEXT_HANDLER,
     ADD_CLEAN_BLUE_TEXT_HANDLER,
     REMOVE_CLEAN_BLUE_TEXT_HANDLER,
@@ -263,4 +264,4 @@ __handlers__ = [
     REMOVE_CLEAN_BLUE_TEXT_GLOBAL_HANDLER,
     LIST_CLEAN_BLUE_TEXT_HANDLER,
     (CLEAN_BLUE_TEXT_HANDLER, BLUE_TEXT_CLEAN_GROUP),
-]
+]'''

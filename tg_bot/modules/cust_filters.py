@@ -7,6 +7,8 @@ from telegram.error import BadRequest
 from telegram.ext import (
     DispatcherHandlerStop,
     Filters,
+    CallbackQueryHandler,
+    MessageHandler,
 )
 from telegram.utils.helpers import mention_html, escape_markdown
 
@@ -43,7 +45,7 @@ ENUM_FUNC_MAP = {
     sql.Types.VIDEO.value: dispatcher.bot.send_video,
     # sql.Types.VIDEO_NOTE.value: dispatcher.bot.send_video_note
 }
-
+CUSTFILTERS_GROUP = -2
 
 @typing_action
 @kigcmd(command='filters', admin_ok=True)
@@ -257,7 +259,7 @@ def stop_filter(update, context):
         "That's not a filter - Click: /filters to get currently active filters.",
     )
 
-@kigmsg((CustomFilters.has_text & ~Filters.update.edited_message))
+@kigmsg((CustomFilters.has_text & ~Filters.update.edited_message), group=CUSTFILTERS_GROUP)
 def reply_filter(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
@@ -288,8 +290,40 @@ def reply_filter(update, context):  # sourcery no-metrics
                     "mention",
                 ]
                 if filt.reply_text:
+
+                    if "%%%" in filt.reply_text:
+                        split = filt.reply_text.split("%%%")
+                        if all(split):
+                            text = random.choice(split)
+                        else:
+                            text = filt.reply_text
+                    else:
+                        text = filt.reply_text
+                    if (text.startswith("~!") or text.startswith(" ~!")) and (text.endswith("!~") or text.endswith("!~ ")):
+                        sticker_id = text.replace("~!", "").replace("!~", "").replace(" ", "") # replace space (' ') bcz, got error: Wrong remote file....
+                        try:
+                            context.bot.send_sticker(
+                                chat.id,
+                                sticker_id,
+                                reply_to_message_id=message.message_id,
+                            )
+                            return
+                        except BadRequest as excp:
+                            if (
+                                excp.message
+                                == "Wrong remote file identifier specified: wrong padding in the string"
+                            ):
+                                context.bot.send_message(
+                                    chat.id,
+                                    "Message couldn't be sent, Is the sticker id valid?",
+                                )
+                                return
+                            else:
+                                log.exception("Error in filters: " + excp.message)
+                                return
+
                     valid_format = escape_invalid_curly_brackets(
-                        filt.reply_text, VALID_WELCOME_FORMATTERS
+                        text, VALID_WELCOME_FORMATTERS
                     )
                     if valid_format:
                         filtext = valid_format.format(
@@ -565,3 +599,32 @@ def get_help(chat):
     return gs(chat, "cust_filters_help")
 
 __mod_name__ = "Filters"
+
+
+
+'''FILTER_HANDLER = CommandHandler("filter", filters, run_async=False)
+STOP_HANDLER = CommandHandler("stop", stop_filter, run_async=False)
+RMALLFILTER_HANDLER = CommandHandler(
+    "removeallfilters", rmall_filters, filters=Filters.chat_type.groups
+)
+LIST_HANDLER = DisableAbleCommandHandler("filters", list_handlers, admin_ok=True)'''
+RMALLFILTER_CALLBACK = CallbackQueryHandler(rmall_callback, pattern=r"filters_.*")
+'''CUST_FILTER_HANDLER = MessageHandler(
+    CustomFilters.has_text & ~Filters.update.edited_message, reply_filter
+)'''
+
+'''dispatcher.add_handler(FILTER_HANDLER)
+dispatcher.add_handler(STOP_HANDLER)
+dispatcher.add_handler(LIST_HANDLER)
+dispatcher.add_handler(RMALLFILTER_HANDLER)'''
+'''dispatcher.add_handler(CUST_FILTER_HANDLER, HANDLER_GROUP)'''
+dispatcher.add_handler(RMALLFILTER_CALLBACK)
+
+__handlers__ = [
+#    FILTER_HANDLER,
+#    STOP_HANDLER,
+#    LIST_HANDLER,
+#    RMALLFILTER_HANDLER,
+#    CUST_FILTER_HANDLER,
+    HANDLER_GROUP,
+]

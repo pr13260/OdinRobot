@@ -39,11 +39,10 @@ from telegram.error import BadRequest
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
-    CommandHandler,
     Filters,
-    MessageHandler,
 )
 from telegram.utils.helpers import escape_markdown, mention_html, mention_markdown
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
 VALID_WELCOME_FORMATTERS = [
     "first",
@@ -69,6 +68,7 @@ ENUM_FUNC_MAP = {
 
 VERIFIED_USER_WAITLIST = {}
 CAPTCHA_ANS_DICT = {}
+WELCOME_GROUP = 7
 
 from multicolorcaptcha import CaptchaGenerator
 
@@ -156,7 +156,7 @@ def send(update, message, keyboard, backup_message):
             log.exception()
     return msg
 
-
+@kigmsg((Filters.status_update.new_chat_members), group=WELCOME_GROUP)
 @loggable
 def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot, job_queue = context.bot, context.job_queue
@@ -167,8 +167,11 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     should_welc, cust_welcome, cust_content, welc_type = sql.get_welc_pref(chat.id)
     welc_mutes = sql.welcome_mutes(chat.id)
     human_checks = sql.get_human_checks(user.id, chat.id)
+    defense = sql.getDefenseStatus(str(chat.id))
 
     new_members = update.effective_message.new_chat_members
+
+
 
     for new_mem in new_members:
 
@@ -179,6 +182,10 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
         welcome_bool = True
         media_wel = False
 
+        if defense:
+            bantime = int(time.time()) + 60
+            chat.kick_member(new_mem.id, until_date=bantime)
+        
         if sw != None:
             sw_ban = sw.get_ban(new_mem.id)
             if sw_ban:
@@ -212,7 +219,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Devs
             elif new_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "Whoa! A member of the Eagle Union just joined!",
+                    "Whoa! A member of the My Devs just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -236,7 +243,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Whitelisted
             elif new_mem.id in SARDEGNA_USERS:
                 update.effective_message.reply_text(
-                    "Oof! A Sadegna Nation just joined!", reply_to_message_id=reply
+                    "Oof! A Sardegna Nation just joined!", reply_to_message_id=reply
                 )
                 continue
 
@@ -250,7 +257,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome yourself
             elif new_mem.id == bot.id:
                 update.effective_message.reply_text(
-                    "Thanks for adding me! Join @YorkTownEagleUnion for support.",
+                    "Thanks for adding me! Join @TheBotsSupport for support.",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -554,7 +561,8 @@ def check_not_bot(member, chat_id, message_id, context):
         except:
             pass
 
-
+@kigmsg((Filters.status_update.left_chat_member), group=WELCOME_GROUP)
+@loggable
 def left_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot = context.bot
     chat = update.effective_chat
@@ -574,8 +582,8 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
             pass
         reply = False
 
-
     if should_goodbye:
+
 
         left_mem = update.effective_message.left_chat_member
         if left_mem:
@@ -604,7 +612,7 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
             # Give the devs a special goodbye
             elif left_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "See you later at the Eagle Union!",
+                    "See you later Dev!",
                     reply_to_message_id=reply,
                 )
                 return
@@ -664,7 +672,7 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
                 random.choice(sql.DEFAULT_GOODBYE_MESSAGES).format(first=first_name),
             )
 
-
+@kigcmd(command='welcome', filters=Filters.chat_type.groups)
 @user_admin
 def welcome(update: Update, context: CallbackContext):
     args = context.args
@@ -726,7 +734,7 @@ def welcome(update: Update, context: CallbackContext):
                 "I understand 'on/yes' or 'off/no' only!"
             )
 
-
+@kigcmd(command='goodbye', filters=Filters.chat_type.groups)
 @user_admin
 def goodbye(update: Update, context: CallbackContext):
     args = context.args
@@ -776,7 +784,7 @@ def goodbye(update: Update, context: CallbackContext):
                 "I understand 'on/yes' or 'off/no' only!"
             )
 
-
+@kigcmd(command='setwelcome', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def set_welcome(update: Update, context: CallbackContext) -> str:
@@ -800,7 +808,7 @@ def set_welcome(update: Update, context: CallbackContext) -> str:
         f"Set the welcome message."
     )
 
-
+@kigcmd(command='resetwelcome', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def reset_welcome(update: Update, context: CallbackContext) -> str:
@@ -819,7 +827,7 @@ def reset_welcome(update: Update, context: CallbackContext) -> str:
         f"Reset the welcome message to default."
     )
 
-
+@kigcmd(command='setgoodbye', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def set_goodbye(update: Update, context: CallbackContext) -> str:
@@ -841,7 +849,7 @@ def set_goodbye(update: Update, context: CallbackContext) -> str:
         f"Set the goodbye message."
     )
 
-
+@kigcmd(command='resetgoodbye', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def reset_goodbye(update: Update, context: CallbackContext) -> str:
@@ -860,7 +868,7 @@ def reset_goodbye(update: Update, context: CallbackContext) -> str:
         f"Reset the goodbye message."
     )
 
-
+@kigcmd(command='welcomemute', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def welcomemute(update: Update, context: CallbackContext) -> str:
@@ -927,7 +935,7 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
         msg.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
         return ""
 
-
+@kigcmd(command='cleanwelcome', filters=Filters.chat_type.groups)
 @user_admin
 @loggable
 def clean_welcome(update: Update, context: CallbackContext) -> str:
@@ -969,7 +977,7 @@ def clean_welcome(update: Update, context: CallbackContext) -> str:
         update.effective_message.reply_text("I understand 'on/yes' or 'off/no' only!")
         return ""
 
-
+@kigcmd(command='cleanservice', filters=Filters.chat_type.groups)
 @user_admin
 def cleanservice(update: Update, context: CallbackContext) -> str:
     args = context.args
@@ -1001,7 +1009,6 @@ def cleanservice(update: Update, context: CallbackContext) -> str:
         update.effective_message.reply_text(
             "Usage is on/yes or off/no", parse_mode=ParseMode.MARKDOWN
         )
-
 
 def user_button(update: Update, context: CallbackContext):
     chat = update.effective_chat
@@ -1148,6 +1155,45 @@ def user_captcha_button(update: Update, context: CallbackContext):
     else:
         query.answer(text="You're not allowed to do this!")
 
+#from SayaAman_bot
+@kigcmd(command="setlockdown", pass_args=True)
+@user_admin
+def setDefense(update: Update, context: CallbackContext):
+    bot = context.bot
+    args = context.args
+    chat = update.effective_chat
+    msg = update.effective_message
+    if len(args) != 1:
+        msg.reply_text("Invalid arguments!")
+        return
+    param = args[0]
+    if param == "on" or param == "true":
+        sql.setDefenseStatus(chat.id, True)
+        msg.reply_text(
+            "Lockdown mode has been turned on, this group is under attack. Every user that now joins will be auto kicked."
+        )
+        return
+    elif param == "off" or param == "false":
+        sql.setDefenseStatus(chat.id, False)
+        msg.reply_text(
+            "Lockdown mode has been turned off, group is no longer under attack."
+        )
+        return
+    else:
+        msg.reply_text("Invalid status to set!")  #on or off ffs
+        return
+
+@kigcmd(command="lockdown")
+@user_admin
+def getDefense(update: Update, context: CallbackContext):
+    bot = context.bot
+    chat = update.effective_chat
+    msg = update.effective_message
+    stat = sql.getDefenseStatus(chat.id)
+    text = "<b>Defense Status</b>\n\nCurrently, this group has the defense setting set to: <b>{}</b>".format(
+        stat)
+    msg.reply_text(text, parse_mode=ParseMode.HTML)
+
 
 WELC_HELP_TXT = (
     "Your group's welcome/goodbye messages can be personalised in multiple ways. If you want the messages"
@@ -1185,12 +1231,12 @@ WELC_MUTE_HELP_TXT = (
     "*Note:* Strong mode kicks a user from the chat if they dont verify in 120seconds. They can always rejoin though"
 )
 
-
+@kigcmd(command='welcomehelp')
 @user_admin
 def welcome_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(WELC_HELP_TXT, parse_mode=ParseMode.MARKDOWN)
 
-
+@kigcmd(command='welcomemutehelp')
 @user_admin
 def welcome_mute_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
@@ -1228,41 +1274,7 @@ from tg_bot.modules.language import gs
 def get_help(chat):
     return gs(chat, "greetings_help")
 
-NEW_MEM_HANDLER = MessageHandler(
-    Filters.status_update.new_chat_members, new_member, run_async=True
-)
-LEFT_MEM_HANDLER = MessageHandler(
-    Filters.status_update.left_chat_member, left_member, run_async=True
-)
-WELC_PREF_HANDLER = CommandHandler(
-    "welcome", welcome, filters=Filters.chat_type.groups, run_async=True
-)
-GOODBYE_PREF_HANDLER = CommandHandler(
-    "goodbye", goodbye, filters=Filters.chat_type.groups, run_async=True
-)
-SET_WELCOME = CommandHandler(
-    "setwelcome", set_welcome, filters=Filters.chat_type.groups, run_async=True
-)
-SET_GOODBYE = CommandHandler(
-    "setgoodbye", set_goodbye, filters=Filters.chat_type.groups, run_async=True
-)
-RESET_WELCOME = CommandHandler(
-    "resetwelcome", reset_welcome, filters=Filters.chat_type.groups, run_async=True
-)
-RESET_GOODBYE = CommandHandler(
-    "resetgoodbye", reset_goodbye, filters=Filters.chat_type.groups, run_async=True
-)
-WELCOMEMUTE_HANDLER = CommandHandler(
-    "welcomemute", welcomemute, filters=Filters.chat_type.groups, run_async=True
-)
-CLEAN_SERVICE_HANDLER = CommandHandler(
-    "cleanservice", cleanservice, filters=Filters.chat_type.groups, run_async=True
-)
-CLEAN_WELCOME = CommandHandler(
-    "cleanwelcome", clean_welcome, filters=Filters.chat_type.groups, run_async=True
-)
-WELCOME_HELP = CommandHandler("welcomehelp", welcome_help, run_async=True)
-WELCOME_MUTE_HELP = CommandHandler("welcomemutehelp", welcome_mute_help, run_async=True)
+
 BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
     user_button, pattern=r"user_join_", run_async=True
 )
@@ -1270,38 +1282,14 @@ CAPTCHA_BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
     user_captcha_button, pattern=r"user_captchajoin_\([\d\-]+,\d+\)_\(\d{4}\)", run_async=True
 )
 
-dispatcher.add_handler(NEW_MEM_HANDLER)
-dispatcher.add_handler(LEFT_MEM_HANDLER)
-dispatcher.add_handler(WELC_PREF_HANDLER)
-dispatcher.add_handler(GOODBYE_PREF_HANDLER)
-dispatcher.add_handler(SET_WELCOME)
-dispatcher.add_handler(SET_GOODBYE)
-dispatcher.add_handler(RESET_WELCOME)
-dispatcher.add_handler(RESET_GOODBYE)
-dispatcher.add_handler(CLEAN_WELCOME)
-dispatcher.add_handler(WELCOME_HELP)
-dispatcher.add_handler(WELCOMEMUTE_HANDLER)
-dispatcher.add_handler(CLEAN_SERVICE_HANDLER)
 dispatcher.add_handler(BUTTON_VERIFY_HANDLER)
-dispatcher.add_handler(WELCOME_MUTE_HELP)
 dispatcher.add_handler(CAPTCHA_BUTTON_VERIFY_HANDLER)
 
 __mod_name__ = "Greetings"
 __command_list__ = []
 __handlers__ = [
-    NEW_MEM_HANDLER,
-    LEFT_MEM_HANDLER,
-    WELC_PREF_HANDLER,
-    GOODBYE_PREF_HANDLER,
-    SET_WELCOME,
-    SET_GOODBYE,
-    RESET_WELCOME,
-    RESET_GOODBYE,
-    CLEAN_WELCOME,
-    WELCOME_HELP,
-    WELCOMEMUTE_HANDLER,
-    CLEAN_SERVICE_HANDLER,
     BUTTON_VERIFY_HANDLER,
-    CAPTCHA_BUTTON_VERIFY_HANDLER,
-    WELCOME_MUTE_HELP,
+    CAPTCHA_BUTTON_VERIFY_HANDLER
 ]
+
+

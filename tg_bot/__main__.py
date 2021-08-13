@@ -29,6 +29,7 @@ from tg_bot import (
     URL,
     log,
     telethn,
+    SUPPORT_GROUP,
     KigyoINIT
 )
 
@@ -100,7 +101,7 @@ def send_help(chat_id, text, keyboard=None):
 
     if not keyboard:
         kb = paginate_modules(0, HELPABLE, "help")
-        kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
+        kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
         InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
         keyboard = InlineKeyboardMarkup(kb)
     dispatcher.bot.send_message(
@@ -151,35 +152,42 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                         [
                             InlineKeyboardButton(
                                 text=gs(chat.id, "support_chat_link_btn"),
-                                url=f"https://t.me/YorktownEagleUnion",
+                                url=f"https://t.me/TheBotsSupport",
                             ),
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "updates_channel_link_btn"),
-                                url="https://t.me/KigyoUpdates",
-                            ),
+                            #InlineKeyboardButton(
+                            #    text=gs(chat.id, "updates_channel_link_btn"),
+                            #    url="https://t.me/TheBotsSupport",
+                            #),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/Dank-del/EnterpriseALRobot",
+                                url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
                             ),
                             
                         ],
-
                         [
-
-                             InlineKeyboardButton(
-                                 text="Try inline",
-                                 switch_inline_query_current_chat="",
-                             ),
-                             InlineKeyboardButton(
-                                text="Help",
-                                callback_data="help_back",
-                                ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
                                     context.bot.username
                                 ),
                             ),
+                        ],
+                        [
+
+                            #InlineKeyboardButton(
+                            #     text="Try inline",
+                            #     switch_inline_query_current_chat="",
+                            #),
+                            InlineKeyboardButton(
+                                text="Help",
+                                callback_data="help_back",
+                                ),
+                            #InlineKeyboardButton(
+                            #    text=gs(chat.id, "add_bot_to_group_btn"),
+                            #    url="t.me/{}?startgroup=true".format(
+                            #        context.bot.username
+                            #    ),
+                            #),
                         ]
                         
                     ]
@@ -222,35 +230,42 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                         [
                             InlineKeyboardButton(
                                 text=gs(chat.id, "support_chat_link_btn"),
-                                url=f"https://t.me/YorktownEagleUnion",
+                                url=f"https://t.me/TheBotsSupport",
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "updates_channel_link_btn"),
-                                url="https://t.me/KigyoUpdates",
+                                url="https://t.me/LukeBots",
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/Dank-del/EnterpriseALRobot",
+                                url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
                             ),
                             
                         ],
-
                         [
-
-                             InlineKeyboardButton(
-                                 text="Try inline",
-                                 switch_inline_query_current_chat="",
-                             ),
-                             InlineKeyboardButton(
-                                text="Help",
-                                callback_data="help_back",
-                                ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
                                     context.bot.username
                                 ),
                             ),
+                        ],
+                        [
+
+                            #InlineKeyboardButton(
+                            #     text="Try inline",
+                            #     switch_inline_query_current_chat="",
+                            #),
+                            InlineKeyboardButton(
+                                text="Help",
+                                callback_data="help_back",
+                                ),
+                            #InlineKeyboardButton(
+                            #    text=gs(chat.id, "add_bot_to_group_btn"),
+                            #    url="t.me/{}?startgroup=true".format(
+                            #        context.bot.username
+                            #    ),
+                            #),
                         ]
                         
                     ]
@@ -330,7 +345,7 @@ def help_button(update, context):
             )
             help_buttons.append(
                 [InlineKeyboardButton(text="Back", callback_data="help_back"),
-                InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion')]
+                InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport')]
             )
             query.message.edit_text(
                 text=text,
@@ -341,8 +356,8 @@ def help_button(update, context):
         elif prev_match:
             curr_page = int(prev_match.group(1))
             kb = paginate_modules(curr_page - 1, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
+            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -352,8 +367,8 @@ def help_button(update, context):
         elif next_match:
             next_page = int(next_match.group(1))
             kb = paginate_modules(next_page + 1, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
+            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -362,8 +377,8 @@ def help_button(update, context):
 
         elif back_match:
             kb = paginate_modules(0, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
+            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -610,7 +625,13 @@ def donate(update: Update, context: CallbackContext):
         context: CallbackContext -
     '''
 
-    update.effective_message.reply_text("I'm free for everyone! >_<")
+    update.effective_message.reply_text("I'm free for everyone to use!")
+
+@kigcmd(command='support')
+def support(update: Update, context: CallbackContext):
+    supporttext = "Join the support chat\n@TheBotsSupport\n\nGet the latest news\n@LukeBots"
+    update.effective_message.reply_text(supporttext)
+
 
 @kigmsg((Filters.status_update.migrate))
 def migrate_chats(update: Update, context: CallbackContext):
@@ -653,7 +674,10 @@ def main():
             updater.bot.set_webhook(url=URL + TOKEN)
 
     else:
-        log.info(f"Kigyo started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
+        dispatcher.bot.sendMessage(OWNER_ID, "Master, I'm awake!")
+        if SUPPORT_GROUP:
+            dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
+        log.info(f"Ɩυκє's bot started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username
         KigyoINIT.bot_name = dispatcher.bot.first_name
@@ -665,6 +689,6 @@ def main():
     updater.idle()
 
 if __name__ == "__main__":
-    log.info("[KIGYO] Successfully loaded modules: " + str(ALL_MODULES))
+    log.info("[Ɩυκє's bot] Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
     main()

@@ -18,6 +18,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
     can_restrict,
     connection_status,
     is_user_admin,
+    can_delete,
     is_user_ban_protected,
     is_user_in_chat,
     user_admin,
@@ -29,7 +30,9 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @connection_status
 @bot_admin
-@kigcmd(command='ban', pass_args=True)
+@kigcmd(command=('dban'), pass_args=True)
+@kigcmd(command=('fban'), pass_args=True)
+@kigcmd(command=('ban'), pass_args=True)
 @can_restrict
 @user_admin
 @loggable
@@ -68,12 +71,25 @@ def ban(update, context):  # sourcery no-metrics
         elif user_id in SUPPORT_USERS:
             message.reply_text("My support users are ban immune")
         elif user_id in SARDEGNA_USERS:
-            message.reply_text("Bring an order from Eagle Union to fight a Sardegna.")
+            message.reply_text("Bring an order from My Devs to fight a Sardegna.")
         elif user_id in WHITELIST_USERS:
             message.reply_text("Neptunians are ban immune!")
         else:
             message.reply_text("This user has immunity and cannot be banned.")
         return log_message
+
+    if message.text.startswith('/s'):
+        silent = True
+        if not can_delete(chat, context.bot.id):
+            return ""
+    else:
+        silent = False
+    if message.text.startswith('/d'):
+        delban = True
+        if not can_delete(chat, context.bot.id):
+            return ""
+    else:
+        delban = False
     log = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#BANNED\n"
@@ -85,6 +101,17 @@ def ban(update, context):  # sourcery no-metrics
 
     try:
         chat.kick_member(user_id)
+
+        if silent:
+            if message.reply_to_message:
+                message.reply_to_message.delete()
+            message.delete()
+            return log
+        if delban:
+            if message.reply_to_message:
+                message.reply_to_message.delete()
+            return log
+
         # context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         context.bot.sendMessage(
             chat.id,

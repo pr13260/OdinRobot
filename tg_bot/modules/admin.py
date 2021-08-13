@@ -81,6 +81,15 @@ def promote(update: Update, context: CallbackContext) -> str:
             can_pin_messages=bot_member.can_pin_messages,
             can_manage_voice_chats=bot_member.can_manage_voice_chats,
         )
+        try:
+            ADMIN_CACHE.pop(update.effective_chat.id)
+        except KeyError:
+            pass
+        bot.sendMessage(
+            chat.id,
+            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> in <b>{chat.title}</b>, and Admins cache refreshed!",
+            parse_mode=ParseMode.HTML,
+        ) 
     except BadRequest as err:
         if err.message == "User_not_mutual_contact":
             message.reply_text("I can't promote someone who isn't in the group.")
@@ -88,11 +97,7 @@ def promote(update: Update, context: CallbackContext) -> str:
             message.reply_text("An error occured while promoting.")
         return
 
-    bot.sendMessage(
-        chat.id,
-        f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> in <b>{chat.title}</b>",
-        parse_mode=ParseMode.HTML,
-    )
+
 
     log_message = (
         f"<b>{html.escape(chat.title)}:</b>\n"
@@ -156,11 +161,15 @@ def demote(update: Update, context: CallbackContext) -> str:
             can_manage_voice_chats=False,
         )
 
+        try:
+            ADMIN_CACHE.pop(update.effective_chat.id)          
+        except KeyError:
+            pass
         bot.sendMessage(
             chat.id,
-            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b> in <b>{chat.title or None}</b>",
+            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b> in <b>{chat.title or None}</b>, and Admins cache refreshed!",
             parse_mode=ParseMode.HTML,
-        )
+        )  
 
         log_message = (
             f"<b>{html.escape(chat.title)}:</b>\n"
@@ -170,17 +179,21 @@ def demote(update: Update, context: CallbackContext) -> str:
         )
 
         return log_message
+
     except BadRequest:
         message.reply_text(
             "Could not demote. I might not be admin, or the admin status was appointed by another"
             " user, so I can't act upon them!"
         )
         return
-
+ 
 @kigcmd(command="admincache", can_disable=False)
 @user_admin
 def refresh_admin(update, _):
-    ADMIN_CACHE.pop(update.effective_chat.id)
+    try:
+        ADMIN_CACHE.pop(update.effective_chat.id)
+    except KeyError:
+        pass
     update.effective_message.reply_text("Admins cache refreshed!")
 
 @kigcmd(command="title", can_disable=False)
@@ -340,7 +353,7 @@ def invite(update: Update, context: CallbackContext):
 
 
 
-@kigcmd(command=["admin", "admins"])
+@kigcmd(command=["admin", "admins", "staff", "adminlist"])
 def adminlist(update, context):
     administrators = update.effective_chat.get_administrators()
     text = "Admins in *{}*:".format(update.effective_chat.title or "this chat")
