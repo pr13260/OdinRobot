@@ -291,12 +291,9 @@ def error_callback(update, context):
 
     try:
         raise context.error
-    except Unauthorized:
+    except (Unauthorized, BadRequest):
         pass
         # remove update.message.chat_id from conversation list
-    except BadRequest:
-        pass
-        # handle malformed requests - read more below!
     except TimedOut:
         pass
         # handle slow connection problems
