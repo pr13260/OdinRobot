@@ -1,11 +1,15 @@
+import html
 import os
+import re
 import subprocess
 import sys
 from time import sleep
-from tg_bot import dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
+
+from telegram.ext.callbackqueryhandler import CallbackQueryHandler
+from tg_bot import DEV_USERS, dispatcher, telethn, OWNER_ID
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
-from telegram import TelegramError, Update, ParseMode
-from telegram.ext import CallbackContext, CommandHandler, Filters
+from telegram import TelegramError, Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackContext, CommandHandler
 import asyncio
 from statistics import mean
 from time import monotonic as time
@@ -19,13 +23,32 @@ def leave(update: Update, context: CallbackContext):
     args = context.args
     if args:
         chat_id = str(args[0])
+        leave_msg = " ".join(args[1:])
         try:
+            context.bot.send_message(chat_id, leave_msg)
             bot.leave_chat(int(chat_id))
             update.effective_message.reply_text("Left chat.")
         except TelegramError:
             update.effective_message.reply_text("Failed to leave chat for some reason.")
     else:
-        update.effective_message.reply_text("Send a valid chat ID")
+        chat = update.effective_chat
+        # user = update.effective_user
+        kb = [[
+            InlineKeyboardButton(text="I am sure of this action.", callback_data="leavechat_cb_({})".format(chat.id))
+        ]]
+        update.effective_message.reply_text("I'm going to leave {}, press the button below to confirm".format(chat.title), reply_markup=InlineKeyboardMarkup(kb))
+
+def leave_cb(update: Update, context: CallbackContext):
+    bot = context.bot
+    callback = update.callback_query
+    if callback.from_user.id not in DEV_USERS:
+        callback.answer(text="This isn't for you", show_alert=True)
+        return
+    
+    match = re.match(r"leavechat_cb_\((.+?)\)", callback.data)
+    chat = int(match.group(1))
+    bot.leave_chat(chat_id=chat)
+    callback.answer(text="Left chat")
 
 @kigcmd(command='gitpull')
 @dev_plus
@@ -125,6 +148,35 @@ def pip_install(update: Update, context: CallbackContext):
             reply += f"*Stderr*\n`{stderr}`\n"
 
         message.reply_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+        
+
+@dev_plus      
+def get_chat_by_id(update: Update, context: CallbackContext):
+    msg = update.effective_message
+    args = context.args
+    if not args:
+        msg.reply_text("<i>Chat ID required</i>", parse_mode=ParseMode.HTML)
+        return
+    if len(args) >= 1:
+        data = context.bot.get_chat(args[0])
+        m = "<b>Found chat, below are the details.</b>\n\n"
+        m += "<b>Title</b>: {}\n".format(html.escape(data.title))
+        m += "<b>Members</b>: {}\n\n".format(data.get_members_count())
+        if data.description:
+            m += "<i>{}</i>\n\n".format(html.escape(data.description))
+        if data.linked_chat_id:
+            m += "<b>Linked chat</b>: {}\n".format(data.linked_chat_id)
+        
+        m += "<b>Type</b>: {}\n".format(data.type)
+        if data.username:
+            m += "<b>Username</b>: {}\n".format(html.escape(data.username))
+        m += "<b>ID</b>: {}\n".format(data.id)
+        m += "\n<b>Permissions</b>:\n <code>{}</code>\n".format(data.permissions)
+        
+        if data.invite_link:
+            m += "\n<b>Invitelink</b>: {}".format(data.invite_link)
+        
+        msg.reply_text(text=m, parse_mode=ParseMode.HTML)
 
 @kigcmd(command='lockgroups')
 @dev_plus
@@ -144,6 +196,11 @@ def allow_groups(update: Update, context: CallbackContext):
     update.effective_message.reply_text("Done! Lockgroups value toggled.")
 
 
-
 __mod_name__ = "Dev"
+LEAVE_CALLBACK = CallbackQueryHandler(
+    leave_cb, pattern=r"leavechat_cb_", run_async=True
+)
 
+dispatcher.add_handler(LEAVE_CALLBACK)
+
+__handlers__ = [LEAVE_CALLBACK]
