@@ -3,8 +3,8 @@ import re
 from typing import Optional
 
 import telegram
-from tg_bot import SARDEGNA_USERS, WHITELIST_USERS, dispatcher
-from tg_bot.modules.disable import DisableAbleCommandHandler
+from tg_bot import WHITELIST_USERS, dispatcher, spamcheck
+#from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
@@ -12,6 +12,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
     user_admin,
     can_delete,
     user_admin_no_reply,
+    user_mod,
 )
 from tg_bot.modules.helper_funcs.extraction import (
     extract_text,
@@ -54,15 +55,6 @@ def warn(
 ) -> str:  # sourcery no-metrics
     if is_user_admin(chat, user.id):
         # message.reply_text("Damn admins, They are too far to be kicked!")
-        return
-
-    if user.id in SARDEGNA_USERS:
-        if warner:
-            message.reply_text("SARDEGNAs cant be warned.")
-        else:
-            message.reply_text(
-                "Sardegna triggered an auto warn filter!\n I can't warn Sardegnas but they should avoid abusing this."
-            )
         return
 
     if user.id in WHITELIST_USERS:
@@ -161,14 +153,6 @@ def swarn(
         # message.reply_text("Damn admins, They are too far to be kicked!")
         return
 
-    if user.id in SARDEGNA_USERS:
-        if warner:
-            message.reply_text("SARDEGNAs cant be warned.")
-        else:
-            message.reply_text(
-                "Sardegna triggered an auto warn filter!\n I can't warn Sardegnas but they should avoid abusing this."
-            )
-        return
 
     if user.id in WHITELIST_USERS:
         if warner:
@@ -270,15 +254,6 @@ def dwarn(
 ) -> str:  # sourcery no-metrics
     if is_user_admin(chat, user.id):
         # message.reply_text("Damn admins, They are too far to be kicked!")
-        return
-
-    if user.id in SARDEGNA_USERS:
-        if warner:
-            message.reply_text("SARDEGNAs cant be warned.")
-        else:
-            message.reply_text(
-                "Sardegna triggered an auto warn filter!\n I can't warn Sardegnas but they should avoid abusing this."
-            )
         return
 
     if user.id in WHITELIST_USERS:
@@ -407,7 +382,8 @@ def button(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='swarn', filters=Filters.chat_type.groups)
 @kigcmd(command='dwarn', filters=Filters.chat_type.groups)
 @kigcmd(command='warn', filters=Filters.chat_type.groups)
-@user_admin
+@spamcheck
+@user_mod
 @can_restrict
 @loggable
 def warn_user(update: Update, context: CallbackContext) -> str:
@@ -483,6 +459,7 @@ def warn_user(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command=['restwarn', 'resetwarns'], filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @bot_admin
 @loggable
@@ -509,6 +486,7 @@ def reset_warns(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command='warns', filters=Filters.chat_type.groups, can_disable=True)
+@spamcheck
 def warns(update: Update, context: CallbackContext):
     args = context.args
     message: Optional[Message] = update.effective_message
@@ -538,6 +516,7 @@ def warns(update: Update, context: CallbackContext):
         update.effective_message.reply_text("This user doesn't have any warns!")
 
 @kigcmd(command='addwarn', filters=Filters.chat_type.groups, run_async=False)
+@spamcheck
 # Dispatcher handler stop - do not async
 @user_admin
 def add_warn_filter(update: Update, context: CallbackContext):
@@ -571,6 +550,7 @@ def add_warn_filter(update: Update, context: CallbackContext):
     raise DispatcherHandlerStop
 
 @kigcmd(command=['nowarn', 'stopwarn'], filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def remove_warn_filter(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
@@ -607,6 +587,7 @@ def remove_warn_filter(update: Update, context: CallbackContext):
     )
 
 @kigcmd(command=['warnlist', 'warnfilters'], filters=Filters.chat_type.groups, can_disable=True)
+@spamcheck
 def list_warn_filters(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
     all_handlers = sql.get_chat_warn_triggers(chat.id)
@@ -656,6 +637,7 @@ def reply_filter(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command='warnlimit', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def set_warn_limit(update: Update, context: CallbackContext) -> str:
@@ -686,6 +668,7 @@ def set_warn_limit(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command='strongwarn', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def set_warn_strength(update: Update, context: CallbackContext):
     args = context.args

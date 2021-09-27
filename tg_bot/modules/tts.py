@@ -6,12 +6,13 @@ from gtts import gTTS
 from telegram import Update, ChatAction, ParseMode
 
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from telegram.ext import CallbackContext
 from tg_bot.modules.helper_funcs.misc import delete
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command='tts')
+@spamcheck
 def tts(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message

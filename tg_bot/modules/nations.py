@@ -8,9 +8,9 @@ from telegram.ext import CommandHandler, run_async, CallbackContext, Filters
 from telegram.utils.helpers import mention_html
 from telethon import events
 from tg_bot import (
+    MOD_USERS,
     dispatcher,
     WHITELIST_USERS,
-    SARDEGNA_USERS,
     SUPPORT_USERS,
     SUDO_USERS,
     DEV_USERS,
@@ -62,6 +62,10 @@ def addsudo(update: Update, context: CallbackContext) -> str:
     if user_id in WHITELIST_USERS:
         rt += "Requested My Devs to promote a Whitelist user to Sudo."
         WHITELIST_USERS.remove(user_id)
+
+    if user_id in MOD_USERS:
+        rt += "Requested A Dev to promote a Moderator to Sudo."
+        MOD_USERS.remove(user_id)
 
     # will add or update their role
     sql.set_royal_role(user_id, "sudos")
@@ -118,6 +122,10 @@ def addsupport(
         rt += "Requested My Devs to promote this Whitelist user to Support"
         WHITELIST_USERS.remove(user_id)
 
+    if user_id in MOD_USERS:
+        rt += "Requested A Dev to promote this Moderator to Support"
+        MOD_USERS.remove(user_id)
+
     sql.set_royal_role(user_id, "supports")
     SUPPORT_USERS.append(user_id)
 
@@ -162,6 +170,10 @@ def addwhitelist(update: Update, context: CallbackContext) -> str:
         rt += "This user is already a Support user, Demoting to Whitelisted user."
         SUPPORT_USERS.remove(user_id)
 
+    if user_id in MOD_USERS:
+        rt += "This user is already a Moderator, Promoting to Whitelisted user."
+        MOD_USERS.remove(user_id)
+
     if user_id in WHITELIST_USERS:
         message.reply_text("This user is already a Whitelist user.")
         return ""
@@ -185,10 +197,12 @@ def addwhitelist(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
-@kigcmd(command='addsardegna')
+
+
+@kigcmd(command=['addmoderator', 'addmod'])
 @dev_plus
 @gloggable
-def addsardegna(update: Update, context: CallbackContext) -> str:
+def addmod(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
     chat = update.effective_chat
@@ -203,30 +217,30 @@ def addsardegna(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUDO_USERS:
-        rt += "This member is a Sudo user, Demoting to Sardegna."
+        rt += "This member is a Sudo user, Demoting to Moderator."
         SUDO_USERS.remove(user_id)
 
     if user_id in SUPPORT_USERS:
-        rt += "This user is already a Support user, Demoting to Sardegna."
+        rt += "This user is already a Support user, Demoting to Moderator."
         SUPPORT_USERS.remove(user_id)
 
     if user_id in WHITELIST_USERS:
-        rt += "This user is already a Whitelist user, Demoting to Sardegna."
+        rt += "This user is already a Whitelist user, Demoting to Moderator."
         WHITELIST_USERS.remove(user_id)
 
-    if user_id in SARDEGNA_USERS:
-        message.reply_text("This user is already a Sardegna.")
+    if user_id in MOD_USERS:
+        message.reply_text("This user is already a Moderator.")
         return ""
 
-    sql.set_royal_role(user_id, "sardegnas")
-    SARDEGNA_USERS.append(user_id)
+    sql.set_royal_role(user_id, "mods")
+    MOD_USERS.append(user_id)
 
     update.effective_message.reply_text(
-        rt + f"\nSuccessfully promoted {user_member.first_name} to a Sardegna Nation!"
+        rt + f"\nSuccessfully promoted {user_member.first_name} to a Moderator!"
     )
 
     log_message = (
-        f"#SARDEGNA\n"
+        f"#MODERATOR\n"
         f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))} \n"
         f"<b>User:</b> {mention_html(user_member.id, html.escape(user_member.first_name))}"
     )
@@ -237,7 +251,7 @@ def addsardegna(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
-@kigcmd(command='removesudo')
+@kigcmd(command=['removesudo', 'rmsudo'])
 @dev_plus
 @gloggable
 def removesudo(update: Update, context: CallbackContext) -> str:
@@ -274,7 +288,7 @@ def removesudo(update: Update, context: CallbackContext) -> str:
         return ""
 
 
-@kigcmd(command='removesupport')
+@kigcmd(command=['removesupport', 'rmsupport'])
 @dev_plus
 @gloggable
 def removesupport(update: Update, context: CallbackContext) -> str:
@@ -311,7 +325,7 @@ def removesupport(update: Update, context: CallbackContext) -> str:
         return ""
 
 
-@kigcmd(command='removewhitelist')
+@kigcmd(command=['removewhitelist', 'rmwhitelist'])
 @dev_plus
 @gloggable
 def removewhitelist(update: Update, context: CallbackContext) -> str:
@@ -347,10 +361,10 @@ def removewhitelist(update: Update, context: CallbackContext) -> str:
         return ""
 
 
-@kigcmd(command='removesardegna')
+@kigcmd(command=['removemod', 'removemoderator', 'rmmod'])
 @dev_plus
 @gloggable
-def removesardegna(update: Update, context: CallbackContext) -> str:
+def removemod(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
     chat = update.effective_chat
@@ -363,13 +377,13 @@ def removesardegna(update: Update, context: CallbackContext) -> str:
         message.reply_text(reply)
         return ""
 
-    if user_id in SARDEGNA_USERS:
+    if user_id in MOD_USERS:
         message.reply_text("Demoting to normal user")
-        SARDEGNA_USERS.remove(user_id)
+        MOD_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
         log_message = (
-            f"#UNSARDEGNA\n"
+            f"#UNMODERATOR\n"
             f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
             f"<b>User:</b> {mention_html(user_member.id, html.escape(user_member.first_name))}"
         )
@@ -379,20 +393,21 @@ def removesardegna(update: Update, context: CallbackContext) -> str:
 
         return log_message
     else:
-        message.reply_text("This user is not a Sardegna Nation!")
+        message.reply_text("This user is not a Moderator!")
         return ""
 
+
 # I added extra new lines
-nations = """Some users have access levels we call as *"Nation Levels"*
+nations = """Some users have access levels we call as *"Super Users"*
 \nThey are users with special bot priveleges and have commands that can only be used by them.
 \n*God* - Only one exists, bot owner.
 \nOwner has complete bot access, including bot adminship in chats this bot is at.
 \n*Devs* - Devs who can access the bots server and can execute, edit, modify bot code. Can manage other Nations
-\n*Royals* - Have super user access to the bot.
-\n*Sakuras* - Have access to globally ban users across the bot.
-\n*Sardegnas* - Same as Neptunians but can unban themselves if banned.
-\n*Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
-\n*Disclaimer*: The Nation levels in the bot are there for troubleshooting, support, banning potential scammers.
+\n*SUDOS* - Have super user access to the bot.
+\n*Support* - Have access to globally ban users across the bot.
+\n*Whitelist* - Cannot be banned, muted flood kicked but can be manually banned by admins and can unban themselves if banned.
+\n*Moderators* - They have some admin permissions, and cannot be banned, muted flood kicked but can be manually banned by admins.
+\n*Disclaimer*: The Super Users in the bot are there for troubleshooting, support, banning potential scammers.
 \n
 \nReport abuse or ask us more on these at the Support chat.
 \nYou can visit @TheBotsSupport to query more about these.
@@ -404,12 +419,14 @@ def send_nations(update):
         nations, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True
     )
 
-@kigcmd(command='neptunians')
+
+@kigcmd(command=['moderators', 'modslist'])
 @whitelist_plus
-def whitelistlist(update: Update, context: CallbackContext):
+def modslist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Neptunia Nations :</b>\n"
-    for each_user in WHITELIST_USERS:
+    true_mods = list(set(MOD_USERS) - set(DEV_USERS))
+    reply = "<b>Known Moderator Members :</b>\n"
+    for each_user in true_mods:
         user_id = int(each_user)
         try:
             user = bot.get_chat(user_id)
@@ -419,12 +436,13 @@ def whitelistlist(update: Update, context: CallbackContext):
             pass
     update.effective_message.reply_text(reply, parse_mode=ParseMode.HTML)
 
-@kigcmd(command=["whitelistlist", "sardegnas"])
+
+@kigcmd(command="whitelistlist")
 @whitelist_plus
-def Sardegnalist(update: Update, context: CallbackContext):
+def whitelistlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Sardegna Nations :</b>\n"
-    for each_user in SARDEGNA_USERS:
+    reply = "<b>Known Whitelist Members :</b>\n"
+    for each_user in WHITELIST_USERS:
         user_id = int(each_user)
         try:
             user = bot.get_chat(user_id)
@@ -437,7 +455,7 @@ def Sardegnalist(update: Update, context: CallbackContext):
 @whitelist_plus
 def supportlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Sakura Nations :</b>\n"
+    reply = "<b>Known Support Members :</b>\n"
     for each_user in SUPPORT_USERS:
         user_id = int(each_user)
         try:
@@ -452,7 +470,7 @@ def supportlist(update: Update, context: CallbackContext):
 def sudolist(update: Update, context: CallbackContext):
     bot = context.bot
     true_sudo = list(set(SUDO_USERS) - set(DEV_USERS))
-    reply = "<b>Known Royal Nations :</b>\n"
+    reply = "<b>Known SuperUsers :</b>\n"
     for each_user in true_sudo:
         user_id = int(each_user)
         try:
@@ -467,7 +485,7 @@ def sudolist(update: Update, context: CallbackContext):
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>My Devs Members :</b>\n"
+    reply = "<b>My Developers :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:
@@ -513,6 +531,8 @@ def nationshelpp(update: Update, context: CallbackContext):
         \n <b>chatlist</b> : get the chats that the bot has joined (sudo+)\
         \n <b>echo</b> : echos a message (sudo+)\
         \n <b>lockgroups</b> : toggles enabling joining the groups (dev+)\
+        \n <b>getchats</b> : gets the chats where the user has in common with the bot (dev+)\
+        \n <b>getinfo</b> : gets user info from a group (dev+)\
         \n <b>stats</b> : get bot stats (sys_admin)\
         \n <b>getstats</b> : get bot avg usage stats (sys_admin)\
         \n <b>ping</b> : ping (sys_admin)\
@@ -520,7 +540,7 @@ def nationshelpp(update: Update, context: CallbackContext):
         \n <b>exec</b> (sys_admin)\
         \n <b>eval</b> (sys_admin)\
         \n <b>broadcast(all/group/users)</b> : broadcast a message (sys_admin)"
-    if user_id is not OWNER_ID and user_id not in SUDO_USERS and user_id not in DEV_USERS and user_id not in SUPPORT_USERS and user_id not in WHITELIST_USERS and user_id not in SARDEGNA_USERS:
+    if user_id is not OWNER_ID and user_id not in SUDO_USERS and user_id not in DEV_USERS and user_id not in SUPPORT_USERS and user_id not in WHITELIST_USERS:
         return
     else:
         update.effective_message.reply_text(cmdlisttt, parse_mode=ParseMode.HTML)

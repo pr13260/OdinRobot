@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 import tg_bot.modules.sql.language_sql as sql
 from tg_bot.modules.helper_funcs.chat_status import user_admin, user_admin_no_reply
 from tg_bot.langs import get_string, get_languages, get_language
@@ -29,7 +29,7 @@ def gs(chat_id: Union[int, str], string: str) -> str:
     lang = sql.get_chat_lang(chat_id)
     return get_string(lang, string)
 
-
+@spamcheck
 @user_admin
 def set_lang(update: Update, _) -> None:
     chat = update.effective_chat

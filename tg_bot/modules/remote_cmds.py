@@ -1,4 +1,5 @@
 # from AstrakoBot
+from logging import log
 from tg_bot import dispatcher
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -9,7 +10,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.filters import CustomFilters
 from telegram import Update, ChatPermissions
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext, CommandHandler, run_async
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
@@ -508,7 +509,7 @@ def runmute(update: Update, context: CallbackContext):
         elif excp.message in RUNMUTE_ERRORS:
             message.reply_text(excp.message)
         else:
-            LOGGER.warning(update)
+            log.warning(update)
             LOGGER.exception(
                 "ERROR unmnuting user %s in chat %s (%s) due to %s",
                 user_id,
@@ -517,6 +518,27 @@ def runmute(update: Update, context: CallbackContext):
                 excp.message,
             )
             message.reply_text("Well damn, I can't unmute that user.")
+
+# https://github.com/el0xren/tgbot/commits/master/tg_bot/modules/misc.py
+# ported from tgbot, thanks to el0xren
+@kigcmd(command='recho')
+@dev_plus
+def recho(update: Update, context: CallbackContext):
+    bot = context.bot
+    args = context.args
+    message = update.effective_message
+    try:
+        chat_id = str(args[0])
+        del args[0]
+    except TypeError as excp:
+        message.reply_text("Please give me a chat ID.")
+    to_send = " ".join(args)
+    if len(to_send) >= 2:
+        try:
+            bot.sendMessage(int(chat_id), str(to_send))
+        except TelegramError:
+            message.reply_text("Couldn't send the message. Perhaps I'm not part of that group?")
+
 
 
 '''RBAN_HANDLER = CommandHandler("rban", rban, filters=CustomFilters.dev_filter, run_async=True)

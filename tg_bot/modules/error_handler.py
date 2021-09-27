@@ -35,12 +35,14 @@ def error_callback(update: Update, context: CallbackContext):
     e = html.escape(f"{context.error}")
     if e.find(KInit.TOKEN) != -1:
         e = e.replace(KInit.TOKEN, "TOKEN")
-
     if update.effective_chat.type != "channel":
         try:
-            context.bot.send_message(update.effective_chat.id, 
-            f"<b>Sorry I ran into an error!</b>\n<b>Error</b>: <code>{e}</code>\n<i>This incident has been logged. No further action is required.</i>",
-            parse_mode="html")
+            if str(context.error).find(str(ConnectionResetError)) != "-1":
+                pass
+            else:
+                context.bot.send_message(update.effective_chat.id, 
+                f"<b>Sorry I ran into an error!</b>\n<b>Error</b>: <code>{e}</code>\n<i>This incident has been logged and reported.</i>",
+                parse_mode="html")
         except BaseException as e:
             log.exception(e)
 
@@ -68,8 +70,6 @@ def error_callback(update: Update, context: CallbackContext):
     key = requests.post(
         "https://nekobin.com/api/documents", json={"content": pretty_message}
     ).json()
-
-
     if not key.get("result", {}).get("key"):
         with open("error.txt", "w+") as f:
             f.write(pretty_message)
@@ -88,7 +88,6 @@ def error_callback(update: Update, context: CallbackContext):
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Nekobin", url=url)]]),
         parse_mode="html",
     )
-    
 
 
 def list_errors(update: Update, context: CallbackContext):
@@ -112,7 +111,10 @@ def list_errors(update: Update, context: CallbackContext):
             parse_mode="html",
         )
         return
+
+
     update.effective_message.reply_text(msg, parse_mode="html")
+
 
 dispatcher.add_error_handler(error_callback)
 dispatcher.add_handler(CommandHandler("errors", list_errors))

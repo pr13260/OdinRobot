@@ -3,11 +3,12 @@ from telegram import Update, Bot, ParseMode
 from telegram.ext import CommandHandler, CallbackContext, run_async
 
 import tg_bot.modules.sql.clear_cmd_sql as sql
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin, connection_status
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command='clearcmd')
+@spamcheck
 @user_admin
 @connection_status
 def clearcmd(update: Update, context: CallbackContext):

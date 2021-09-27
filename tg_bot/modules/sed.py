@@ -3,7 +3,7 @@ import sre_constants
 
 import regex
 import telegram
-from tg_bot import MESSAGE_DUMP, dispatcher, SYS_ADMIN, OWNER_ID, SUDO_USERS, DEV_USERS
+from tg_bot import MESSAGE_DUMP, dispatcher, SYS_ADMIN, OWNER_ID, SUDO_USERS, DEV_USERS, spamcheck
 from tg_bot.modules.disable import DisableAbleMessageHandler
 from tg_bot.modules.helper_funcs.regex_helper import infinite_loop_check
 from telegram import Update
@@ -57,7 +57,7 @@ def separate_sed(sed_string):
             flags = sed_string[counter:]
         return replace, replace_with, flags.lower()
 
-
+@spamcheck
 def sed(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     if user_id is not OWNER_ID and user_id not in SUDO_USERS and user_id not in DEV_USERS:

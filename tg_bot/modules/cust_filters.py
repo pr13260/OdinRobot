@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 from telegram.utils.helpers import mention_html, escape_markdown
 
-from tg_bot import dispatcher, log, SUDO_USERS
+from tg_bot import dispatcher, log, SUDO_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.extraction import extract_text
 from tg_bot.modules.helper_funcs.filters import CustomFilters
@@ -47,8 +47,9 @@ ENUM_FUNC_MAP = {
 }
 CUSTFILTERS_GROUP = -2
 
-@typing_action
 @kigcmd(command='filters', admin_ok=True)
+@spamcheck
+@typing_action
 def list_handlers(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -96,6 +97,7 @@ def list_handlers(update, context):
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @kigcmd(command='filter', run_async=False)
+@spamcheck
 @user_admin
 @typing_action
 def filters(update, context):  # sourcery no-metrics
@@ -220,6 +222,7 @@ def filters(update, context):  # sourcery no-metrics
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @kigcmd(command='stop', run_async=False)
+@spamcheck
 @user_admin
 @typing_action
 def stop_filter(update, context):
@@ -260,6 +263,7 @@ def stop_filter(update, context):
     )
 
 @kigmsg((CustomFilters.has_text & ~Filters.update.edited_message), group=CUSTFILTERS_GROUP)
+@spamcheck
 def reply_filter(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
@@ -484,6 +488,7 @@ def reply_filter(update, context):  # sourcery no-metrics
             break
 
 @kigcmd(command="removeallfilters", filters=Filters.chat_type.groups)
+@spamcheck
 def rmall_filters(update, context):
     chat = update.effective_chat
     user = update.effective_user

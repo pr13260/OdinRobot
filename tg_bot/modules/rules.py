@@ -1,7 +1,7 @@
 from typing import Optional
 
 import tg_bot.modules.sql.rules_sql as sql
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.string_handling import markdown_parser
 from telegram import (
@@ -19,6 +19,7 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 
 @kigcmd(command='rules', filters=Filters.chat_type.groups)
+@spamcheck
 def get_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     send_rules(update, chat_id)
@@ -73,6 +74,7 @@ def send_rules(update, chat_id, from_pm=False):
         )
 
 @kigcmd(command='setrules', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def set_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -90,6 +92,7 @@ def set_rules(update: Update, context: CallbackContext):
         update.effective_message.reply_text("Successfully set rules for this group.")
 
 @kigcmd(command='clearrules', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def clear_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id

@@ -1,6 +1,6 @@
 import html
 
-from tg_bot import ALLOW_EXCL, CustomCommandHandler, dispatcher
+from tg_bot import ALLOW_EXCL, CustomCommandHandler, dispatcher, spamcheck
 from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_can_delete,
@@ -64,6 +64,7 @@ def clean_blue_text_must_click(update: Update, context: CallbackContext):
                 message.delete()
 
 @kigcmd(command='cleanbluetext', pass_args=True)
+@spamcheck
 @connection_status
 @bot_can_delete
 @user_admin
@@ -99,6 +100,7 @@ def set_blue_text_must_click(update: Update, context: CallbackContext):
         message.reply_text(reply, parse_mode=ParseMode.HTML)
 
 @kigcmd(command='ignorecleanbluetext', pass_args=True)
+@spamcheck
 @user_admin
 def add_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -120,6 +122,7 @@ def add_bluetext_ignore(update: Update, context: CallbackContext):
         message.reply_text(reply)
 
 @kigcmd(command='unignorecleanbluetext', pass_args=True)
+@spamcheck
 @user_admin
 def remove_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message

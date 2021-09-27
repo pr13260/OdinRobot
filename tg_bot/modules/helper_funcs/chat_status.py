@@ -5,10 +5,10 @@ from tg_bot import (
     DEV_USERS,
     SUDO_USERS,
     SUPPORT_USERS,
-    SARDEGNA_USERS,
     WHITELIST_USERS,
     dispatcher,
     SYS_ADMIN,
+    MOD_USERS
 )
 from cachetools import TTLCache
 from telegram import Chat, ChatMember, ParseMode, Update
@@ -23,10 +23,10 @@ def is_whitelist_plus(chat: Chat, user_id: int, member: ChatMember = None) -> bo
         user_id in user
         for user in [
             WHITELIST_USERS,
-            SARDEGNA_USERS,
             SUPPORT_USERS,
             SUDO_USERS,
             DEV_USERS,
+            MOD_USERS
         ]
     )
 
@@ -42,6 +42,33 @@ def is_sudo_plus(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
 def is_user_admin(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
     if (
         chat.type == "private"
+        or user_id in SUDO_USERS
+        or user_id in DEV_USERS
+        or chat.all_members_are_administrators
+        or user_id in [777000, 1087968824]
+    ):  # Count telegram and Group Anonymous as admin
+        return True
+
+    if not member:
+        # try to fetch from cache first.
+        try:
+            return user_id in ADMIN_CACHE[chat.id]
+        except KeyError:
+            # keyerror happend means cache is deleted,
+            # so query bot api again and return user status
+            # while saving it in cache for future useage...
+            chat_admins = dispatcher.bot.getChatAdministrators(chat.id)
+            admin_list = [x.user.id for x in chat_admins]
+            ADMIN_CACHE[chat.id] = admin_list
+
+            if user_id in admin_list:
+                return True
+            return False
+
+def is_user_mod(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
+    if (
+        chat.type == "private"
+        or user_id in MOD_USERS
         or user_id in SUDO_USERS
         or user_id in DEV_USERS
         or chat.all_members_are_administrators
@@ -86,7 +113,6 @@ def is_user_ban_protected(chat: Chat, user_id: int, member: ChatMember = None) -
         or user_id in SUDO_USERS
         or user_id in DEV_USERS
         or user_id in WHITELIST_USERS
-        or user_id in SARDEGNA_USERS
         or chat.all_members_are_administrators
         or user_id in [777000, 1087968824]
     ):  # Count telegram and Group Anonymous as admin
@@ -210,6 +236,29 @@ def user_admin(func):
             )
 
     return is_admin
+
+def user_mod(func):
+    @wraps(func)
+    def is_mod(update: Update, context: CallbackContext, *args, **kwargs):
+        bot = context.bot
+        user = update.effective_user
+        chat = update.effective_chat
+
+        if user and is_user_mod(chat, user.id):
+            return func(update, context, *args, **kwargs)
+        elif not user:
+            pass
+        elif DEL_CMDS and " " not in update.effective_message.text:
+            try:
+                update.effective_message.delete()
+            except:
+                pass
+        else:
+            update.effective_message.reply_text(
+                "Hmmm, how about you go ask an admin to perform this action for you? "
+            )
+
+    return is_mod
 
 
 def user_admin_no_reply(func):

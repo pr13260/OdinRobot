@@ -1,9 +1,11 @@
+from tg_bot import spamcheck
 import requests
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command='paste', pass_args=True)
+@spamcheck
 def paste(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message

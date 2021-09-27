@@ -154,17 +154,10 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                                 text=gs(chat.id, "support_chat_link_btn"),
                                 url=f"https://t.me/TheBotsSupport",
                             ),
-                            #InlineKeyboardButton(
-                            #    text=gs(chat.id, "updates_channel_link_btn"),
-                            #    url="https://t.me/TheBotsSupport",
-                            #),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
                                 url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
                             ),
-                            
-                        ],
-                        [
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
@@ -174,20 +167,10 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                         ],
                         [
 
-                            #InlineKeyboardButton(
-                            #     text="Try inline",
-                            #     switch_inline_query_current_chat="",
-                            #),
                             InlineKeyboardButton(
                                 text="Help",
                                 callback_data="help_back",
                                 ),
-                            #InlineKeyboardButton(
-                            #    text=gs(chat.id, "add_bot_to_group_btn"),
-                            #    url="t.me/{}?startgroup=true".format(
-                            #        context.bot.username
-                            #    ),
-                            #),
                         ]
                         
                     ]
@@ -233,16 +216,10 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                                 url=f"https://t.me/TheBotsSupport",
                             ),
                             InlineKeyboardButton(
-                                text=gs(chat.id, "updates_channel_link_btn"),
-                                url="https://t.me/LukeBots",
-                            ),
-                            InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
                                 url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
                             ),
                             
-                        ],
-                        [
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
@@ -252,20 +229,11 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                         ],
                         [
 
-                            #InlineKeyboardButton(
-                            #     text="Try inline",
-                            #     switch_inline_query_current_chat="",
-                            #),
                             InlineKeyboardButton(
                                 text="Help",
                                 callback_data="help_back",
                                 ),
-                            #InlineKeyboardButton(
-                            #    text=gs(chat.id, "add_bot_to_group_btn"),
-                            #    url="t.me/{}?startgroup=true".format(
-                            #        context.bot.username
-                            #    ),
-                            #),
+
                         ]
                         
                     ]
@@ -294,6 +262,9 @@ def error_callback(update, context):
     except (Unauthorized, BadRequest):
         pass
         # remove update.message.chat_id from conversation list
+    except BadRequest:
+        pass
+        # handle malformed requests - read more below!
     except TimedOut:
         pass
         # handle slow connection problems
@@ -341,9 +312,11 @@ def help_button(update, context):
                 + help_text
             )
             help_buttons.append(
-                [InlineKeyboardButton(text="Back", callback_data="help_back"),
-                InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport')]
-            )
+                [
+                    InlineKeyboardButton(text="Back", callback_data="help_back"),
+                    InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport')
+                ]
+                    )
             query.message.edit_text(
                 text=text,
                 parse_mode=ParseMode.MARKDOWN,
@@ -353,8 +326,13 @@ def help_button(update, context):
         elif prev_match:
             curr_page = int(prev_match.group(1))
             kb = paginate_modules(curr_page - 1, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
+            kb.append(
+                [
+                    InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+                    InlineKeyboardButton(text='Back', callback_data='start_back'),
+                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                ]
+                    )
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -364,8 +342,13 @@ def help_button(update, context):
         elif next_match:
             next_page = int(next_match.group(1))
             kb = paginate_modules(next_page + 1, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
+            kb.append(
+                [
+                    InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+                    InlineKeyboardButton(text='Back', callback_data='start_back'),
+                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                ]
+                    )
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -374,8 +357,13 @@ def help_button(update, context):
 
         elif back_match:
             kb = paginate_modules(0, HELPABLE, "help")
-            kb.append([InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
-            InlineKeyboardButton(text='Back', callback_data='start_back'), InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))])
+            kb.append(
+                [
+                    InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
+                    InlineKeyboardButton(text='Back', callback_data='start_back'),
+                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                ]
+                    )
             query.message.edit_text(
                 text=gs(chat.id, "pm_help_text"),
                 parse_mode=ParseMode.MARKDOWN,
@@ -678,7 +666,7 @@ def main():
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username
         KigyoINIT.bot_name = dispatcher.bot.first_name
-        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
+        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()
     else:

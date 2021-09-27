@@ -2,7 +2,7 @@ from io import BytesIO
 from time import sleep
 
 import tg_bot.modules.sql.users_sql as sql
-from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher, SYS_ADMIN
+from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher, SYS_ADMIN, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import dev_plus, sudo_plus
 from tg_bot.modules.sql.users_sql import get_all_users
 from telegram import TelegramError, Update
@@ -109,6 +109,7 @@ def log_user(update: Update, context: CallbackContext):
         sql.update_user(msg.forward_from.id, msg.forward_from.username)
 
 @kigcmd(command='chatlist')
+@spamcheck
 @sudo_plus
 def chats(update: Update, context: CallbackContext):
     all_chats = sql.get_all_chats() or []
@@ -141,13 +142,15 @@ def chat_checker(update: Update, context: CallbackContext):
         bot.leaveChat(update.effective_message.chat.id)
 
 
-def __user_info__(user_id):
-    if user_id in [777000, 1087968824]:
-        return """Groups count: <code>N/A</code>"""
-    if user_id == dispatcher.bot.id:
-        return """Groups count: <code>N/A</code>"""
-    num_chats = sql.get_user_num_chats(user_id)
-    return f"""Groups count: <code>{num_chats}</code>"""
+#def __user_info__(user_id):
+#    if user_id in [777000, 1087968824]:
+#        return """Groups count: <code>N/A</code>"""
+#    if user_id == dispatcher.bot.id:
+#        return """Groups count: Why are you stalking me?"""
+#    if user_id == OWNER_ID:
+#        return """Groups count: <code>N/A</code>"""
+#    num_chats = sql.get_user_num_chats(user_id)
+#    return f"""Groups count: <code>{num_chats}</code>"""
 
 
 def __stats__():

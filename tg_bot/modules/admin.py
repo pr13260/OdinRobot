@@ -5,7 +5,7 @@ from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown, mention_html
 
-from tg_bot import SUDO_USERS
+from tg_bot import SUDO_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_pin,
@@ -13,6 +13,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
     connection_status,
     user_admin,
     ADMIN_CACHE,
+    user_mod,
 )
 
 from tg_bot.modules.helper_funcs.extraction import extract_user, extract_user_and_text
@@ -21,6 +22,7 @@ from tg_bot.modules.language import gs
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command="promote", can_disable=False)
+@spamcheck
 @connection_status
 @bot_admin
 @can_promote
@@ -43,7 +45,7 @@ def promote(update: Update, context: CallbackContext) -> str:
         message.reply_text("You don't have the necessary rights to do that!")
         return
 
-    user_id = extract_user(message, args)
+    user_id, title = extract_user_and_text(message, args)
 
     if not user_id:
         message.reply_text(
@@ -81,13 +83,15 @@ def promote(update: Update, context: CallbackContext) -> str:
             can_pin_messages=bot_member.can_pin_messages,
             can_manage_voice_chats=bot_member.can_manage_voice_chats,
         )
+        if title:
+            bot.setChatAdministratorCustomTitle(chat.id, user_id, title)
         try:
             ADMIN_CACHE.pop(update.effective_chat.id)
         except KeyError:
             pass
         bot.sendMessage(
             chat.id,
-            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> in <b>{chat.title}</b>, and Admins cache refreshed!",
+            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> in <b>{chat.title}</b>.",
             parse_mode=ParseMode.HTML,
         ) 
     except BadRequest as err:
@@ -109,6 +113,7 @@ def promote(update: Update, context: CallbackContext) -> str:
     return log_message
 
 @kigcmd(command="demote", can_disable=False)
+@spamcheck
 @connection_status
 @bot_admin
 @can_promote
@@ -167,7 +172,7 @@ def demote(update: Update, context: CallbackContext) -> str:
             pass
         bot.sendMessage(
             chat.id,
-            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b> in <b>{chat.title or None}</b>, and Admins cache refreshed!",
+            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b> in <b>{chat.title or None}</b>.",
             parse_mode=ParseMode.HTML,
         )  
 
@@ -188,7 +193,7 @@ def demote(update: Update, context: CallbackContext) -> str:
         return
  
 @kigcmd(command="admincache", can_disable=False)
-@user_admin
+@user_mod
 def refresh_admin(update, _):
     try:
         ADMIN_CACHE.pop(update.effective_chat.id)
@@ -197,6 +202,7 @@ def refresh_admin(update, _):
     update.effective_message.reply_text("Admins cache refreshed!")
 
 @kigcmd(command="title", can_disable=False)
+@spamcheck
 @connection_status
 @bot_admin
 @can_promote
@@ -253,17 +259,18 @@ def set_title(update: Update, context: CallbackContext):
         message.reply_text("I can't set custom title for admins that I didn't promote!")
         return
 
-    bot.sendMessage(
-        chat.id,
-        f"Sucessfully set title for <code>{user_member.user.first_name or user_id}</code> "
-        f"to <code>{html.escape(title[:16])}</code>!",
-        parse_mode=ParseMode.HTML,
-    )
+    #bot.sendMessage(
+    #    chat.id,
+    #    f"Sucessfully set title for <code>{user_member.user.first_name or user_id}</code> "
+    #    f"to <code>{html.escape(title[:16])}</code>!",
+    #    parse_mode=ParseMode.HTML,
+    #)
 
 @kigcmd(command="pin", can_disable=False)
+@spamcheck
 @bot_admin
 @can_pin
-@user_admin
+@user_mod
 @loggable
 def pin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
@@ -302,9 +309,10 @@ def pin(update: Update, context: CallbackContext) -> str:
         return log_message
 
 @kigcmd(command="unpin", can_disable=False)
+@spamcheck
 @bot_admin
 @can_pin
-@user_admin
+@user_mod
 @loggable
 def unpin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
@@ -327,7 +335,8 @@ def unpin(update: Update, context: CallbackContext) -> str:
 
     return log_message
 
-@kigcmd(command="invitelink", can_disable=False)
+@kigcmd(command=["invitelink", "link"], can_disable=False)
+@spamcheck
 @bot_admin
 @user_admin
 @connection_status
@@ -354,6 +363,7 @@ def invite(update: Update, context: CallbackContext):
 
 
 @kigcmd(command=["admin", "admins", "staff", "adminlist"])
+@spamcheck
 def adminlist(update, context):
     administrators = update.effective_chat.get_administrators()
     text = "Admins in *{}*:".format(update.effective_chat.title or "this chat")

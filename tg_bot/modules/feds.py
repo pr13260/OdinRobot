@@ -29,6 +29,7 @@ from tg_bot import (
     GBAN_LOGS,
     DEV_USERS,
     log,
+    spamcheck,
 )
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
 from tg_bot.modules.helper_funcs.extraction import (
@@ -90,6 +91,7 @@ UNFBAN_ERRORS = {
 
 @typing_action
 @kigcmd(command='newfed')
+@spamcheck
 def new_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -143,6 +145,7 @@ def new_fed(update, context):
 
 @typing_action
 @kigcmd(command='delfed', pass_args=True)
+@spamcheck
 def del_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -191,6 +194,7 @@ def del_fed(update, context):
 
 @typing_action
 @kigcmd(command='chatfed', pass_args=True)
+@spamcheck
 def fed_chat(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     fed_id = sql.get_fed_id(chat.id)
@@ -217,6 +221,7 @@ def fed_chat(update, context):
 
 @typing_action
 @kigcmd(command='joinfed', pass_args=True)
+@spamcheck
 def join_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -279,6 +284,7 @@ def join_fed(update, context):
 
 @typing_action
 @kigcmd(command='leavefed')
+@spamcheck
 def leave_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -321,6 +327,7 @@ def leave_fed(update, context):
 
 @typing_action
 @kigcmd(command='fpromote', pass_args=True)
+@spamcheck
 def user_join_fed(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -386,6 +393,7 @@ def user_join_fed(update, context):
 
 @typing_action
 @kigcmd(command='fdemote', pass_args=True)
+@spamcheck
 def user_demote_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -447,6 +455,7 @@ def user_demote_fed(update, context):
 
 @typing_action
 @kigcmd(command='fedinfo', pass_args=True)
+@spamcheck
 def fed_info(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -496,6 +505,7 @@ def fed_info(update, context):
 
 @typing_action
 @kigcmd(command='fedadmins', pass_args=True)
+@spamcheck
 def fed_admin(update, context):
 
     chat = update.effective_chat  # type: Optional[Chat]
@@ -547,6 +557,7 @@ def fed_admin(update, context):
 
 @typing_action
 @kigcmd(command=['fban', 'fedban'], pass_args=True)
+@spamcheck
 def fed_ban(update, context):  # sourcery no-metrics
 
     chat = update.effective_chat  # type: Optional[Chat]
@@ -966,6 +977,7 @@ def fed_ban(update, context):  # sourcery no-metrics
 
 @typing_action
 @kigcmd(command=['unfban', 'rmfedban'], pass_args=True)
+@spamcheck
 def unfban(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1189,7 +1201,7 @@ def unfban(update, context):
 			html=True)
 	"""
 
-
+@spamcheck
 @typing_action
 def set_frules(update, context):
 
@@ -1250,6 +1262,7 @@ def set_frules(update, context):
 
 @typing_action
 @kigcmd(command='frules', pass_args=True)
+@spamcheck
 def get_frules(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     args = context.args
@@ -1274,6 +1287,7 @@ def get_frules(update, context):
 
 @typing_action
 @kigcmd(command='fbroadcast', pass_args=True)
+@spamcheck
 def fed_broadcast(update, context):
     msg = update.effective_message  # type: Optional[Message]
     user = update.effective_user  # type: Optional[User]
@@ -1334,6 +1348,7 @@ def fed_broadcast(update, context):
 
 @send_action(ChatAction.UPLOAD_DOCUMENT)
 @kigcmd(command='fbanlist', pass_args=True, pass_chat_data=True)
+@spamcheck
 def fed_ban_list(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1514,6 +1529,7 @@ def fed_ban_list(update, context):  # sourcery no-metrics
 
 @typing_action
 @kigcmd(command='fednotif', pass_args=True)
+@spamcheck
 def fed_notif(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1550,6 +1566,7 @@ def fed_notif(update, context):
 
 @typing_action
 @kigcmd(command='fedchats', pass_args=True)
+@spamcheck
 def fed_chats(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1615,6 +1632,7 @@ def fed_chats(update, context):
 
 @typing_action
 @kigcmd(command='importfbans', pass_args=True, pass_chat_data=True)
+@spamcheck
 def fed_import_bans(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1859,6 +1877,7 @@ def del_fed_button(update, context):
 
 @typing_action
 @kigcmd(command='fbanstat', pass_args=True)
+@spamcheck
 def fed_stat_user(update, context):  # sourcery no-metrics
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
@@ -1968,6 +1987,7 @@ def fed_stat_user(update, context):  # sourcery no-metrics
 
 @typing_action
 @kigcmd(command='setfedlog', pass_args=True)
+@spamcheck
 def set_fed_log(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2010,6 +2030,7 @@ def set_fed_log(update, context):
 
 @typing_action
 @kigcmd(command='unsetfedlog', pass_args=True)
+@spamcheck
 def unset_fed_log(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2053,6 +2074,7 @@ def unset_fed_log(update, context):
 
 @typing_action
 @kigcmd('subfed', pass_args=True)
+@spamcheck
 def subs_feds(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2120,6 +2142,7 @@ def subs_feds(update, context):
 
 @typing_action
 @kigcmd(command='unsubfed', pass_args=True)
+@spamcheck
 def unsubs_feds(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2187,6 +2210,7 @@ def unsubs_feds(update, context):
 
 @typing_action
 @kigcmd(command='fedsubs', pass_args=True)
+@spamcheck
 def get_myfedsubs(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2236,6 +2260,7 @@ def get_myfedsubs(update, context):
 
 @typing_action
 @kigcmd(command='myfeds', pass_args=True)
+@spamcheck
 def get_myfeds_list(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]

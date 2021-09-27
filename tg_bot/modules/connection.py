@@ -9,12 +9,12 @@ from telegram.ext import (
 )
 
 import tg_bot.modules.sql.connection_sql as sql
-from tg_bot import dispatcher, SUDO_USERS, DEV_USERS
+from tg_bot import dispatcher, SUDO_USERS, DEV_USERS, spamcheck
 from tg_bot.modules.helper_funcs import chat_status
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 #from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 user_admin = chat_status.user_admin
-
+@spamcheck
 @user_admin
 @typing_action
 def allow_connections(update, context) -> str:
@@ -61,7 +61,7 @@ def allow_connections(update, context) -> str:
         send_message(
             update.effective_message, "This command is for group only. Not in PM!"
         )
-
+@spamcheck
 @typing_action
 def connection_chat(update, context):
 
@@ -84,7 +84,7 @@ def connection_chat(update, context):
     else:
         message = "You are currently not connected in any group.\n"
     send_message(update.effective_message, message, parse_mode="markdown")
-
+@spamcheck
 @typing_action
 def connect_chat(update, context):  # sourcery no-metrics
 
@@ -243,7 +243,7 @@ def connect_chat(update, context):  # sourcery no-metrics
             send_message(
                 update.effective_message, "Connection to this chat is not allowed!"
             )
-
+@spamcheck
 def disconnect_chat(update, context):
 
     if update.effective_chat.type == "private":
@@ -311,7 +311,7 @@ CONN_HELP = """
  • Enable and Disable commands in chat.
  • Export and Imports of chat backup.
  • More in future!"""
-
+@spamcheck
 def help_connect_chat(update, context):
 
     args = context.args
@@ -321,7 +321,7 @@ def help_connect_chat(update, context):
         return
     else:
         send_message(update.effective_message, CONN_HELP, parse_mode="markdown")
-
+@spamcheck
 def connect_button(update, context):
 
     query = update.callback_query

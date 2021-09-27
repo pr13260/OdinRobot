@@ -3,8 +3,8 @@ from io import BytesIO
 from typing import Optional
 
 import tg_bot.modules.sql.notes_sql as sql
-from tg_bot import log, dispatcher, SUDO_USERS
-from tg_bot.modules.helper_funcs.chat_status import user_admin, connection_status
+from tg_bot import log, dispatcher, SUDO_USERS, spamcheck
+from tg_bot.modules.helper_funcs.chat_status import user_admin, connection_status, user_mod
 from tg_bot.modules.helper_funcs.misc import build_keyboard, revert_buttons
 from tg_bot.modules.helper_funcs.msg_types import get_note_type
 from tg_bot.modules.helper_funcs.handlers import MessageHandlerChecker
@@ -210,6 +210,7 @@ def get(update, context, notename, show_none=True, no_format=False):
 
 
 @kigcmd(command="get")
+@spamcheck
 @connection_status
 def cmd_get(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -223,6 +224,7 @@ def cmd_get(update: Update, context: CallbackContext):
 
 
 @kigmsg((Filters.regex(r"^#[^\s]+")), group=-14)
+@spamcheck
 @connection_status
 def hash_get(update: Update, context: CallbackContext):
     message = update.effective_message.text
@@ -232,7 +234,8 @@ def hash_get(update: Update, context: CallbackContext):
 
 
 
-@kigmsg((Filters.regex(r"^/\d+$")), group=-16)
+@kigmsg((Filters.regex(r"^[/!>]\d+$")), group=-16)
+@spamcheck
 @connection_status
 def slash_get(update: Update, context: CallbackContext):
     message, chat_id = update.effective_message.text, update.effective_chat.id
@@ -247,7 +250,8 @@ def slash_get(update: Update, context: CallbackContext):
         update.effective_message.reply_text("Wrong Note ID 😾")
 
 @kigcmd(command='save')
-@user_admin
+@spamcheck
+@user_mod
 @connection_status
 def save(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -289,7 +293,8 @@ def save(update: Update, context: CallbackContext):
         return
 
 @kigcmd(command='clear')
-@user_admin
+@spamcheck
+@user_mod
 @connection_status
 def clear(update: Update, context: CallbackContext):
     args = context.args
@@ -306,6 +311,7 @@ def clear(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='removeallnotes')
+@spamcheck
 def clearall(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
@@ -365,6 +371,7 @@ def clearall_btn(update: Update, context: CallbackContext):
 
 
 @kigcmd(command=["notes", "saved"])
+@spamcheck
 @connection_status
 def list_notes(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id

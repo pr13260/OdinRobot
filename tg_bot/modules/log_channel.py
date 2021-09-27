@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import wraps
+from tg_bot import spamcheck
 
 from telegram.ext import CallbackContext
 from tg_bot.modules.helper_funcs.decorators import kigcmd
@@ -31,8 +32,11 @@ if is_module_loaded(FILENAME):
                 datetime_fmt = "%H:%M - %d-%m-%Y"
                 result += f"\n<b>Event Stamp</b>: <code>{datetime.utcnow().strftime(datetime_fmt)}</code>"
 
-                if message.chat.type == chat.SUPERGROUP and message.chat.username:
-                    result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+                try:
+                    if message.chat.type == chat.SUPERGROUP and message.chat.username:
+                        result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+                except AttributeError:
+                    result += f'\n<b>Link:</b> No link for manual actions.'
                 log_chat = sql.get_chat_log_channel(chat.id)
                 if log_chat:
                     send_log(context, log_chat, chat.id, result)
@@ -94,6 +98,7 @@ if is_module_loaded(FILENAME):
 
     @user_admin
     @kigcmd(command='logchannel')
+    @spamcheck
     def logging(update: Update, context: CallbackContext):
         bot = context.bot
         message = update.effective_message
@@ -113,6 +118,7 @@ if is_module_loaded(FILENAME):
 
     @user_admin
     @kigcmd(command='setlog')
+    @spamcheck
     def setlog(update: Update, context: CallbackContext):
         bot = context.bot
         message = update.effective_message
@@ -155,6 +161,7 @@ if is_module_loaded(FILENAME):
 
     @user_admin
     @kigcmd(command='unsetlog')
+    @spamcheck
     def unsetlog(update: Update, context: CallbackContext):
         bot = context.bot
         message = update.effective_message

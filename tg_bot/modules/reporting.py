@@ -1,6 +1,6 @@
 import html
 
-from tg_bot import log, SUDO_USERS, SARDEGNA_USERS, WHITELIST_USERS
+from tg_bot import log, SUDO_USERS, WHITELIST_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import reporting_sql as sql
@@ -14,9 +14,10 @@ from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 
 REPORT_GROUP = 12
-REPORT_IMMUNE_USERS = SUDO_USERS + SARDEGNA_USERS + WHITELIST_USERS
+REPORT_IMMUNE_USERS = SUDO_USERS + WHITELIST_USERS
 
 @kigcmd(command='reports')
+@spamcheck
 @user_admin
 def report_setting(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -63,6 +64,7 @@ def report_setting(update: Update, context: CallbackContext):
 @user_not_admin
 @loggable
 @kigcmd(command='report', filters=Filters.chat_type.groups, group=REPORT_GROUP)
+@spamcheck
 @kigmsg((Filters.regex(r"(?i)@admin(s)?")), group=REPORT_GROUP)
 def report(update: Update, context: CallbackContext) -> str:
     # sourcery no-metrics

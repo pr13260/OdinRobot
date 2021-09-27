@@ -11,7 +11,7 @@ from telegram import (
     ChatPermissions,
 )
 
-from tg_bot import SARDEGNA_USERS, WHITELIST_USERS, dispatcher
+from tg_bot import WHITELIST_USERS, dispatcher, spamcheck
 from tg_bot.modules.sql.approve_sql import is_approved
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -58,7 +58,6 @@ def check_flood(update, context) -> str:
     if (
         is_user_admin(chat, user.id)
         or user.id in WHITELIST_USERS
-        or user.id in SARDEGNA_USERS
     ):
         sql.update_flood(chat.id, None)
         return ""
@@ -160,6 +159,7 @@ def flood_button(update: Update, context: CallbackContext):
             pass
 
 @kigcmd(command='setflood', pass_args=True, filters=Filters.chat_type.groups)
+@spamcheck
 @connection_status
 @user_admin
 @can_restrict
@@ -255,9 +255,9 @@ def set_flood(update, context) -> str:  # sourcery no-metrics
         )
     return ""
 
-
 @connection_status
 @kigcmd(command="flood", filters=Filters.chat_type.groups)
+@spamcheck
 def flood(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -299,6 +299,7 @@ def flood(update, context):
         )
 
 @kigcmd(command="setfloodmode", pass_args=True, filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def set_flood_mode(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]

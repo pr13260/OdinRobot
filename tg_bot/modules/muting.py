@@ -1,13 +1,14 @@
 import html
 from typing import Optional
 
-from tg_bot import SARDEGNA_USERS
+from tg_bot import WHITELIST_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
     connection_status,
     is_user_admin,
     user_admin,
+    user_mod,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.string_handling import extract_time
@@ -35,15 +36,16 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
     if user_id == bot.id:
         return "I'm not gonna MUTE myself, How high are you?"
 
-    if is_user_admin(chat, user_id, member) or user_id in SARDEGNA_USERS:
+    if is_user_admin(chat, user_id, member) or user_id in WHITELIST_USERS:
         return "Can't. Find someone else to mute but not this one."
 
     return None
 
 @kigcmd(command='mute')
+@spamcheck
 @connection_status
 @bot_admin
-@user_admin
+@user_mod
 @loggable
 def mute(update: Update, context: CallbackContext) -> str:
     bot = context.bot
@@ -90,9 +92,10 @@ def mute(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command='unmute')
+@spamcheck
 @connection_status
 @bot_admin
-@user_admin
+@user_mod
 @loggable
 def unmute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args
@@ -153,10 +156,11 @@ def unmute(update: Update, context: CallbackContext) -> str:
     return ""
 
 @kigcmd(command=['tmute', 'tempmute'])
+@spamcheck
 @connection_status
 @bot_admin
 @can_restrict
-@user_admin
+@user_mod
 @loggable
 def temp_mute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args

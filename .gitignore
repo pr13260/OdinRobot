@@ -25,3 +25,7 @@ shell_output.txt
 tg_bot/elevated_users.json
 updates.txt
 *.temp
+tg_bot/antispam.py
+tg_bot/modules/announcements.py
+*.pytempp
+tg_bot/modules/spamcheck.py

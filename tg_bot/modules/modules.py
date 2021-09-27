@@ -1,6 +1,6 @@
 import importlib
 
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot.__main__ import (
     CHAT_SETTINGS,
     DATA_EXPORT,
@@ -83,6 +83,7 @@ def load(update: Update, context: CallbackContext):
         "Successfully loaded module : <b>{}</b>".format(text), parse_mode=ParseMode.HTML
     )
 
+
 @kigcmd(command='unload')
 @dev_plus
 def unload(update: Update, context: CallbackContext):
@@ -151,6 +152,7 @@ def unload(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='listmodules')
+@spamcheck
 @sudo_plus
 def listmodules(update: Update, context: CallbackContext):
     message = update.effective_message

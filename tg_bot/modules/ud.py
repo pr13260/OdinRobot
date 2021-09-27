@@ -1,9 +1,11 @@
+from tg_bot import spamcheck
 import requests
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, run_async
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command=["ud", "urban"])
+@spamcheck
 def ud(update: Update, context: CallbackContext):
     message = update.effective_message
     text = message.text[len("/ud ") :]

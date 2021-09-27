@@ -8,11 +8,12 @@ import tg_bot.modules.sql.antispam_sql as sql
 from tg_bot import (
     DEV_USERS,
     GBAN_LOGS,
+    MOD_USERS,
     OWNER_ID,
     SUDO_USERS,
     SUPPORT_USERS,
-    SARDEGNA_USERS,
     WHITELIST_USERS,
+    spamcheck,
     sw,
     dispatcher,
     log,
@@ -113,22 +114,22 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     if int(user_id) in SUDO_USERS:
         message.reply_text(
-            "I spy, with my little eye... a nation! Why are you guys turning on each other?"
+            "I spy, with my little eye... a Sudo! Why are you guys turning on each other?"
         )
         return
 
     if int(user_id) in SUPPORT_USERS:
         message.reply_text(
-            "OOOH someone's trying to gban a Sakura Nation! *grabs popcorn*"
+            "OOOH someone's trying to gban a Support User! *grabs popcorn*"
         )
         return
 
-    if int(user_id) in SARDEGNA_USERS:
-        message.reply_text("That's a Sardegna! They cannot be banned!")
+    if int(user_id) in WHITELIST_USERS:
+        message.reply_text("That's a Whitelisted user! They cannot be banned!")
         return
 
-    if int(user_id) in WHITELIST_USERS:
-        message.reply_text("That's a Neptunia! They cannot be banned!")
+    if int(user_id) in MOD_USERS:
+        message.reply_text("That's a Moderator, why do you want to ban them?")
         return
 
     if int(user_id) in (777000, 1087968824):
@@ -506,6 +507,7 @@ def enforce_gban(update: Update, context: CallbackContext):
                 check_and_ban(update, user.id, should_message=False)
 
 @kigcmd(command=["antispam", "gbanstat"])
+@spamcheck
 @user_admin
 def gbanstat(update: Update, context: CallbackContext):
     args = context.args
@@ -542,21 +544,22 @@ def __user_info__(user_id):
         return ""
 
     is_gbanned = sql.is_user_gbanned(user_id)
-    text = "\nGbanned: <b>{}</b>"
+    
     if user_id in [777000, 1087968824]:
         return ""
     if user_id == dispatcher.bot.id:
         return ""
-    if int(user_id) in SUDO_USERS + SARDEGNA_USERS + WHITELIST_USERS:
+    if int(user_id) in SUDO_USERS + WHITELIST_USERS:
         return ""
     if is_gbanned:
+        text = "\nGbanned: <b>{}</b>"
         text = text.format("Yes")
         user = sql.get_gbanned_user(user_id)
         if user.reason:
             text += f"\n<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
         text += f"\n<b>Appeal Chat:</b> @TheBotsSupport"
     else:
-        text = text.format("No")
+        text = ""
     return text
 
 

@@ -3,10 +3,10 @@
 import tg_bot.modules.sql.blacklistusers_sql as sql
 from tg_bot import (
     DEV_USERS,
+    MOD_USERS,
     OWNER_ID,
     SUDO_USERS,
     SUPPORT_USERS,
-    SARDEGNA_USERS,
     WHITELIST_USERS,
     dispatcher,
 )
@@ -20,7 +20,7 @@ from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 BLACKLISTWHITELIST = (
-    [OWNER_ID] + DEV_USERS + SUDO_USERS + WHITELIST_USERS + SUPPORT_USERS
+    [OWNER_ID] + DEV_USERS + SUDO_USERS + WHITELIST_USERS + SUPPORT_USERS + MOD_USERS
 )
 BLABLEUSERS = [OWNER_ID] + DEV_USERS
 
@@ -42,7 +42,7 @@ def bl_user(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in BLACKLISTWHITELIST:
-        message.reply_text("No!\nNoticing Nations is my job.")
+        message.reply_text("No!\nNoticing Super Users is my job.")
         return ""
 
     try:
@@ -132,22 +132,24 @@ def __user_info__(user_id):
 
     is_blacklisted = sql.is_user_blacklisted(user_id)
 
-    text = "\nBlacklisted: <b>{}</b>"
+    
     if (
         user_id
         in [777000, 1087968824, dispatcher.bot.id]
         + SUDO_USERS
-        + SARDEGNA_USERS
         + WHITELIST_USERS
+        + SUPPORT_USERS
+        + MOD_USERS
     ):
         return ""
     if is_blacklisted:
+        text = "\nBlacklisted: <b>{}</b>"
         text = text.format("Yes")
         reason = sql.get_reason(user_id)
         if reason:
             text += f"\nReason: <code>{reason}</code>"
     else:
-        text = text.format("No")
+        text = ""
 
     return text
 

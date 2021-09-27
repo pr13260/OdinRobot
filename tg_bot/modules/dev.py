@@ -4,23 +4,24 @@ import re
 import subprocess
 import sys
 from time import sleep
-
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
-from tg_bot import DEV_USERS, dispatcher, telethn, OWNER_ID
+from tg_bot import DEV_USERS, dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from telegram import TelegramError, Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackContext, CommandHandler
+from telegram.ext import CallbackContext, CommandHandler, Filters
 import asyncio
 from statistics import mean
 from time import monotonic as time
 from telethon import events
 from tg_bot.modules.helper_funcs.decorators import kigcmd
+import signal
 
 @kigcmd(command='leave')
 @dev_plus
 def leave(update: Update, context: CallbackContext):
     bot = context.bot
     args = context.args
+    this = update.effective_chat.linked_chat_id
     if args:
         chat_id = str(args[0])
         leave_msg = " ".join(args[1:])
@@ -30,7 +31,7 @@ def leave(update: Update, context: CallbackContext):
             update.effective_message.reply_text("Left chat.")
         except TelegramError:
             update.effective_message.reply_text("Failed to leave chat for some reason.")
-    else:
+    elif update.effective_message.chat.type != "private":
         chat = update.effective_chat
         # user = update.effective_user
         kb = [[
@@ -38,17 +39,18 @@ def leave(update: Update, context: CallbackContext):
         ]]
         update.effective_message.reply_text("I'm going to leave {}, press the button below to confirm".format(chat.title), reply_markup=InlineKeyboardMarkup(kb))
 
+
 def leave_cb(update: Update, context: CallbackContext):
     bot = context.bot
     callback = update.callback_query
     if callback.from_user.id not in DEV_USERS:
         callback.answer(text="This isn't for you", show_alert=True)
         return
-    
+
     match = re.match(r"leavechat_cb_\((.+?)\)", callback.data)
     chat = int(match.group(1))
+    callback.edit_message_text("I'm outa here.")
     bot.leave_chat(chat_id=chat)
-    callback.answer(text="Left chat")
 
 @kigcmd(command='gitpull')
 @dev_plus
@@ -118,7 +120,7 @@ telethn.add_event_handler(inline_queries, events.InlineQuery())
 telethn.add_event_handler(callback_queries, events.CallbackQuery())
 
 
-@telethn.on(events.NewMessage(pattern=r"/getstats", from_users=SYS_ADMIN))
+@telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=SYS_ADMIN))
 async def getstats(event):
     await event.reply(
         f"**__KIGYO EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",
@@ -148,35 +150,6 @@ def pip_install(update: Update, context: CallbackContext):
             reply += f"*Stderr*\n`{stderr}`\n"
 
         message.reply_text(text=reply, parse_mode=ParseMode.MARKDOWN)
-        
-
-@dev_plus      
-def get_chat_by_id(update: Update, context: CallbackContext):
-    msg = update.effective_message
-    args = context.args
-    if not args:
-        msg.reply_text("<i>Chat ID required</i>", parse_mode=ParseMode.HTML)
-        return
-    if len(args) >= 1:
-        data = context.bot.get_chat(args[0])
-        m = "<b>Found chat, below are the details.</b>\n\n"
-        m += "<b>Title</b>: {}\n".format(html.escape(data.title))
-        m += "<b>Members</b>: {}\n\n".format(data.get_members_count())
-        if data.description:
-            m += "<i>{}</i>\n\n".format(html.escape(data.description))
-        if data.linked_chat_id:
-            m += "<b>Linked chat</b>: {}\n".format(data.linked_chat_id)
-        
-        m += "<b>Type</b>: {}\n".format(data.type)
-        if data.username:
-            m += "<b>Username</b>: {}\n".format(html.escape(data.username))
-        m += "<b>ID</b>: {}\n".format(data.id)
-        m += "\n<b>Permissions</b>:\n <code>{}</code>\n".format(data.permissions)
-        
-        if data.invite_link:
-            m += "\n<b>Invitelink</b>: {}".format(data.invite_link)
-        
-        msg.reply_text(text=m, parse_mode=ParseMode.HTML)
 
 @kigcmd(command='lockgroups')
 @dev_plus
@@ -195,12 +168,43 @@ def allow_groups(update: Update, context: CallbackContext):
         return
     update.effective_message.reply_text("Done! Lockgroups value toggled.")
 
+@kigcmd(command='getinfo') # todo: flood fed rules gbanstat locks? reports
+# ! make as chat and get current if possible
+# ? spacing?
+@dev_plus      
+def get_chat_by_id(update: Update, context: CallbackContext):
+    msg = update.effective_message
+    args = context.args
+    if not args:
+        msg.reply_text("<i>Chat ID required</i>", parse_mode=ParseMode.HTML)
+        return
+    if len(args) >= 1:
+        data = context.bot.get_chat(args[0])
+        m = "<b>Found chat, below are the details.</b>\n\n"
+        m += "<b>Title</b>: {}\n".format(html.escape(data.title))
+        m += "<b>Members</b>: {}\n\n".format(data.get_members_count())
+        if data.description:
+            m += "<i>{}</i>\n\n".format(html.escape(data.description))
+        if data.linked_chat_id:
+            m += "<b>Linked chat</b>: {}\n".format(data.linked_chat_id)
+
+        m += "<b>Type</b>: {}\n".format(data.type)
+        if data.username:
+            m += "<b>Username</b>: {}\n".format(html.escape(data.username))
+        m += "<b>ID</b>: {}\n".format(data.id)
+        m += "\n<b>Permissions</b>:\n <code>{}</code>\n".format(data.permissions)
+
+        if data.invite_link:
+            m += "\n<b>Invitelink</b>: {}".format(data.invite_link)
+
+        msg.reply_text(text=m, parse_mode=ParseMode.HTML)
+
+
 
 __mod_name__ = "Dev"
+
 LEAVE_CALLBACK = CallbackQueryHandler(
     leave_cb, pattern=r"leavechat_cb_", run_async=True
 )
-
 dispatcher.add_handler(LEAVE_CALLBACK)
-
 __handlers__ = [LEAVE_CALLBACK]

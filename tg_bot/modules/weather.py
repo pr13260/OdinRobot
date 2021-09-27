@@ -7,7 +7,7 @@ from requests import get
 from telegram import Bot, Update, ParseMode
 from telegram.ext import Updater, CommandHandler
 from telegram.ext import CallbackContext, run_async
-from tg_bot import WEATHER_API, dispatcher
+from tg_bot import WEATHER_API, dispatcher, spamcheck
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot.modules.helper_funcs.misc import delete
 from tg_bot.modules.helper_funcs.decorators import kigcmd
@@ -23,6 +23,7 @@ def get_tz(con):
         return
 
 @kigcmd(command='weather')
+@spamcheck
 def weather(update: Update, context: CallbackContext):
     bot = context.bot
     chat = update.effective_chat

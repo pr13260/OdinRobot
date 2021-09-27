@@ -5,7 +5,7 @@ from telegram import ParseMode, Update, Chat
 from telegram.ext import CommandHandler, MessageHandler
 from telegram.utils.helpers import escape_markdown
 
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot.modules.helper_funcs.handlers import CMD_STARTERS
 from tg_bot.modules.helper_funcs.misc import is_module_loaded
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
@@ -46,7 +46,6 @@ if is_module_loaded(FILENAME):
                 DISABLE_CMDS.extend(command)
                 if admin_ok:
                     ADMIN_CMDS.extend(command)
-
         def check_update(self, update):
             if not isinstance(update, Update) or not update.effective_message:
                 return
@@ -91,14 +90,13 @@ if is_module_loaded(FILENAME):
             super().__init__(pattern, callback, run_async=run_async, **kwargs)
             DISABLE_OTHER.append(friendly or pattern)
             self.friendly = friendly or pattern
-
         def check_update(self, update):
             if isinstance(update, Update) and update.effective_message:
                 chat = update.effective_chat
                 return self.filters(update) and not sql.is_command_disabled(
                     chat.id, self.friendly
                 )
-
+    @spamcheck
     @user_admin
     @typing_action
     def disable(update, context):
@@ -143,7 +141,7 @@ if is_module_loaded(FILENAME):
 
         else:
             send_message(update.effective_message, "What should I disable?")
-
+    @spamcheck
     @user_admin
     @typing_action
     def enable(update, context):
@@ -189,7 +187,7 @@ if is_module_loaded(FILENAME):
 
         else:
             send_message(update.effective_message, "What should I enable?")
-
+    @spamcheck
     @user_admin
     @typing_action
     def list_cmds(update, context):
@@ -214,7 +212,7 @@ if is_module_loaded(FILENAME):
 
         result = "".join(" - `{}`\n".format(escape_markdown(cmd)) for cmd in disabled)
         return "The following commands are currently restricted:\n{}".format(result)
-
+    @spamcheck
     @typing_action
     def commands(update, context):
         chat = update.effective_chat

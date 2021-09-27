@@ -1,6 +1,6 @@
 import html
-from tg_bot.modules.disable import DisableAbleCommandHandler
-from tg_bot import dispatcher, SUDO_USERS
+
+from tg_bot import dispatcher, SUDO_USERS, spamcheck
 from tg_bot.modules.helper_funcs.extraction import extract_user
 from telegram.ext import CallbackContext, CallbackQueryHandler, Filters
 import tg_bot.modules.sql.approve_sql as sql
@@ -12,6 +12,7 @@ from telegram.error import BadRequest
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
 @kigcmd(command='approve', filters=Filters.chat_type.groups)
+@spamcheck
 @loggable
 @user_admin
 def approve(update, context):
@@ -55,6 +56,7 @@ def approve(update, context):
     return log_message
 
 @kigcmd(command='unapprove', filters=Filters.chat_type.groups)
+@spamcheck
 @loggable
 @user_admin
 def disapprove(update, context):
@@ -91,6 +93,7 @@ def disapprove(update, context):
     return log_message
 
 @kigcmd(command='approved', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def approved(update, context):
     message = update.effective_message
@@ -109,6 +112,7 @@ def approved(update, context):
 
 
 @kigcmd(command='approval', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def approval(update, context):
     message = update.effective_message
@@ -132,6 +136,7 @@ def approval(update, context):
 
 
 @kigcmd(command='unapproveall', filters=Filters.chat_type.groups)
+@spamcheck
 def unapproveall(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user

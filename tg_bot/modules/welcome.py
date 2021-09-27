@@ -7,12 +7,14 @@ from io import BytesIO
 import tg_bot.modules.sql.welcome_sql as sql
 from tg_bot import (
     DEV_USERS,
+    MESSAGE_DUMP,
+    MOD_USERS,
     log,
     OWNER_ID,
     SUDO_USERS,
     SUPPORT_USERS,
-    SARDEGNA_USERS,
     WHITELIST_USERS,
+    spamcheck,
     sw,
     dispatcher,
 )
@@ -34,6 +36,7 @@ from telegram import (
     InlineKeyboardMarkup,
     ParseMode,
     Update,
+    parsemode,
 )
 from telegram.error import BadRequest
 from telegram.ext import (
@@ -157,7 +160,7 @@ def send(update, message, keyboard, backup_message):
     return msg
 
 @kigmsg((Filters.status_update.new_chat_members), group=WELCOME_GROUP)
-@loggable
+#@loggable
 def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot, job_queue = context.bot, context.job_queue
     chat = update.effective_chat
@@ -227,7 +230,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Sudos
             elif new_mem.id in SUDO_USERS:
                 update.effective_message.reply_text(
-                    "Huh! A Royal Nation just joined! Stay Alert!",
+                    "Huh! A Sudo user just joined! Stay Alert!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -235,31 +238,33 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Support
             elif new_mem.id in SUPPORT_USERS:
                 update.effective_message.reply_text(
-                    "Huh! Someone with a Sakura Nation level just joined!",
+                    "Huh! a Support user just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
 
-            # Welcome Whitelisted
-            elif new_mem.id in SARDEGNA_USERS:
+            # Welcome WHITELIST_USERS
+            elif new_mem.id in WHITELIST_USERS:
                 update.effective_message.reply_text(
-                    "Oof! A Sardegna Nation just joined!", reply_to_message_id=reply
+                    "Oof! A Whitelist user just joined!", reply_to_message_id=reply
                 )
                 continue
 
-            # Welcome SARDEGNA_USERS
-            elif new_mem.id in WHITELIST_USERS:
+            # Welcome MOD_USERS
+            elif new_mem.id in MOD_USERS:
                 update.effective_message.reply_text(
-                    "Oof! A Neptuia Nation just joined!", reply_to_message_id=reply
+                    "Ah! A Moderator just joined!", reply_to_message_id=reply
                 )
                 continue
 
             # Welcome yourself
             elif new_mem.id == bot.id:
                 update.effective_message.reply_text(
-                    "Thanks for adding me! Join @TheBotsSupport for support.",
+                    "Heyy, thanks for adding me!",
                     reply_to_message_id=reply,
                 )
+                msgg = f"#NEWCHAT\nI've been added to a new chat\n<b>Title:</b> {chat.title}\n<b>ID:</b> <code>{chat.id}</code>"
+                dispatcher.bot.sendMessage(MESSAGE_DUMP, msgg, parse_mode=ParseMode.HTML)
                 continue
 
             else:
@@ -529,7 +534,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
                 if sent:
                     sql.set_clean_welcome(chat.id, sent.message_id)
 
-        if welcome_log:
+        '''if welcome_log:
             return welcome_log
 
         return (
@@ -537,7 +542,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             f"#USER_JOINED\n"
             f"<b>User</b>: {mention_html(user.id, user.first_name)}\n"
             f"<b>ID</b>: <code>{user.id}</code>"
-        )
+        )'''
 
     return ""
 
@@ -562,7 +567,7 @@ def check_not_bot(member, chat_id, message_id, context):
             pass
 
 @kigmsg((Filters.status_update.left_chat_member), group=WELCOME_GROUP)
-@loggable
+#@loggable
 def left_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot = context.bot
     chat = update.effective_chat
@@ -673,6 +678,7 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
             )
 
 @kigcmd(command='welcome', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def welcome(update: Update, context: CallbackContext):
     args = context.args
@@ -735,6 +741,7 @@ def welcome(update: Update, context: CallbackContext):
             )
 
 @kigcmd(command='goodbye', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def goodbye(update: Update, context: CallbackContext):
     args = context.args
@@ -785,6 +792,7 @@ def goodbye(update: Update, context: CallbackContext):
             )
 
 @kigcmd(command='setwelcome', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def set_welcome(update: Update, context: CallbackContext) -> str:
@@ -809,6 +817,7 @@ def set_welcome(update: Update, context: CallbackContext) -> str:
     )
 
 @kigcmd(command='resetwelcome', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def reset_welcome(update: Update, context: CallbackContext) -> str:
@@ -828,6 +837,7 @@ def reset_welcome(update: Update, context: CallbackContext) -> str:
     )
 
 @kigcmd(command='setgoodbye', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def set_goodbye(update: Update, context: CallbackContext) -> str:
@@ -850,6 +860,7 @@ def set_goodbye(update: Update, context: CallbackContext) -> str:
     )
 
 @kigcmd(command='resetgoodbye', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def reset_goodbye(update: Update, context: CallbackContext) -> str:
@@ -869,6 +880,7 @@ def reset_goodbye(update: Update, context: CallbackContext) -> str:
     )
 
 @kigcmd(command='welcomemute', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def welcomemute(update: Update, context: CallbackContext) -> str:
@@ -936,6 +948,7 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
         return ""
 
 @kigcmd(command='cleanwelcome', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 @loggable
 def clean_welcome(update: Update, context: CallbackContext) -> str:
@@ -978,6 +991,7 @@ def clean_welcome(update: Update, context: CallbackContext) -> str:
         return ""
 
 @kigcmd(command='cleanservice', filters=Filters.chat_type.groups)
+@spamcheck
 @user_admin
 def cleanservice(update: Update, context: CallbackContext) -> str:
     args = context.args
@@ -1157,6 +1171,7 @@ def user_captcha_button(update: Update, context: CallbackContext):
 
 #from SayaAman_bot
 @kigcmd(command="setlockdown", pass_args=True)
+@spamcheck
 @user_admin
 def setDefense(update: Update, context: CallbackContext):
     bot = context.bot
@@ -1184,6 +1199,7 @@ def setDefense(update: Update, context: CallbackContext):
         return
 
 @kigcmd(command="lockdown")
+@spamcheck
 @user_admin
 def getDefense(update: Update, context: CallbackContext):
     bot = context.bot

@@ -7,11 +7,12 @@ from telegram.utils.helpers import mention_html
 
 from tg_bot import (
     DEV_USERS,
+    MOD_USERS,
     SUDO_USERS,
-    SARDEGNA_USERS,
     SUPPORT_USERS,
     OWNER_ID,
     WHITELIST_USERS,
+    spamcheck,
 )
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -22,6 +23,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
     is_user_ban_protected,
     is_user_in_chat,
     user_admin,
+    user_mod,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.string_handling import extract_time
@@ -33,8 +35,9 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 @kigcmd(command=('dban'), pass_args=True)
 @kigcmd(command=('fban'), pass_args=True)
 @kigcmd(command=('ban'), pass_args=True)
+@spamcheck
 @can_restrict
-@user_admin
+@user_mod
 @loggable
 def ban(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
@@ -70,10 +73,10 @@ def ban(update, context):  # sourcery no-metrics
             message.reply_text("My sudos are ban immune")
         elif user_id in SUPPORT_USERS:
             message.reply_text("My support users are ban immune")
-        elif user_id in SARDEGNA_USERS:
-            message.reply_text("Bring an order from My Devs to fight a Sardegna.")
         elif user_id in WHITELIST_USERS:
-            message.reply_text("Neptunians are ban immune!")
+            message.reply_text("Bring an order from My Devs to fight a Whitelist user.")
+        elif user_id in MOD_USERS:
+            message.reply_text("Moderators cannot be banned, report abuse at @TheBotsSupport.")
         else:
             message.reply_text("This user has immunity and cannot be banned.")
         return log_message
@@ -143,9 +146,10 @@ def ban(update, context):  # sourcery no-metrics
 
 @connection_status
 @kigcmd(command='tban', pass_args=True)
+@spamcheck
 @bot_admin
 @can_restrict
-@user_admin
+@user_mod
 @loggable
 def temp_ban(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
@@ -231,9 +235,10 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
 
 @connection_status
 @kigcmd(command='kick', pass_args=True)
+@spamcheck
 @bot_admin
 @can_restrict
-@user_admin
+@user_mod
 @loggable
 def kick(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
@@ -287,9 +292,10 @@ def kick(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
+@kigcmd(command='kickme', pass_args=True, filters=Filters.chat_type.groups)
 @bot_admin
 @can_restrict
-@kigcmd(command='kickme', pass_args=True, filters=Filters.chat_type.groups)
+@spamcheck
 def kickme(update: Update, context: CallbackContext):
     user_id = update.effective_message.from_user.id
     if is_user_admin(update.effective_chat, user_id):
@@ -303,11 +309,12 @@ def kickme(update: Update, context: CallbackContext):
         update.effective_message.reply_text("Huh? I can't :/")
 
 
-@connection_status
 @kigcmd(command='unban', pass_args=True)
+@connection_status
+@spamcheck
 @bot_admin
 @can_restrict
-@user_admin
+@user_mod
 @loggable
 def unban(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
@@ -357,8 +364,8 @@ def unban(update: Update, context: CallbackContext) -> str:
     return log
 
 
-@connection_status
 @kigcmd(command='selfunban', pass_args=True)
+@connection_status
 @bot_admin
 @can_restrict
 @gloggable
@@ -366,7 +373,7 @@ def selfunban(context: CallbackContext, update: Update) -> str:
     message = update.effective_message
     user = update.effective_user
     bot, args = context.bot, context.args
-    if user.id not in SUDO_USERS or user.id not in SARDEGNA_USERS:
+    if user.id not in SUDO_USERS or user.id not in WHITELIST_USERS:
         return
 
     try:

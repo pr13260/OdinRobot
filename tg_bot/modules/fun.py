@@ -1,6 +1,7 @@
 import html
 import json
 import random
+from tg_bot import spamcheck
 import time
 import urllib.request
 import urllib.parse
@@ -13,10 +14,12 @@ from tg_bot.modules.helper_funcs.extraction import extract_user
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command='runs')
+@spamcheck
 def runs(update: Update, context: CallbackContext):
     update.effective_message.reply_text(random.choice(fun_strings.RUN_STRINGS))
 
 @kigcmd(command='slap')
+@spamcheck
 def slap(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     message = update.effective_message
@@ -71,6 +74,7 @@ def slap(update: Update, context: CallbackContext):
     reply_text(reply, parse_mode=ParseMode.HTML)
 
 @kigcmd(command='pat')
+@spamcheck
 def pat(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     msg = str(update.message.text)
@@ -111,14 +115,17 @@ def pat(update: Update, context: CallbackContext):
         )
 
 @kigcmd(command='roll')
+@spamcheck
 def roll(update: Update, context: CallbackContext):
     update.message.reply_text(random.choice(range(1, 7)))
 
 @kigcmd(command='toss')
+@spamcheck
 def toss(update: Update, context: CallbackContext):
     update.message.reply_text(random.choice(fun_strings.TOSS))
 
 @kigcmd(command='shrug')
+@spamcheck
 def shrug(update: Update, context: CallbackContext):
     msg = update.effective_message
     reply_text = (
@@ -127,6 +134,7 @@ def shrug(update: Update, context: CallbackContext):
     reply_text(r"¯\_(ツ)_/¯")
 
 @kigcmd(command='rlg')
+@spamcheck
 def rlg(update: Update, context: CallbackContext):
     eyes = random.choice(fun_strings.EYES)
     mouth = random.choice(fun_strings.MOUTHS)
@@ -139,6 +147,7 @@ def rlg(update: Update, context: CallbackContext):
     update.message.reply_text(repl)
 
 @kigcmd(command='decide')
+@spamcheck
 def decide(update: Update, context: CallbackContext):
     reply_text = (
         update.effective_message.reply_to_message.reply_text
@@ -148,6 +157,7 @@ def decide(update: Update, context: CallbackContext):
     reply_text(random.choice(fun_strings.DECIDE))
 
 @kigcmd(command='table')
+@spamcheck
 def table(update: Update, context: CallbackContext):
     reply_text = (
         update.effective_message.reply_to_message.reply_text

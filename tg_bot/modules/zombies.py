@@ -1,16 +1,15 @@
 # from AstrakoBot
 from asyncio import sleep
 from telethon import events
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot import telethn as tg_botTelethonClient
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot.modules.helper_funcs.telethn.chatstatus import user_is_admin
 from tg_bot.modules.helper_funcs.misc import delete
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
-from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 
-@kigcmd(command='zombies', pass_args=True)
+@tg_botTelethonClient.on(events.NewMessage(pattern=f"^[!/>]zombies ?(.*)"))
 async def zombies(event):
     chat = await event.get_chat()
     chat_id = event.chat_id

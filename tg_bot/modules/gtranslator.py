@@ -1,3 +1,4 @@
+from tg_bot import spamcheck
 from gpytranslate import SyncTranslator
 from tg_bot.modules.language import gs
 
@@ -11,6 +12,7 @@ from telegram.ext import CallbackContext
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 @kigcmd(command=["tr", "tl"])
+@spamcheck
 def translate(update: Update, context: CallbackContext):
     message = update.effective_message
     trl = SyncTranslator()

@@ -1,4 +1,5 @@
 import math
+from tg_bot import spamcheck
 import urllib.request as urllib
 from html import escape
 from io import BytesIO
@@ -13,6 +14,7 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 
 @kigcmd(command='stickerid')
+@spamcheck
 def stickerid(update: Update, context: CallbackContext):
     msg = update.effective_message
     if msg.reply_to_message and msg.reply_to_message.sticker:
@@ -34,6 +36,7 @@ def stickerid(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='getsticker')
+@spamcheck
 def getsticker(update: Update, context: CallbackContext):
     bot = context.bot
     msg = update.effective_message
@@ -66,6 +69,7 @@ def getsticker(update: Update, context: CallbackContext):
 
 
 @kigcmd(command=["steal", "kang"])
+@spamcheck
 def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
     msg = update.effective_message
     user = update.effective_user

@@ -3,7 +3,7 @@ from io import BytesIO
 from telegram import ParseMode, Message
 from telegram.error import BadRequest
 import tg_bot.modules.sql.notes_sql as sql
-from tg_bot import dispatcher, log as LOGGER, OWNER_ID
+from tg_bot import dispatcher, log as LOGGER, OWNER_ID, spamcheck
 from tg_bot.__main__ import DATA_IMPORT
 from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.alternate import typing_action
@@ -22,6 +22,7 @@ from tg_bot.modules.connection import connected
 
 
 @kigcmd(command='import')
+@spamcheck
 @user_admin
 @typing_action
 def import_data(update, context):
@@ -115,6 +116,7 @@ def import_data(update, context):
         msg.reply_text(text, parse_mode="markdown")
 
 @kigcmd(command='export')
+@spamcheck
 @user_admin
 def export_data(update, context):  # sourcery no-metrics
     chat_data = context.chat_data

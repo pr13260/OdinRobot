@@ -12,12 +12,12 @@ from telegram.ext import CallbackContext, run_async
 from ujson import loads
 from yaml import load, Loader
 
-from tg_bot import dispatcher
+from tg_bot import dispatcher, spamcheck
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot.modules.github import getphh
 from tg_bot.modules.helper_funcs.misc import delete
 
-
+@spamcheck
 def magisk(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
@@ -45,7 +45,7 @@ def magisk(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def checkfw(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message
@@ -91,7 +91,7 @@ def checkfw(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def getfw(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message
@@ -148,7 +148,7 @@ def getfw(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def phh(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message
@@ -167,7 +167,7 @@ def phh(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def miui(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
@@ -212,7 +212,7 @@ def miui(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def orangefox(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
@@ -271,7 +271,7 @@ def orangefox(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
-
+@spamcheck
 def twrp(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat

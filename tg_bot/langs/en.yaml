@@ -1,7 +1,7 @@
 # Language name in their native
 language: "English 🇺🇲"
 # name of people(s) who worked on this translation
-authors: "@AbOuLfOoOoOuF"
+authors: "@itsLuuke"
 
 # languages
 curr_chat_lang: "Hey. Your current language is {}, select the one you want from the buttons below :)"
@@ -48,6 +48,8 @@ src_btn: "Source code"
 
 admin_help: |
    • `/admins`*:* list of admins in the chat
+   • `/adminlist`*:* list of admins in the chat
+   • `/staff`*:* list of admins in the chat
 
    *Admins only:*
    • `/pin`*:* silently pins the message replied to - add `'loud'` or `'notify'` to give notifs to users.
@@ -61,6 +63,9 @@ admin_help: |
    • `/import`*:* reply to a group butler backup file to import as much as possible, making the transfer super simple! Note \
        that files/photos can't be imported due to telegram restrictions.
    • `/export`*:* Export group data, which will be exported are: rules, notes (documents, images, music, video, audio, voice, text, text buttons)
+   • `/announce <on/off/yes/no/true/false>`*:* Will toggle our admin actions announcements.
+
+   announce is a module that keeps u updated with admin cations in your group weather its done manually or by other bots. Turn it on to get announcements on every admin action in your group. Note that no matter if this is on or off everythong will be logged to the log channel.
 
 #   • /delete: deletes the message you replied to
 #   • /purge: deletes all messages between this and the replied to message.
@@ -466,20 +471,19 @@ greetings_help: |
        • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
 
 nation_help: |
-      Some users have access levels we call as *"Nation Levels"*
-      They are users with special bot priveleges and have commands that can only be used by them.
-      
-      *God* - Only one exists, bot owner.
-      Owner has complete bot access, including bot adminship in chats this bot is at.
-      *Devs* - Devs who can access the bots server and can execute, edit, modify bot code. Can manage other Nations
-      *Royals* - Have super user access to the bot.
-      *Sakuras* - Have access to globally ban users across the bot.
-      *Sardegnas* - Same as Neptunians but can unban themselves if banned.
-      *Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
-      *Disclaimer*: The Nation levels in the bot are there for troubleshooting, support, banning potential scammers.
-
-      Report abuse or ask us more on these at the Support chat.
-      You can visit @TheBotsSupport to query more about these.
+    Some users have access levels we call as *Super Users*
+    They are users with special bot priveleges and have commands that can only be used by them.
+    *God* - Only one exists, bot owner.
+    Owner has complete bot access, including bot adminship in chats this bot is at.
+    *Devs* - Devs who can access the bots server and can execute, edit, modify bot code. Can manage other Nations
+    *SUDOS* - Have super user access to the bot.
+    *Support* - Have access to globally ban users across the bot.
+    *Whitelist* - Cannot be banned, muted flood kicked but can be manually banned by admins and can unban themselves if banned.
+    *Moderators* - They have some admin permissions, and cannot be banned, muted flood kicked but can be manually banned by admins.
+    *Disclaimer*: The Super Users in the bot are there for troubleshooting, support, banning potential scammers.
+    
+    Report abuse or ask us more on these at the Support chat.
+    You can visit @TheBotsSupport to query more about these.
 
 nlp_help: |
 

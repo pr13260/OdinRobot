@@ -6,7 +6,7 @@ import tg_bot.modules.helper_funcs.git_api as api
 import tg_bot.modules.sql.github_sql as sql
 
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
-from tg_bot import dispatcher, OWNER_ID, SUDO_USERS, SUPPORT_USERS
+from tg_bot import dispatcher, OWNER_ID, SUDO_USERS, SUPPORT_USERS, spamcheck
 from tg_bot.modules.helper_funcs.filters import CustomFilters
 from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.misc import delete
@@ -32,7 +32,7 @@ from telegram import (
     MAX_MESSAGE_LENGTH,
 )
 
-
+@spamcheck
 def getphh(index):
     recentRelease = api.getReleaseData(api.getData("phhusson/treble_experimentations"), index)
     if recentRelease is None:
@@ -57,7 +57,7 @@ def getphh(index):
         message += "    <code>Size: "  + size + " MB</code>\n"
     return message
 
-
+@spamcheck
 # do not async
 def getData(url, index):
     if not api.getData(url):
@@ -85,7 +85,7 @@ def getData(url, index):
         message += "\nDownload Count: " + str(downloadCount) + "\n\n"
     return message
 
-
+@spamcheck
 # likewise, aux function, not async
 def getRepo(bot, update, reponame):
     chat_id = update.effective_chat.id
@@ -94,7 +94,7 @@ def getRepo(bot, update, reponame):
         return repo.value, repo.backoffset
     return None, None
 
-
+@spamcheck
 def getRelease(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     msg = update.effective_message
@@ -116,7 +116,7 @@ def getRelease(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
     return
 
-
+@spamcheck
 def hashFetch(update: Update, context: CallbackContext):  # kanged from notes
     bot, args = context.bot, context.args
     message = update.effective_message.text
@@ -135,7 +135,7 @@ def hashFetch(update: Update, context: CallbackContext):  # kanged from notes
     deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
     return
 
-
+@spamcheck
 def cmdFetch(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     msg = update.effective_message
@@ -154,7 +154,7 @@ def cmdFetch(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
     return
 
-
+@spamcheck
 def changelog(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     msg = update.effective_message
@@ -171,7 +171,7 @@ def changelog(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text(body))
     return
 
-
+@spamcheck
 @user_admin
 def saveRepo(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -191,7 +191,7 @@ def saveRepo(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text("Repo shortcut saved successfully!"))
     return
 
-
+@spamcheck
 @user_admin
 def delRepo(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -204,7 +204,7 @@ def delRepo(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text("Repo shortcut deleted successfully!"))
     return
 
-
+@spamcheck
 def listRepo(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     chat = update.effective_chat
@@ -225,7 +225,7 @@ def listRepo(update: Update, context: CallbackContext):
             msg.format(chat_name) + des, parse_mode=ParseMode.MARKDOWN
         ))
 
-
+@spamcheck
 def getVer(update: Update, context: CallbackContext):
     msg = update.effective_message
     ver = api.vercheck()

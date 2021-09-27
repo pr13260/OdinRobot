@@ -9,13 +9,8 @@ from telethon.sessions import MemorySession
 from configparser import ConfigParser
 from ptbcontrib.postgres_persistence import PostgresPersistence
 from logging.config import fileConfig
-
+from functools import wraps
 StartTime = time.time()
-
-
-flag = """
-\033[37m┌─────────────────────────────────────────────┐\033[0m\n\033[37m│\033[44m\033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[0m\033[91;101m#########################\033[0m\033[37m│\n\033[37m│\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m  \033[0m\033[97;107m:::::::::::::::::::::::::\033[0m\033[37m│\n\033[37m│\033[44m\033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[0m\033[91;101m#########################\033[0m\033[37m│\n\033[37m│\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m  \033[0m\033[97;107m:::::::::::::::::::::::::\033[0m\033[37m│\n\033[37m│\033[44m\033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[0m\033[91;101m#########################\033[0m\033[37m│\n\033[37m│\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m  \033[0m\033[97;107m:::::::::::::::::::::::::\033[0m\033[37m│\n\033[37m│\033[44m\033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[97m★\033[0m\033[44m \033[0m\033[91;101m#########################\033[0m\033[37m│      \033[1mUnited we stand, Divided we fall\033[0m\n\033[37m│\033[97;107m:::::::::::::::::::::::::::::::::::::::::::::\033[0m\033[37m│ \033[1mKigyo Project, a tribute to USS Enterprise.\033[0m\n\033[37m│\033[91;101m#############################################\033[0m\033[37m│\n\033[37m│\033[97;107m:::::::::::::::::::::::::::::::::::::::::::::\033[0m\033[37m│\n\033[37m│\033[91;101m#############################################\033[0m\033[37m│\n\033[37m│\033[97;107m:::::::::::::::::::::::::::::::::::::::::::::\033[0m\033[37m│\n\033[37m│\033[91;101m#############################################\033[0m\033[37m│\n\033[37m└─────────────────────────────────────────────┘\033[0m\n
-"""
 
 def get_user_list(key):
     # Import here to evade a circular import
@@ -27,11 +22,10 @@ def get_user_list(key):
 
 fileConfig('logging.ini')
 
-print(flag)
 log = logging.getLogger('[Enterprise]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
 log.info("[Ɩυκє's bot] Ɩυκє's bot is starting. | Licensed under GPLv3.")
-log.info("[Ɩυκє's bot] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/abOuLfOoOoOuF)")
+log.info("[Ɩυκє's bot] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/itsLuuke)")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
@@ -82,6 +76,9 @@ class KigyoINIT:
         self.bot_username = "L4K3bot" #placeholder
         self.ALLOW_CHATS =  self.parser.getboolean("ALLOW_CHATS", True)
         self.SUPPORT_GROUP =  self.parser.get("SUPPORT_GROUP", 0)
+        self.IS_DEBUG =  self.parser.getboolean("IS_DEBUG", False)
+        self.ANTISPAM_TOGGLE =  self.parser.getboolean("ANTISPAM_TOGGLE", True)
+        self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
 
     def init_sw(self):
         if self.spamwatch_api is None:
@@ -120,22 +117,39 @@ GBAN_LOGS = KInit.GBAN_LOGS
 NO_LOAD = KInit.NO_LOAD
 OWNER_USER = [OWNER_ID]
 SYS_ADMIN = KInit.SYS_ADMIN
+MOD_USERS = [OWNER_ID] + get_user_list("mods")
 SUDO_USERS = [OWNER_ID] + get_user_list("sudos")
 DEV_USERS = [OWNER_ID] + get_user_list("devs")
 SUPPORT_USERS = get_user_list("supports")
-SARDEGNA_USERS = get_user_list("sardegnas")
 WHITELIST_USERS = get_user_list("whitelists")
 SPAMMERS = get_user_list("spammers")
 spamwatch_api = KInit.spamwatch_api
 CASH_API_KEY = KInit.CASH_API_KEY
 TIME_API_KEY = KInit.TIME_API_KEY
-#WALL_API = KInit.WALL_API
+# WALL_API = KInit.WALL_API
 LASTFM_API_KEY = KInit.LASTFM_API_KEY
 WEATHER_API = KInit.WEATHER_API
 CF_API_KEY = KInit.CF_API_KEY
 ALLOW_CHATS = KInit.ALLOW_CHATS
 SPB_MODE = kigconfig.getboolean('SPB_MODE', False)
 SUPPORT_GROUP = KInit.SUPPORT_GROUP
+IS_DEBUG = KInit.IS_DEBUG
+GROUP_BLACKLIST = KInit.GROUP_BLACKLIST
+ANTISPAM_TOGGLE = KInit.ANTISPAM_TOGGLE
+
+
+
+
+
+try:
+    IS_DEBUG = IS_DEBUG
+except AttributeError:
+    IS_DEBUG = False
+
+try:
+    ANTISPAM_TOGGLE = ANTISPAM_TOGGLE
+except AttributeError:
+    ANTISPAM_TOGGLE = True
 
 # SpamWatch
 sw = KInit.init_sw()
@@ -205,3 +219,4 @@ def spamcheck(func):
             return False
         return func(update, context, *args, **kwargs)
     return check_user
+

@@ -9,10 +9,12 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 from alphabet_detector import AlphabetDetector
 from tg_bot.modules.sql.approve_sql import is_approved
 import tg_bot.modules.sql.locks_sql as sql
-from tg_bot import dispatcher, SUDO_USERS, log
+from tg_bot import dispatcher, SUDO_USERS, log, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import (
     can_delete,
     is_user_admin,
+    is_user_mod,
+    user_mod,
     user_not_admin,
     is_bot_admin,
     user_admin,
@@ -142,6 +144,7 @@ def unrestr_members(
             pass
 
 @kigcmd(command='locktypes')
+@spamcheck
 def locktypes(update, context):
     update.effective_message.reply_text(
         "\n • ".join(
@@ -151,7 +154,8 @@ def locktypes(update, context):
     )
 
 @kigcmd(command='lock', pass_args=True)
-@user_admin
+@spamcheck
+@user_mod
 @loggable
 @typing_action
 def lock(update, context) -> str:  # sourcery no-metrics
@@ -258,7 +262,8 @@ def lock(update, context) -> str:  # sourcery no-metrics
     return ""
 
 @kigcmd(command='unlock', pass_args=True)
-@user_admin
+@spamcheck
+@user_mod
 @loggable
 @typing_action
 def unlock(update, context) -> str:  # sourcery no-metrics
@@ -266,7 +271,7 @@ def unlock(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
-    if is_user_admin(chat, message.from_user.id):
+    if is_user_mod(chat, message.from_user.id):
         if len(args) >= 1:
             ltype = args[0].lower()
             if ltype in LOCK_TYPES:
@@ -354,6 +359,7 @@ def unlock(update, context) -> str:  # sourcery no-metrics
     return ""
 
 @kigmsg((Filters.all & Filters.chat_type.groups), group=PERM_GROUP)
+#@spamcheck  maybe later ill add back
 @user_not_admin
 def del_lockables(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
@@ -514,7 +520,8 @@ def build_lock_message(chat_id):
     return res
 
 @kigcmd(command='locks')
-@user_admin
+@spamcheck
+@user_mod
 @typing_action
 def list_locks(update, context):
     chat = update.effective_chat  # type: Optional[Chat]

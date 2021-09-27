@@ -1,4 +1,5 @@
 import random
+from tg_bot import spamcheck
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -210,6 +211,7 @@ reactions = [
 ]
 
 @kigcmd(command='react')
+@spamcheck
 def react(update: Update, context: CallbackContext):
     message = update.effective_message
     react = random.choice(reactions)

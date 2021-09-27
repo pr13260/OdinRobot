@@ -6,7 +6,7 @@ from telegram.ext import Filters
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.sql.approve_sql import is_approved
 import tg_bot.modules.sql.blacklist_sql as sql
-from tg_bot import log, dispatcher
+from tg_bot import log, dispatcher, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from tg_bot.modules.helper_funcs.extraction import extract_text
 from tg_bot.modules.helper_funcs.misc import split_message
@@ -20,6 +20,7 @@ from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 BLACKLIST_GROUP = -3
 
 @kigcmd(command="blacklist", pass_args=True, admin_ok=True)
+@spamcheck
 @user_admin
 @typing_action
 def blacklist(update, context):
@@ -64,6 +65,7 @@ def blacklist(update, context):
         send_message(update.effective_message, text, parse_mode=ParseMode.HTML)
 
 @kigcmd(command="addblacklist", pass_args=True)
+@spamcheck
 @user_admin
 @typing_action
 def add_blacklist(update, context):
@@ -122,6 +124,7 @@ def add_blacklist(update, context):
         )
 
 @kigcmd(command="unblacklist", pass_args=True)
+@spamcheck
 @user_admin
 @typing_action
 def unblacklist(update, context):
@@ -206,6 +209,7 @@ def unblacklist(update, context):
         )
 
 @kigcmd(command="blacklistmode", pass_args=True)
+@spamcheck
 @loggable
 @user_admin
 @typing_action

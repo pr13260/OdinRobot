@@ -1,6 +1,6 @@
 import telegram.ext as tg
 from telegram import Update
-from tg_bot import DEV_USERS, SUDO_USERS, WHITELIST_USERS, SUPPORT_USERS, SARDEGNA_USERS
+from tg_bot import DEV_USERS, MOD_USERS, SUDO_USERS, WHITELIST_USERS, SUPPORT_USERS
 from pyrate_limiter import (
     BucketFullException,
     Duration,
@@ -24,7 +24,7 @@ class AntiSpam:
             + (SUDO_USERS or [])
             + (WHITELIST_USERS or [])
             + (SUPPORT_USERS or [])
-            + (SARDEGNA_USERS or [])
+            + (MOD_USERS or [])
         )
         # Values are HIGHLY experimental, its recommended you pay attention to our commits as we will be adjusting the values over time with what suits best.
         Duration.CUSTOM = 15  # Custom duration, 15 seconds
