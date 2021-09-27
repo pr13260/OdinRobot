@@ -156,10 +156,52 @@ if CUSTOM_CMD and len(CUSTOM_CMD) >= 1:
     tg.CommandHandler = CustomCommandHandler
 
 
-def spamfilters(text, user_id, chat_id):
+'''def spamfilters(text, user_id, chat_id):
     # print("{} | {} | {}".format(text, user_id, chat_id))
     if int(user_id) not in SPAMMERS:
         return False
 
     print("This user is a spammer!")
-    return True
+    return True'''
+
+
+try:
+    from tg_bot.antispam import antispam_restrict_user, antispam_cek_user, detect_user
+    log.info("AntiSpam loaded!")
+    antispam_module = True
+except ModuleNotFoundError:
+    antispam_module = False
+
+
+def spamcheck(func):
+    @wraps(func)
+    def check_user(update, context, *args, **kwargs):
+        try:
+            chat = update.effective_chat
+            user = update.effective_user
+            message = update.effective_message
+        except AttributeError:
+            return
+        # If msg from self, return True
+        if user.id == context.bot.id:
+            return False
+        if user.id == "777000":
+            return False
+        if IS_DEBUG:
+            print("{} | {} | {} | {}".format(message.text or message.caption, user.id, message.chat.title, chat.id))
+        if antispam_module and ANTISPAM_TOGGLE:
+            parsing_date = time.mktime(message.date.timetuple())
+            detecting = detect_user(user.id, chat.id, message, parsing_date)
+            if detecting:
+                return False
+            antispam_restrict_user(user.id, parsing_date)
+        if int(user.id) in SPAMMERS:
+            if IS_DEBUG:
+                print("^ This user is a spammer!")
+            return False
+        elif int(chat.id) in GROUP_BLACKLIST:
+            dispatcher.bot.sendMessage(chat.id, "This group is blacklisted, i'm outa here...")
+            dispatcher.bot.leaveChat(chat.id)
+            return False
+        return func(update, context, *args, **kwargs)
+    return check_user
