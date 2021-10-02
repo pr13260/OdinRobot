@@ -408,7 +408,6 @@ nations = """Some users have access levels we call as *"Super Users"*
 \n*Whitelist* - Cannot be banned, muted flood kicked but can be manually banned by admins and can unban themselves if banned.
 \n*Moderators* - They have some admin permissions, and cannot be banned, muted flood kicked but can be manually banned by admins.
 \n*Disclaimer*: The Super Users in the bot are there for troubleshooting, support, banning potential scammers.
-\n
 \nReport abuse or ask us more on these at the Support chat.
 \nYou can visit @TheBotsSupport to query more about these.
 """
