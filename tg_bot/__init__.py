@@ -81,6 +81,7 @@ class KigyoINIT:
         self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
         self.DEBUG = self.parser.getboolean("IS_DEBUG", False)
         self.DROP_UPDATES = self.parser.getboolean("DROP_UPDATES", True)
+
     def init_sw(self):
         if self.spamwatch_api is None:
             log.warning("SpamWatch API key is missing! Check your config.ini")
