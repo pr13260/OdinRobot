@@ -19,6 +19,7 @@ from telegram.ext import (
 from telegram.ext.dispatcher import DispatcherHandlerStop
 from telegram.utils.helpers import escape_markdown
 from tg_bot import (
+    KInit,
     dispatcher,
     updater,
     TOKEN,
@@ -666,7 +667,7 @@ def main():
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username
         KigyoINIT.bot_name = dispatcher.bot.first_name
-        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=KInit.DROP_UPDATES, allowed_updates=Update.ALL_TYPES)
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()
     else:

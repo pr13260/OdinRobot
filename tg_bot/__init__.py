@@ -79,7 +79,8 @@ class KigyoINIT:
         self.IS_DEBUG =  self.parser.getboolean("IS_DEBUG", False)
         self.ANTISPAM_TOGGLE =  self.parser.getboolean("ANTISPAM_TOGGLE", True)
         self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
-
+        self.DEBUG = self.parser.getboolean("IS_DEBUG", False)
+        self.DROP_UPDATES = self.parser.getboolean("DROP_UPDATES", True)
     def init_sw(self):
         if self.spamwatch_api is None:
             log.warning("SpamWatch API key is missing! Check your config.ini")
@@ -156,8 +157,12 @@ sw = KInit.init_sw()
 
 from tg_bot.modules.sql import SESSION
 
-
-updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
+if not KInit.DROP_UPDATES:
+    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
+    
+else:
+    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
+    
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher = updater.dispatcher
 
