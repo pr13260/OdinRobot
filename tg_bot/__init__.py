@@ -81,6 +81,7 @@ class KigyoINIT:
         self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
         self.DEBUG = self.parser.getboolean("IS_DEBUG", False)
         self.DROP_UPDATES = self.parser.getboolean("DROP_UPDATES", True)
+        self.BOT_API_URL = self.parser.get('BOT_API_URL', "https://api.telegram.org/bot")
 
     def init_sw(self):
         if self.spamwatch_api is None:
@@ -159,10 +160,10 @@ sw = KInit.init_sw()
 from tg_bot.modules.sql import SESSION
 
 if not KInit.DROP_UPDATES:
-    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
+    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
     
 else:
-    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
+    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
     
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher = updater.dispatcher
