@@ -1,6 +1,6 @@
 import re
 from html import escape
-
+import html
 import telegram
 from telegram import ParseMode, InlineKeyboardMarkup, Message, InlineKeyboardButton
 from telegram.error import BadRequest
@@ -10,7 +10,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
 )
-from telegram.utils.helpers import mention_html, escape_markdown
+from telegram.utils.helpers import mention_html, escape_markdown, mention_html
 
 from tg_bot import dispatcher, log, SUDO_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import user_admin
@@ -24,6 +24,7 @@ from tg_bot.modules.helper_funcs.string_handling import (
     escape_invalid_curly_brackets,
     markdown_to_html,
 )
+from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import cust_filters_sql as sql
 
 from tg_bot.modules.connection import connected
@@ -515,17 +516,19 @@ def rmall_filters(update, context):
         )
 
 @kigcallback(pattern=r"filters_.*")
-def rmall_callback(update, context):
+@loggable
+def rmall_callback(update, context) -> str:
     query = update.callback_query
     chat = update.effective_chat
     msg = update.effective_message
     member = chat.get_member(query.from_user.id)
+    user = query.from_user
     if query.data == "filters_rmall":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             allfilters = sql.get_chat_triggers(chat.id)
             if not allfilters:
                 msg.edit_text("No filters in this chat, nothing to stop!")
-                return
+                return ""
 
             count = 0
             filterlist = []
@@ -538,19 +541,30 @@ def rmall_callback(update, context):
 
             msg.edit_text(f"Cleaned {count} filters in {chat.title}")
 
+            log_message = (
+                f"<b>{html.escape(chat.title)}:</b>\n"
+                f"#CLEAREDALLFILTERS\n"
+                f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+            )
+            return log_message
+
         if member.status == "administrator":
             query.answer("Only owner of the chat can do this.")
+            return ""
 
         if member.status == "member":
             query.answer("You need to be admin to do this.")
+            return ""
     elif query.data == "filters_cancel":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             msg.edit_text("Clearing of all filters has been cancelled.")
-            return
+            return ""
         if member.status == "administrator":
             query.answer("Only owner of the chat can do this.")
+            return ""
         if member.status == "member":
             query.answer("You need to be admin to do this.")
+            return ""
 
 
 # NOT ASYNC NOT A HANDLER

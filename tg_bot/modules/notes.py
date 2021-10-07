@@ -1,6 +1,8 @@
 import re, ast, random
 from io import BytesIO
 from typing import Optional
+from tg_bot.modules.log_channel import loggable
+import html
 
 import tg_bot.modules.sql.notes_sql as sql
 from tg_bot import log, dispatcher, SUDO_USERS, spamcheck
@@ -18,7 +20,7 @@ from telegram import (
     InlineKeyboardButton,
 )
 from telegram.error import BadRequest
-from telegram.utils.helpers import escape_markdown, mention_markdown
+from telegram.utils.helpers import escape_markdown, mention_markdown, mention_html
 from telegram.ext import (
     CallbackContext,
     Filters,
@@ -342,11 +344,13 @@ def clearall(update: Update, context: CallbackContext):
 
 
 @kigcallback(pattern=r"notes_.*")
-def clearall_btn(update: Update, context: CallbackContext):
+@loggable
+def clearall_btn(update: Update, context: CallbackContext) -> str:
     query = update.callback_query
     chat = update.effective_chat
     message = update.effective_message
     member = chat.get_member(query.from_user.id)
+    user = query.from_user
     if query.data == "notes_rmall":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             note_list = sql.get_all_chat_notes(chat.id)
@@ -355,22 +359,34 @@ def clearall_btn(update: Update, context: CallbackContext):
                     note = notename.name.lower()
                     sql.rm_note(chat.id, note)
                 message.edit_text("Deleted all notes.")
+
+                log_message = (
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#CLEAREDALLNOTES\n"
+                    f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+                )
+                return log_message
+
             except BadRequest:
-                return
+                return ""
 
         if member.status == "administrator":
             query.answer("Only owner of the chat can do this.")
+            return ""
 
         if member.status == "member":
             query.answer("You need to be admin to do this.")
+            return ""
     elif query.data == "notes_cancel":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             message.edit_text("Clearing of all notes has been cancelled.")
-            return
+            return ""
         if member.status == "administrator":
             query.answer("Only owner of the chat can do this.")
+            return ""
         if member.status == "member":
             query.answer("You need to be admin to do this.")
+            return ""
 
 
 @kigcmd(command=["notes", "saved"])
