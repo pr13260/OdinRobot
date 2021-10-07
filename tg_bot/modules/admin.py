@@ -1,16 +1,15 @@
 import html
-from time import time
+
 
 from telegram import ParseMode, Update
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
+
 from telegram.utils.helpers import escape_markdown, mention_html
 
 from tg_bot import SUDO_USERS, spamcheck
-from tg_bot.modules.backups import put_chat
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
-    can_pin,
     can_promote,
     connection_status,
     user_admin,
@@ -260,74 +259,6 @@ def set_title(update: Update, context: CallbackContext):
         message.reply_text("I can only set titles for the admins I promote!")
         return
 
-@kigcmd(command="pin", can_disable=False)
-@spamcheck
-@bot_admin
-@can_pin
-@user_mod
-@loggable
-def pin(update: Update, context: CallbackContext) -> str:
-    bot = context.bot
-    args = context.args
-
-    user = update.effective_user
-    chat = update.effective_chat
-
-    is_group = chat.type != "private" and chat.type != "channel"
-    prev_message = update.effective_message.reply_to_message
-
-    is_silent = True
-    if len(args) >= 1:
-        is_silent = (
-            args[0].lower() != "notify"
-            or args[0].lower() == "loud"
-            or args[0].lower() == "violent"
-        )
-
-    if prev_message and is_group:
-        try:
-            bot.pinChatMessage(
-                chat.id, prev_message.message_id, disable_notification=is_silent
-            )
-        except BadRequest as excp:
-            if excp.message == "Chat_not_modified":
-                pass
-            else:
-                raise
-        log_message = (
-            f"<b>{html.escape(chat.title)}:</b>\n"
-            f"#PINNED\n"
-            f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
-        )
-
-        return log_message
-
-@kigcmd(command="unpin", can_disable=False)
-@spamcheck
-@bot_admin
-@can_pin
-@user_mod
-@loggable
-def unpin(update: Update, context: CallbackContext) -> str:
-    bot = context.bot
-    chat = update.effective_chat
-    user = update.effective_user
-
-    try:
-        bot.unpinChatMessage(chat.id)
-    except BadRequest as excp:
-        if excp.message == "Chat_not_modified":
-            pass
-        else:
-            raise
-
-    log_message = (
-        f"<b>{html.escape(chat.title)}:</b>\n"
-        f"#UNPINNED\n"
-        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
-    )
-
-    return log_message
 
 @kigcmd(command=["invitelink", "link"], can_disable=False)
 @spamcheck
@@ -369,6 +300,8 @@ def adminlist(update, context):
         text += "\n - {}".format(name)
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+
+
 
 
 def get_help(chat):

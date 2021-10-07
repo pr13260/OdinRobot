@@ -509,10 +509,10 @@ def syslist(update: Update, context: CallbackContext):
     update.effective_message.reply_text(reply, parse_mode=ParseMode.HTML)
 
 
-from tg_bot.modules.language import gs
+# from tg_bot.modules.language import gs
 
-def get_help(chat):
-    return gs(chat, "nation_help")
+# def get_help(chat):
+#     return gs(chat, "nation_help")
 
 __mod_name__ = "Nations"
 
