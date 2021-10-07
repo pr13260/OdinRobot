@@ -57,7 +57,7 @@ admin_help: |
    • `/invitelink`*:* gets invitelink
    • `/promote`*:* promotes the user replied to
    • `/demote`*:* demotes the user replied to
-   • `/admincache`*:* refreshes the admins cache
+   • `/admincache`*:* refreshes the admins cache (useless as it is always updated)
    • `/title <title here>`*:* sets a custom title for an admin that the bot promoted
    • `/zombies`*:* removes the deleted accounts from the group
    • `/import`*:* reply to a group butler backup file to import as much as possible, making the transfer super simple! Note \
@@ -280,6 +280,7 @@ gtranslate_help: |
        eg: `/tl ja//en`: translates from Japanese to English.
      • `/langs`: get a list of supported languages for translation.
 
+     "" = Not used when replied to a message.
 
 locks_help: |
      Do stickers annoy you? or want to avoid people sharing links? or pictures?
@@ -532,13 +533,12 @@ android_help: |
        • `/checkfw <model> <csc>` - Samsung only - shows the latest firmware info for the given device, taken from samsung servers
        • `/getfw <model> <csc>` - Samsung only - gets firmware download links from samfrew, sammobile and sfirmwares for the given device
 
-lockdown_help: |
+lockgroup_help: |
        *Available commands:*
        *Group owner only!*
        *Lockdown:* 
-       • `/lockdown` : check the current lockdown status
-       • `/setlockdown (on/off)` : toggles the group lockdown status
+       • `/lockgroup (on/off)` : check and toggle the current lockgroup status
 
        Ever had your group raided by spammers or bots?
-       By enabling *lockdown* the bot will kick every user on joining the group.
-       When the raid is done you can toggle back lockdown and everything will be back to normal.
+       By enabling *lockgroup* the bot will kick every user on joining the group.
+       When the raid is done you can toggle back lockgroup and everything will be back to normal.

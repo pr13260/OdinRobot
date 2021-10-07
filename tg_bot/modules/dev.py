@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 from time import sleep
+from telegram.error import Unauthorized
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from tg_bot import DEV_USERS, dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
@@ -28,7 +29,10 @@ def leave(update: Update, context: CallbackContext):
         try:
             context.bot.send_message(chat_id, leave_msg)
             bot.leave_chat(int(chat_id))
-            update.effective_message.reply_text("Left chat.")
+            try:
+                update.effective_message.reply_text("Left chat.")
+            except Unauthorized:
+                pass
         except TelegramError:
             update.effective_message.reply_text("Failed to leave chat for some reason.")
     elif update.effective_message.chat.type != "private":
@@ -123,7 +127,7 @@ telethn.add_event_handler(callback_queries, events.CallbackQuery())
 @telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=SYS_ADMIN))
 async def getstats(event):
     await event.reply(
-        f"**__KIGYO EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",
+        f"**__BOT EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",
         parse_mode='md'
     )
 
@@ -151,12 +155,12 @@ def pip_install(update: Update, context: CallbackContext):
 
         message.reply_text(text=reply, parse_mode=ParseMode.MARKDOWN)
 
-@kigcmd(command='lockgroups')
+@kigcmd(command='lockdown')
 @dev_plus
 def allow_groups(update: Update, context: CallbackContext):
     args = context.args
     if not args:
-        state = "Lockgroups is " + "on" if not ALLOW_CHATS else "off"
+        state = "Lockdown is " + "on" if not ALLOW_CHATS else "off"
         update.effective_message.reply_text(f"Current state: {state}")
         return
     if args[0].lower() in ["off", "no"]:
@@ -164,7 +168,7 @@ def allow_groups(update: Update, context: CallbackContext):
     elif args[0].lower() in ["yes", "on"]:
         ALLOW_CHATS = False
     else:
-        update.effective_message.reply_text("Format: /lockgroups Yes/No or Off/On")
+        update.effective_message.reply_text("Format: /lockdown Yes/No or Off/On")
         return
     update.effective_message.reply_text("Done! Lockgroups value toggled.")
 

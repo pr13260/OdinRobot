@@ -143,11 +143,11 @@ def __user_info__(user_id):
     ):
         return ""
     if is_blacklisted:
-        text = "\nBlacklisted: <b>{}</b>"
+        text = "\nㅤBlacklisted: <b>{}</b>"
         text = text.format("Yes")
         reason = sql.get_reason(user_id)
         if reason:
-            text += f"\nReason: <code>{reason}</code>"
+            text += f"\nㅤReason: <code>{reason}</code>"
     else:
         text = ""
 

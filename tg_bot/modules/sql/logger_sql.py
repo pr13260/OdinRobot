@@ -10,7 +10,7 @@ from tg_bot.modules.sql import BASE, SESSION
 class LoggerSettings(BASE):
     __tablename__ = "chat_log_settings"
     chat_id = Column(String(14), primary_key=True)
-    setting = Column(Boolean, default=True, nullable=False)
+    setting = Column(Boolean, default=False, nullable=False)
 
     def __init__(self, chat_id, disabled):
         self.chat_id = str(chat_id)

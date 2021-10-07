@@ -1,4 +1,5 @@
 import html
+from time import time
 
 from telegram import ParseMode, Update
 from telegram.error import BadRequest
@@ -6,6 +7,7 @@ from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown, mention_html
 
 from tg_bot import SUDO_USERS, spamcheck
+from tg_bot.modules.backups import put_chat
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_pin,
@@ -42,7 +44,7 @@ def promote(update: Update, context: CallbackContext) -> str:
         not (promoter.can_promote_members or promoter.status == "creator")
         and not user.id in SUDO_USERS
     ):
-        message.reply_text("You don't have the necessary rights to do that!")
+        message.reply_text("You lack the CAN_ADD_ADMINS right!")
         return
 
     user_id, title = extract_user_and_text(message, args)
@@ -59,11 +61,11 @@ def promote(update: Update, context: CallbackContext) -> str:
         return
 
     if user_member.status in ("administrator", "creator"):
-        message.reply_text("How am I meant to promote someone that's already an admin?")
+        message.reply_text("This user is already an admin!")
         return
 
     if user_id == bot.id:
-        message.reply_text("I can't promote myself! Get an admin to do it for me.")
+        message.reply_text("Yeah I wish I could promote myself...")
         return
 
     # set same perms as bot - bot can't assign higher perms than itself!
@@ -91,12 +93,12 @@ def promote(update: Update, context: CallbackContext) -> str:
             pass
         bot.sendMessage(
             chat.id,
-            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> in <b>{chat.title}</b>.",
+            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b>.",
             parse_mode=ParseMode.HTML,
         ) 
     except BadRequest as err:
         if err.message == "User_not_mutual_contact":
-            message.reply_text("I can't promote someone who isn't in the group.")
+            message.reply_text("How am I mean to promote someone who isn't in the group?")
         else:
             message.reply_text("An error occured while promoting.")
         return
@@ -140,11 +142,11 @@ def demote(update: Update, context: CallbackContext) -> str:
         return
 
     if user_member.status == "creator":
-        message.reply_text("This person CREATED the chat, how would I demote them?")
+        message.reply_text("This person is the chat CREATOR, find someone else to play with.")
         return
 
     if user_member.status != "administrator":
-        message.reply_text("Can't demote what wasn't promoted!")
+        message.reply_text("This user isn't an admin!")
         return
 
     if user_id == bot.id:
@@ -172,7 +174,7 @@ def demote(update: Update, context: CallbackContext) -> str:
             pass
         bot.sendMessage(
             chat.id,
-            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b> in <b>{chat.title or None}</b>.",
+            f"<b>{user_member.user.first_name or user_id or None}</b> was demoted by <b>{message.from_user.first_name or None}</b>.",
             parse_mode=ParseMode.HTML,
         )  
 
@@ -185,21 +187,20 @@ def demote(update: Update, context: CallbackContext) -> str:
 
         return log_message
 
-    except BadRequest:
+    except BadRequest as e:
         message.reply_text(
-            "Could not demote. I might not be admin, or the admin status was appointed by another"
-            " user, so I can't act upon them!"
+            f"Could not demote!\n{str(e)}"
         )
         return
  
 @kigcmd(command="admincache", can_disable=False)
 @user_mod
-def refresh_admin(update, _):
+def refresh_admin(update, context):
     try:
         ADMIN_CACHE.pop(update.effective_chat.id)
     except KeyError:
         pass
-    update.effective_message.reply_text("Admins cache refreshed!")
+    update.effective_message.reply_text("Admins cache is up to date!")
 
 @kigcmd(command="title", can_disable=False)
 @spamcheck
@@ -228,13 +229,13 @@ def set_title(update: Update, context: CallbackContext):
 
     if user_member.status == "creator":
         message.reply_text(
-            "This person CREATED the chat, how can i set custom title for him?"
+            "This person is the chat CREATOR, only they can set their title."
         )
         return
 
     if user_member.status != "administrator":
         message.reply_text(
-            "Can't set title for non-admins!\nPromote them first to set custom title!"
+            "Titles can only be set to admins."
         )
         return
 
@@ -245,7 +246,7 @@ def set_title(update: Update, context: CallbackContext):
         return
 
     if not title:
-        message.reply_text("Setting blank title doesn't do anything!")
+        message.reply_text("You can't set an empty title!")
         return
 
     if len(title) > 16:
@@ -256,15 +257,8 @@ def set_title(update: Update, context: CallbackContext):
     try:
         bot.setChatAdministratorCustomTitle(chat.id, user_id, title)
     except BadRequest:
-        message.reply_text("I can't set custom title for admins that I didn't promote!")
+        message.reply_text("I can only set titles for the admins I promote!")
         return
-
-    #bot.sendMessage(
-    #    chat.id,
-    #    f"Sucessfully set title for <code>{user_member.user.first_name or user_id}</code> "
-    #    f"to <code>{html.escape(title[:16])}</code>!",
-    #    parse_mode=ParseMode.HTML,
-    #)
 
 @kigcmd(command="pin", can_disable=False)
 @spamcheck

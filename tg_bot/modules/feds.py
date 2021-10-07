@@ -1420,10 +1420,10 @@ def fed_ban_list(update, context):  # sourcery no-metrics
                 backups += json.dumps(json_parser)
                 backups += "\n"
             with BytesIO(str.encode(backups)) as output:
-                output.name = "kigyo_fbanned_users.json"
+                output.name = "lukesbot_fbanned_users.json"
                 update.effective_message.reply_document(
                     document=output,
-                    filename="kigyo_fbanned_users.json",
+                    filename="lukesbot_fbanned_users.json",
                     caption="Total {} User are blocked by the Federation {}.".format(
                         len(getfban), info["fname"]
                     ),
@@ -1464,10 +1464,10 @@ def fed_ban_list(update, context):  # sourcery no-metrics
                 )
                 backups += "\n"
             with BytesIO(str.encode(backups)) as output:
-                output.name = "kigyo_fbanned_users.csv"
+                output.name = "lukesbot_fbanned_users.csv"
                 update.effective_message.reply_document(
                     document=output,
-                    filename="kigyo_fbanned_users.csv",
+                    filename="lukesbot_fbanned_users.csv",
                     caption="Total {} User are blocked by Federation {}.".format(
                         len(getfban), info["fname"]
                     ),
@@ -2334,22 +2334,22 @@ def __user_info__(user_id, chat_id):
 
         if int(info["owner"]) == user_id:
             text = (
-                "This user is the owner of the current Federation: <b>{}</b>.".format(
+                "ㅤ<b>Fed owner of: \nㅤ{}</b>.".format(
                     infoname
                 )
             )
         elif is_user_fed_admin(fed_id, user_id):
             text = (
-                "This user is the admin of the current Federation: <b>{}</b>.".format(
+                "ㅤ<b>Fed Admin in:\nㅤ{}</b>.".format(
                     infoname
                 )
             )
 
         elif fban:
-            text = "<b>Banned in current Fed</b>: Yes"
-            text += "\n<b>Reason</b>: {}".format(fbanreason)
+            text = "ㅤ<b>FedBanned</b>: Yes"
+            text += "\nㅤ<b>Reason</b>: {}".format(fbanreason)
         else:
-            text = "<b>Banned in current Fed</b>: No"
+            text = "ㅤ<b>FedBanned</b>: No"
     else:
         text = ""
     return text

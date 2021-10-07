@@ -13,6 +13,7 @@ from tg_bot import (
     OWNER_ID,
     WHITELIST_USERS,
     spamcheck,
+    log
 )
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,

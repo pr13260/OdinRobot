@@ -214,12 +214,12 @@ def get(update, context, notename, show_none=True, no_format=False):
 @connection_status
 def cmd_get(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
-    if len(args) >= 2 and args[1].lower() == "noformat":
+    if len(args) >= 2 and args[1].lower() == ("noformat" or "raw"):
         get(update, context, args[0].lower(), show_none=True, no_format=True)
     elif len(args) >= 1:
         get(update, context, args[0].lower(), show_none=True)
     else:
-        update.effective_message.reply_text("Get rekt")
+        update.effective_message.reply_text("Specify a note name!")
 
 
 
@@ -247,7 +247,7 @@ def slash_get(update: Update, context: CallbackContext):
         note_name = str(noteid).strip(">").split()[1]
         get(update, context, note_name, show_none=False)
     except IndexError:
-        update.effective_message.reply_text("Wrong Note ID 😾")
+        update.effective_message.reply_text("Wrong Note ID!")
 
 @kigcmd(command='save')
 @spamcheck
@@ -265,6 +265,9 @@ def save(update: Update, context: CallbackContext):
     if data_type is None:
         msg.reply_text("Dude, there's no note")
         return
+
+    if text is None and buttons is not None:
+        text = "Click the button below!"
 
     sql.add_note_to_db(
         chat_id, note_name, text, data_type, buttons=buttons, file=content

@@ -26,12 +26,10 @@ spamwatch
 speedtest-cli
 spongemock
 sqlalchemy==1.4.11
-telethon==1.16.4
+telethon
 tgcrypto
 tswift
 ujson
 zalgo-text
 gtts
 wikipedia
-youtube-search-python
-youtube_dl

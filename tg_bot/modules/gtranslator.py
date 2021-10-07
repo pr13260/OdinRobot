@@ -46,6 +46,7 @@ def translate(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='langs')
+@spamcheck
 def languages(update: Update, context: CallbackContext) -> None:
     message = update.effective_message
     bot = context.bot

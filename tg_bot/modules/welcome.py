@@ -263,8 +263,6 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
                     "Heyy, thanks for adding me!",
                     reply_to_message_id=reply,
                 )
-                msgg = f"#NEWCHAT\nI've been added to a new chat\n<b>Title:</b> {chat.title}\n<b>ID:</b> <code>{chat.id}</code>"
-                dispatcher.bot.sendMessage(MESSAGE_DUMP, msgg, parse_mode=ParseMode.HTML)
                 continue
 
             else:
@@ -1170,7 +1168,7 @@ def user_captcha_button(update: Update, context: CallbackContext):
         query.answer(text="You're not allowed to do this!")
 
 #from SayaAman_bot
-@kigcmd(command="setlockdown", pass_args=True)
+@kigcmd(command="lockgroup", pass_args=True)
 @spamcheck
 @user_admin
 def setDefense(update: Update, context: CallbackContext):
@@ -1179,36 +1177,29 @@ def setDefense(update: Update, context: CallbackContext):
     chat = update.effective_chat
     msg = update.effective_message
     if len(args) != 1:
-        msg.reply_text("Invalid arguments!")
+        stat = sql.getDefenseStatus(chat.id)
+        text = "Give me some arguments to choose a setting! on/off, yes/no!\n\n\
+                Your current setting is: {}\n\
+                When True, every user that joins will be auto kicked.""".format(stat)
+        msg.reply_text(text, parse_mode=ParseMode.HTML)
         return
     param = args[0]
     if param == "on" or param == "true":
         sql.setDefenseStatus(chat.id, True)
         msg.reply_text(
-            "Lockdown mode has been turned on, this group is under attack. Every user that now joins will be auto kicked."
+            "Lockgroup mode has been turned on, this group is under attack. Every user that now joins will be auto kicked."
         )
         return
     elif param == "off" or param == "false":
         sql.setDefenseStatus(chat.id, False)
         msg.reply_text(
-            "Lockdown mode has been turned off, group is no longer under attack."
+            "Lockgroup mode has been turned off, group is no longer under attack."
         )
         return
     else:
         msg.reply_text("Invalid status to set!")  #on or off ffs
         return
 
-@kigcmd(command="lockdown")
-@spamcheck
-@user_admin
-def getDefense(update: Update, context: CallbackContext):
-    bot = context.bot
-    chat = update.effective_chat
-    msg = update.effective_message
-    stat = sql.getDefenseStatus(chat.id)
-    text = "<b>Defense Status</b>\n\nCurrently, this group has the defense setting set to: <b>{}</b>".format(
-        stat)
-    msg.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 WELC_HELP_TXT = (

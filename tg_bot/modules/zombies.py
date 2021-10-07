@@ -8,7 +8,6 @@ from tg_bot.modules.helper_funcs.telethn.chatstatus import user_is_admin
 from tg_bot.modules.helper_funcs.misc import delete
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
 
-
 @tg_botTelethonClient.on(events.NewMessage(pattern=f"^[!/>]zombies ?(.*)"))
 async def zombies(event):
     chat = await event.get_chat()

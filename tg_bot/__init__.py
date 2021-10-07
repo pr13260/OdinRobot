@@ -139,7 +139,7 @@ SUPPORT_GROUP = KInit.SUPPORT_GROUP
 IS_DEBUG = KInit.IS_DEBUG
 GROUP_BLACKLIST = KInit.GROUP_BLACKLIST
 ANTISPAM_TOGGLE = KInit.ANTISPAM_TOGGLE
-
+BOT_ID = TOKEN.split(":")[0]
 
 
 
@@ -160,10 +160,10 @@ sw = KInit.init_sw()
 from tg_bot.modules.sql import SESSION
 
 if not KInit.DROP_UPDATES:
-    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
+    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
     
 else:
-    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
+    updater = tg.Updater(TOKEN, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
     
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher = updater.dispatcher

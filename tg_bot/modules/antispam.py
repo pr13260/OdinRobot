@@ -8,6 +8,7 @@ import tg_bot.modules.sql.antispam_sql as sql
 from tg_bot import (
     DEV_USERS,
     GBAN_LOGS,
+    MESSAGE_DUMP,
     MOD_USERS,
     OWNER_ID,
     SUDO_USERS,
@@ -26,7 +27,7 @@ from tg_bot.modules.helper_funcs.chat_status import (
 from tg_bot.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from tg_bot.modules.helper_funcs.misc import send_to_list
 from telegram import ParseMode, Update
-from telegram.error import BadRequest, TelegramError
+from telegram.error import BadRequest, TelegramError, Unauthorized
 from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
@@ -108,7 +109,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     if int(user_id) in DEV_USERS:
         message.reply_text(
-            "That user is part of the Union\nI can't act against our own."
+            "That user is part of my Developers\nI can't act against our own."
         )
         return
 
@@ -137,7 +138,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
         return
 
     if user_id == bot.id:
-        message.reply_text("You uhh...want me to kill myself?")
+        message.reply_text("Go find someone else to play with noob.")
         return
 
     try:
@@ -484,27 +485,38 @@ def check_and_ban(update, user_id, should_message=True):
 def enforce_gban(update: Update, context: CallbackContext):
     # Not using @restrict handler to avoid spamming - just ignore if cant gban.
     bot = context.bot
-    if (
-        sql.does_chat_gban(update.effective_chat.id)
-        and update.effective_chat.get_member(bot.id).can_restrict_members
-    ):
-        user = update.effective_user
-        chat = update.effective_chat
-        msg = update.effective_message
+    try:
+        if (
+            sql.does_chat_gban(update.effective_chat.id)
+            and update.effective_chat.get_member(bot.id).can_restrict_members
+        ):
+            user = update.effective_user
+            chat = update.effective_chat
+            msg = update.effective_message
 
-        if user and not is_user_admin(chat, user.id):
-            check_and_ban(update, user.id)
-            return
-
-        if msg.new_chat_members:
-            new_members = update.effective_message.new_chat_members
-            for mem in new_members:
-                check_and_ban(update, mem.id)
-
-        if msg.reply_to_message:
-            user = msg.reply_to_message.from_user
             if user and not is_user_admin(chat, user.id):
-                check_and_ban(update, user.id, should_message=False)
+                check_and_ban(update, user.id)
+                return
+
+            if msg.new_chat_members:
+                new_members = update.effective_message.new_chat_members
+                for mem in new_members:
+                    check_and_ban(update, mem.id)
+
+            if msg.reply_to_message:
+                user = msg.reply_to_message.from_user
+                if user and not is_user_admin(chat, user.id):
+                    check_and_ban(update, user.id, should_message=False)
+    except Forbidden as e:
+        err_msg = "An error has happened with enforce_gban\n"
+        err_msg += str(e)
+        err_msg += "\n"
+        err_msg += user.id
+        err_msg += "\n"
+        err_msg += chat.id
+        err_msg += "\n"
+        err_msg += msg.id
+        dispatcher.bot.sendMessage(MESSAGE_DUMP, err_msg, parse_mode=ParseMode.HTML)
 
 @kigcmd(command=["antispam", "gbanstat"])
 @spamcheck
@@ -552,12 +564,12 @@ def __user_info__(user_id):
     if int(user_id) in SUDO_USERS + WHITELIST_USERS:
         return ""
     if is_gbanned:
-        text = "\nGbanned: <b>{}</b>"
+        text = "\nㅤGbanned: <b>{}</b>"
         text = text.format("Yes")
         user = sql.get_gbanned_user(user_id)
         if user.reason:
-            text += f"\n<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
-        text += f"\n<b>Appeal Chat:</b> @TheBotsSupport"
+            text += f"\nㅤ<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
+        text += f"\nㅤ<b>Appeal Chat:</b> @TheBotsSupport"
     else:
         text = ""
     return text
