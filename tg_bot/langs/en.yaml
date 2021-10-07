@@ -561,3 +561,8 @@ pins_help: |
    • `/unpin`*:* unpins the currently pinned message
    • `/permapin`*:* pins a message though the bot permanently, this message can include buttons, markdown, etc 
    • `/cleanlinked <on/off/true/false>`*:* automatically delete the messages sent by the linked channel 
+
+   *Creator only:*
+   • `/unpinall`*:* unpins all pinned messages in a chat.
+
+   if you want to use these functions make sure to pin adn unpin the messages with the bot and not manually

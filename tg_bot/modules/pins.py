@@ -7,22 +7,25 @@ from telegram.ext import CallbackContext
 from telegram.ext.filters import Filters
 from telegram.utils.helpers import mention_html
 
-from tg_bot import spamcheck, dispatcher
+from tg_bot import SUDO_USERS, spamcheck, dispatcher
 
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_pin,
     connection_status,
     user_admin,
-    user_mod,
+    user_mod, is_user_mod,
 )
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.language import gs
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 from tg_bot.modules.helper_funcs.misc import get_message_type,\
     build_keyboard_alternate
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 from tg_bot.modules.connection import connected
+from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
+from telegram.ext.callbackqueryhandler import CallbackQueryHandler
+from telegram.parsemode import ParseMode
 
 
 @kigcmd(command="pin", can_disable=False)
@@ -51,11 +54,20 @@ def pin(update: Update, context: CallbackContext) -> str:
 
     if prev_message and is_group:
         try:
+            pinn = prev_message.message_id
             bot.pinChatMessage(
-                chat.id, prev_message.message_id, disable_notification=is_silent
+                chat.id, pinn, disable_notification=is_silent
             )
+
+            if chat.username:
+                pinmsg = "https://t.me/{}/{}".format(chat.username, pinn)
+            else:
+                pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], pinn)
+
+            dispatcher.bot.sendMessage(chat.id, "I have pinned [this message]({})".format(pinmsg), parse_mode="markdown")
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
+                dispatcher.bot.sendMessage(chat.id, f"I couldn't pin the message from some reason.")
                 pass
             else:
                 raise
@@ -78,50 +90,127 @@ def unpin(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     user = update.effective_user
 
-    try:
-        bot.unpinChatMessage(chat.id)
-    except BadRequest as excp:
-        if excp.message == "Chat_not_modified":
-            pass
-        else:
-            raise
+    message = update.effective_message
+    reply_msg = message.reply_to_message
+    if not reply_msg:
+        print("not rp")
+        try:
+            bot.unpinChatMessage(chat.id)
+            dispatcher.bot.sendMessage(chat.id, "Unpinned the last pinned message successfully!", parse_mode="markdown")
+        except BadRequest as excp:
+            if excp.message == "Chat_not_modified":
+                dispatcher.bot.sendMessage(chat.id, f"I couldn't unpin the message from some reason.")
+                pass
+            else:
+                raise
 
-    log_message = (
-        f"<b>{html.escape(chat.title)}:</b>\n"
-        f"#UNPINNED\n"
-        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
-    )
+        log_message = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#UNPINNED\n"
+            f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+        )
+        return log_message
 
-    return log_message
+    else:
+        print("rp")
+        unpinthis = reply_msg.message_id
+        try:
+            bot.unpinChatMessage(chat.id, unpinthis)
 
+            if chat.username:
+                pinmsg = "https://t.me/{}/{}".format(chat.username, unpinthis)
+            else:
+                pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], unpinthis)
 
-@kigcmd(command="unpinall", can_disable=False)
+            dispatcher.bot.sendMessage(chat.id, "I have unpinned [this message]({})".format(pinmsg), parse_mode="markdown")
+        except BadRequest as excp:
+            if excp.message == "Chat_not_modified":
+                dispatcher.bot.sendMessage(chat.id, f"I couldn't unpin the message from some reason.")
+                pass
+            else:
+                raise
+
+        log_message = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#UNPINNED\n"
+            f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+        )
+        return log_message
+
 @spamcheck
 @bot_admin
-@can_pin
-@user_mod
-@loggable
-def unpinall(update: Update, context: CallbackContext) -> str:
-    bot = context.bot
+@kigcmd(command="unpinall", filters=Filters.chat_type.groups)
+@spamcheck
+def rmall_filters(update, context):
     chat = update.effective_chat
     user = update.effective_user
+    member = chat.get_member(user.id)
+    if member.status != "creator" and user.id not in SUDO_USERS:
+        update.effective_message.reply_text(
+            "Only the chat owner can unpin all messages at once."
+        )
+    else:
+        buttons = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        text="Unpin all messages", callback_data="pinned_rmall"
+                    )
+                ],
+                [InlineKeyboardButton(text="Cancel", callback_data="pinned_cancel")],
+            ]
+        )
+        update.effective_message.reply_text(
+            f"Are you sure you would like unpin all pinned messages in {chat.title}? This action cannot be undone.",
+            reply_markup=buttons,
+            parse_mode=ParseMode.MARKDOWN,
+        )
 
-    try:
-        bot.unpinAllChatMessages(chat.id)
-    except BadRequest as excp:
-        if excp.message == "Chat_not_modified":
-            pass
-        else:
-            raise
+@kigcallback(pattern=r"pinned_.*")
+@loggable
+def unpin_callback(update, context: CallbackContext) -> str:
+    query = update.callback_query
+    chat = update.effective_chat
+    msg = update.effective_message
+    bot = context.bot
+    member = chat.get_member(query.from_user.id)
+    user = query.from_user
+    if query.data == "pinned_rmall":
+        if member.status == "creator" or query.from_user.id in SUDO_USERS:
 
-    log_message = (
-        f"<b>{html.escape(chat.title)}:</b>\n"
-        f"#UNPINNED_ALL\n"
-        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
-    )
+            try:
+                bot.unpinAllChatMessages(chat.id)
+            except BadRequest as excp:
+                if excp.message == "Chat_not_modified":
+                    pass
+                else:
+                    raise
+            msg.edit_text(f"Unpinned all messages in {chat.title}")
 
-    return log_message
+            log_message = (
+                f"<b>{html.escape(chat.title)}:</b>\n"
+                f"#UNPINNED_ALL\n"
+                f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+            )
+            return log_message
 
+        if member.status == "administrator":
+            query.answer("Only owner of the chat can do this.")
+            return ""
+
+        if member.status == "member":
+            query.answer("You need to be admin to do this.")
+            return ""
+    elif query.data == "pinned_cancel":
+        if member.status == "creator" or query.from_user.id in SUDO_USERS:
+            msg.edit_text("Unpinning all pinned messages has been cancelled.")
+            return
+        if member.status == "administrator":
+            query.answer("Only owner of the chat can do this.")
+            return ""
+        if member.status == "member":
+            query.answer("You need to be admin to do this.")
+            return ""
 
 
 
@@ -301,21 +390,3 @@ def get_help(chat):
     return gs(chat, "pins_help")
 
 __mod_name__ = "Pins"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
