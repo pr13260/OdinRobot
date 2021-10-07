@@ -54,7 +54,7 @@ def warn(
     user: User, chat: Chat, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
     if is_user_admin(chat, user.id):
-        # message.reply_text("Damn admins, They are too far to be kicked!")
+        message.reply_text("Damn admins, They are too far to be kicked!")
         return
 
     if user.id in WHITELIST_USERS:
@@ -150,7 +150,7 @@ def swarn(
     user: User, chat: Chat, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
     if is_user_admin(chat, user.id):
-        # message.reply_text("Damn admins, They are too far to be kicked!")
+        message.reply_text("Damn admins, They are too far to be kicked!")
         return
 
 
@@ -253,7 +253,7 @@ def dwarn(
     user: User, chat: Chat, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
     if is_user_admin(chat, user.id):
-        # message.reply_text("Damn admins, They are too far to be kicked!")
+        message.reply_text("Damn admins, They are too far to be kicked!")
         return
 
     if user.id in WHITELIST_USERS:
