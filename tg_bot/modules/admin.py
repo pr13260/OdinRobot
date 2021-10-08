@@ -294,10 +294,19 @@ def adminlist(update, context):
     text = "Admins in *{}*:".format(update.effective_chat.title or "this chat")
     for admin in administrators:
         user = admin.user
-        name = "[{}](tg://user?id={})".format(user.first_name + (user.last_name or ""), user.id)
-        if user.username:
-            name = escape_markdown("@" + user.username)
-        text += "\n - {}".format(name)
+
+
+        if user.first_name == "":
+            name = "☠ Zombie"
+
+        if admin.status == "creator":
+            name = "[{}](tg://user?id={})".format(user.first_name, user.id)
+            text += "\n*Creator:*"
+            text += "\nㅤ👑 {}".format(name)
+        else:
+            text += "\n*Admins:*"
+            name = "[{}](tg://user?id={})".format(user.first_name, user.id)
+            text += "\nㅤ{}".format(name)
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
