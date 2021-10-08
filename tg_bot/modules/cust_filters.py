@@ -13,7 +13,7 @@ from telegram.ext import (
 from telegram.utils.helpers import mention_html, escape_markdown, mention_html
 
 from tg_bot import dispatcher, log, SUDO_USERS, spamcheck
-from tg_bot.modules.helper_funcs.chat_status import user_admin
+from tg_bot.modules.helper_funcs.chat_status import is_user_admin, user_admin
 from tg_bot.modules.helper_funcs.extraction import extract_text
 from tg_bot.modules.helper_funcs.filters import CustomFilters
 from tg_bot.modules.helper_funcs.misc import build_keyboard_parser
@@ -268,6 +268,7 @@ def stop_filter(update, context):
 def reply_filter(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
+    user = update.effective_user
 
     if not update.effective_user or update.effective_user.id == 777000:
         return
@@ -293,6 +294,8 @@ def reply_filter(update, context):  # sourcery no-metrics
                     "id",
                     "chatname",
                     "mention",
+                    "user",
+                    "admin",
                 ]
                 if filt.reply_text:
 
@@ -357,6 +360,8 @@ def reply_filter(update, context):  # sourcery no-metrics
                             if message.chat.type != "private"
                             else escape(message.from_user.first_name),
                             id=message.from_user.id,
+                            user="",
+                            admin="",
                         )
                     else:
                         filtext = ""
