@@ -6,7 +6,7 @@ import html
 
 import tg_bot.modules.sql.notes_sql as sql
 from tg_bot import log, dispatcher, SUDO_USERS, spamcheck
-from tg_bot.modules.helper_funcs.chat_status import user_admin, connection_status, user_mod
+from tg_bot.modules.helper_funcs.chat_status import is_user_admin, user_admin, connection_status, user_mod
 from tg_bot.modules.helper_funcs.misc import build_keyboard, revert_buttons
 from tg_bot.modules.helper_funcs.msg_types import get_note_type
 from tg_bot.modules.helper_funcs.handlers import MessageHandlerChecker
@@ -55,10 +55,12 @@ ENUM_FUNC_MAP = {
 def get(update, context, notename, show_none=True, no_format=False):
     # sourcery no-metrics
     bot = context.bot
+    chat = update.effective_message.chat
     chat_id = update.effective_message.chat.id
     note_chat_id = update.effective_chat.id
     note = sql.get_note(note_chat_id, notename)
     message = update.effective_message  # type: Optional[Message]
+    user = update.effective_user
 
     if note:
         if MessageHandlerChecker.check_user(update.effective_user.id):
@@ -106,6 +108,8 @@ def get(update, context, notename, show_none=True, no_format=False):
                 "id",
                 "chatname",
                 "mention",
+                "user",
+                "admin",
             ]
             valid_format = escape_invalid_curly_brackets(
                 note.value, VALID_NOTE_FORMATTERS,
@@ -116,6 +120,12 @@ def get(update, context, notename, show_none=True, no_format=False):
                     text = random.choice(split) if all(split) else valid_format
                 else:
                     text = valid_format
+                if "{admin}" in text:
+                    if is_user_admin(chat, user):
+                        return
+                if "{user}" in text:
+                    if not is_user_admin(chat, user):
+                        return
                 text = text.format(
                     first=escape_markdown(message.from_user.first_name),
                     last=escape_markdown(
@@ -142,6 +152,8 @@ def get(update, context, notename, show_none=True, no_format=False):
                         else message.from_user.first_name,
                     ),
                     id=message.from_user.id,
+                    user="",
+                    admin="",
                 )
             else:
                 text = ""
