@@ -247,6 +247,8 @@ filling_help: |
       - <code>{mention}</code>: Mentions the user with their firstname.
       - <code>{id}</code>: The user's ID.
       - <code>{chatname}</code>: The chat's name.
+      - <code>{admin}</code>: Note-Filter can only be used by chat admins (not for non-admins)
+      - <code>{user}</code>: Note-Filter can only be used by chat users (not for admins)
 
 antispam_help: |
      *Admins only:*
