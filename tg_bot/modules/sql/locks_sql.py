@@ -29,16 +29,11 @@ class Permissions(BASE):
     inline = Column(Boolean, default=False)
     apk = Column(Boolean, default=False)
     doc = Column(Boolean, default=False)
-    docx = Column(Boolean, default=False)
     exe = Column(Boolean, default=False)
     jpg = Column(Boolean, default=False)
     mp3 = Column(Boolean, default=False)
     pdf = Column(Boolean, default=False)
-    py = Column(Boolean, default=False)
-    svg = Column(Boolean, default=False)
     txt = Column(Boolean, default=False)
-    targz = Column(Boolean, default=False)
-    wav = Column(Boolean, default=False)
     xml = Column(Boolean, default=False)
     zip = Column(Boolean, default=False)
 
@@ -63,16 +58,11 @@ class Permissions(BASE):
         self.inline = False
         self.apk = False
         self.doc = False
-        self.docx = False
         self.exe = False
         self.jpg = False
         self.mp3 = False
         self.pdf = False
-        self.py = False
-        self.svg = False
         self.txt = False
-        self.targz = False
-        self.wav = False
         self.xml = False
         self.zip = False
 
@@ -177,8 +167,6 @@ def update_lock(chat_id, lock_type, locked):
             curr_perm.apk = locked
         elif lock_type == "doc":
             curr_perm.doc = locked
-        elif lock_type == "docx":
-            curr_perm.doc = locked
         elif lock_type == "exe":
             curr_perm.exe = locked
         elif lock_type == "jpg":
@@ -187,16 +175,8 @@ def update_lock(chat_id, lock_type, locked):
             curr_perm.mp3 = locked
         elif lock_type == "pdf":
             curr_perm.pdf = locked
-        elif lock_type == "py":
-            curr_perm.py = locked
-        elif lock_type == "svg":
-            curr_perm.svg = locked
         elif lock_type == "txt":
             curr_perm.txt = locked
-        elif lock_type == "targz":
-            curr_perm.tar = locked
-        elif lock_type == "wav":
-            curr_perm.wav = locked
         elif lock_type == "xml":
             curr_perm.xml = locked
         elif lock_type == "zip":
@@ -274,8 +254,6 @@ def is_locked(chat_id, lock_type):
         return curr_perm.apk
     elif lock_type == "doc":
         return curr_perm.doc
-    elif lock_type == "docx":
-        return curr_perm.docx
     elif lock_type == "exe":
         return curr_perm.exe
     elif lock_type == "jpg":
@@ -284,16 +262,8 @@ def is_locked(chat_id, lock_type):
         return curr_perm.mp3
     elif lock_type == "pdf":
         return curr_perm.pdf
-    elif lock_type == "py":
-        return curr_perm.py
-    elif lock_type == "svg":
-        return curr_perm.svg
     elif lock_type == "txt":
         return curr_perm.txt
-    elif lock_type == "targz":
-        return curr_perm.targz
-    elif lock_type == "wav":
-        return curr_perm.wav
     elif lock_type == "xml":
         return curr_perm.xml
     elif lock_type == "zip":

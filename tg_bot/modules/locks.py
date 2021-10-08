@@ -45,17 +45,12 @@ LOCK_TYPES = {
     "inline": "inline",
     "apk" : Filters.document.mime_type("application/vnd.android.package-archive"),
     "doc" : Filters.document.mime_type("application/msword"),
-    "docx" : Filters.document.mime_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
     "exe" : Filters.document.mime_type("application/x-ms-dos-executable"),
     "gif" : Filters.document.mime_type("video/mp4"),
     "jpg" : Filters.document.mime_type("image/jpeg"),
     "mp3" : Filters.document.mime_type("audio/mpeg"),
     "pdf" : Filters.document.mime_type("application/pdf"),
-    "py" : Filters.document.mime_type("text/x-python"),
-    "svg" : Filters.document.mime_type("image/svg+xml"),
     "txt" : Filters.document.mime_type("text/plain"),
-    "targz" : Filters.document.mime_type("application/x-compressed-tar"),
-    "wav" : Filters.document.mime_type("audio/x-wav"),
     "xml" : Filters.document.mime_type("application/xml"),
     "zip" : Filters.document.mime_type("application/zip"),
 }
@@ -486,16 +481,11 @@ def build_lock_message(chat_id):
         locklist.append("inline = `{}`".format(locks.inline))
         locklist.append("apk = `{}`".format(locks.apk))
         locklist.append("doc = `{}`".format(locks.doc))
-        locklist.append("docx = `{}`".format(locks.docx))
         locklist.append("exe = `{}`".format(locks.exe))
         locklist.append("jpg = `{}`".format(locks.jpg))
         locklist.append("mp3 = `{}`".format(locks.mp3))
         locklist.append("pdf = `{}`".format(locks.pdf))
-        locklist.append("py = `{}`".format(locks.py))
-        locklist.append("svg = `{}`".format(locks.svg))
         locklist.append("txt = `{}`".format(locks.txt))
-        locklist.append("targz = `{}`".format(locks.targz))
-        locklist.append("wav = `{}`".format(locks.wav))
         locklist.append("xml = `{}`".format(locks.xml))
         locklist.append("zip = `{}`".format(locks.zip))
     permissions = dispatcher.bot.get_chat(chat_id).permissions
