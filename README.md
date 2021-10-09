@@ -1,27 +1,27 @@
-# Ɩυκє's bot, a fork of Kigyō
+#  Ōɖìղ • オーディン, a fork of Kigyō
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![ForTheBadge built-with-love](http://ForTheBadge.com/images/badges/built-with-love.svg)](https://GitHub.com/AbOulfOoOoOuF/)</br>
 
 
 ![Python Version](https://img.shields.io/badge/python-3.8-green?style=for-the-badge&logo=appveyor)
-![Issues](https://img.shields.io/github/issues/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)
-![Forks](https://img.shields.io/github/forks/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)
-![Stars](https://img.shields.io/github/stars/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)
-![LICENSE](https://img.shields.io/github/license/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)
-![Contributors](https://img.shields.io/github/contributors/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)
-![Repository Size](https://img.shields.io/github/repo-size/AbOuLfOoOoOuF/L4K3Bot?style=for-the-badge&logo=appveyor)</br>
+![Issues](https://img.shields.io/github/issues/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)
+![Forks](https://img.shields.io/github/forks/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)
+![Stars](https://img.shields.io/github/stars/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)
+![LICENSE](https://img.shields.io/github/license/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)
+![Contributors](https://img.shields.io/github/contributors/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)
+![Repository Size](https://img.shields.io/github/repo-size/OdinRobot/OdinRobot?style=for-the-badge&logo=appveyor)</br>
 
 
 [![Join Support!](https://img.shields.io/badge/Support%20Chat-SupportGroup-red)](https://t.me/TheBotsSupport)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cfb691a93a064d9ea753ef2b5fccf797)](https://www.codacy.com/manual/AbOuLfOoOoOuF/L4K3Bot?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AbOuLfOoOoOuF/L4K3Bot&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cfb691a93a064d9ea753ef2b5fccf797)](https://www.codacy.com/manual/OdinRobot/OdinRobot?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=OdinRobot/OdinRobot&amp;utm_campaign=Badge_Grade)
 
 
 A modular telegram Python bot running on python3 with an sqlalchemy database.
 
 Originally a marie fork
 
-Can be found on telegram as [Ɩυκє's bot](https://t.me/L4K3Bot).
+Can be found on telegram as [Ōɖìղ • オーディン](https://t.me/OdinRobot).
 
 The Support group can be reached out to at [The support group](https://t.me/TheBotsSupport), where you can ask for help setting up your bot, discover/request new features, report bugs, and stay in the loop whenever a new update is available.
 
@@ -32,8 +32,8 @@ The Support group can be reached out to at [The support group](https://t.me/TheB
 
 # How to setup
 
-- `git clone https://github.com/AbOuLfOoOoOuF/L4K3Bot`
-- `cd L4K3Bot`
+- `git clone https://github.com/OdinRobot/OdinRobot`
+- `cd OdinRobot`
 - `cp sample_config.ini config.ini`
 - *Fill in all the vars*
 - `pip3 install -U -r requirements.txt`

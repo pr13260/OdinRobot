@@ -9,7 +9,7 @@ except ImportError:
     pver = "N/A"
 
 with window("About"):
-    add_text("Ɩυκє's telegram bot")
+    add_text(" Ōɖìղ • オーディン telegram bot")
     add_text("Maintained with <3 by AbOuLfOoOoOuF(github.com/AbOuLfOoOoOuF)")
     add_text("Enviroment:")
     add_text(f"Bot lib: python-telegram-bot v{pver}.", bullet=True)

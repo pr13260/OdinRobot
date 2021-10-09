@@ -158,7 +158,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/AbOuLfOoOoOuF/{}".format(escape_markdown(dispatcher.bot.username)),
+                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
@@ -219,7 +219,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/AbOuLfOoOoOuF/{}".format(escape_markdown(dispatcher.bot.username)),
+                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
                             ),
                             
                             InlineKeyboardButton(

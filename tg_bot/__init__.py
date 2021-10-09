@@ -72,7 +72,7 @@ class KigyoINIT:
         self.WEATHER_API = self.parser.get('WEATHER_API', None)
         self.CF_API_KEY =  self.parser.get("CF_API_KEY", None)
         self.bot_id = 0 #placeholder
-        self.bot_name = "luketste" #placeholder
+        self.bot_name = " Ōɖìղ" #placeholder
         self.bot_username = "" #placeholder
         self.ALLOW_CHATS =  self.parser.getboolean("ALLOW_CHATS", True)
         self.SUPPORT_GROUP =  self.parser.get("SUPPORT_GROUP", 0)

@@ -1420,10 +1420,10 @@ def fed_ban_list(update, context):  # sourcery no-metrics
                 backups += json.dumps(json_parser)
                 backups += "\n"
             with BytesIO(str.encode(backups)) as output:
-                output.name = "lukesbot_fbanned_users.json"
+                output.name = "{}_fbanned_users.json".format(dispatcher.bot.username)
                 update.effective_message.reply_document(
                     document=output,
-                    filename="lukesbot_fbanned_users.json",
+                    filename="{}_fbanned_users.json".format(dispatcher.bot.username),
                     caption="Total {} User are blocked by the Federation {}.".format(
                         len(getfban), info["fname"]
                     ),
@@ -1464,10 +1464,10 @@ def fed_ban_list(update, context):  # sourcery no-metrics
                 )
                 backups += "\n"
             with BytesIO(str.encode(backups)) as output:
-                output.name = "lukesbot_fbanned_users.csv"
+                output.name = "{}_fbanned_users.csv".format(dispatcher.bot.username)
                 update.effective_message.reply_document(
                     document=output,
-                    filename="lukesbot_fbanned_users.csv",
+                    filename="{}_fbanned_users.csv".format(dispatcher.bot.username),
                     caption="Total {} User are blocked by Federation {}.".format(
                         len(getfban), info["fname"]
                     ),
