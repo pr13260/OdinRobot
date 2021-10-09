@@ -304,7 +304,6 @@ def adminlist(update, context):
             text += "\n*Creator:*"
             text += "\nㅤ👑 {}".format(name)
         else:
-            text += "\n*Admins:*"
             name = "[{}](tg://user?id={})".format(user.first_name, user.id)
             text += "\nㅤ{}".format(name)
 
