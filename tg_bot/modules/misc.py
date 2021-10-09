@@ -9,11 +9,13 @@ from telegram.error import BadRequest
 from telegram.ext import Filters, CallbackContext
 from telegram.utils.helpers import mention_html, escape_markdown
 from subprocess import Popen, PIPE
+from tg_bot.modules import dev
 
 from tg_bot.modules.debug import ANTISPAM_TOGGLE
 from tg_bot import (
     MESSAGE_DUMP,
     MOD_USERS,
+    KigyoINIT,
     dispatcher,
     OWNER_ID,
     SUDO_USERS,
@@ -28,7 +30,7 @@ from tg_bot import (
 )
 from tg_bot.__main__ import STATS, USER_INFO, TOKEN
 from tg_bot.modules.sql import SESSION
-from tg_bot.modules.helper_funcs.chat_status import user_admin, sudo_plus
+from tg_bot.modules.helper_funcs.chat_status import dev_plus, user_admin, sudo_plus
 from tg_bot.modules.helper_funcs.extraction import extract_user
 import tg_bot.modules.sql.users_sql as sql
 from tg_bot.modules.language import gs
@@ -209,17 +211,17 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
             pass
 
     if user.id == OWNER_ID:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Owner</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Owner</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in DEV_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Developer</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Developer</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in SUDO_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Sudo</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Sudo</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in SUPPORT_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Support</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Support</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in MOD_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Moderator</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Moderator</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in WHITELIST_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Whitelist</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Whitelist</a>".format(escape_markdown(dispatcher.bot.username))
         
 
     if user.id in [777000, 1087968824]:
@@ -464,17 +466,17 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 
 
     if user.id == OWNER_ID:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Owner</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Owner</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in DEV_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Developer</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Developer</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in SUDO_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Sudo</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Sudo</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in SUPPORT_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Support</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Support</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in MOD_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Moderator</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Moderator</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in WHITELIST_USERS:
-        text += f"\nㅤ<b>User status:</b> <a href='https://t.me/L4k3Bot?start=nations'>Whitelist</a>"
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Whitelist</a>".format(escape_markdown(dispatcher.bot.username))
 
     try:
         user_member = chat.get_member(user.id)
@@ -623,10 +625,11 @@ def shell(command):
     stdout, stderr = process.communicate()
     return (stdout, stderr)
 
+bot_firstname = dispatcher.bot.first_name.split(" ")[0]
 @kigcmd(command='markdownhelp', filters=Filters.chat_type.private)
 def markdown_help(update: Update, _):
     chat = update.effective_chat
-    update.effective_message.reply_text((gs(chat.id, "markdown_help_text")), parse_mode=ParseMode.HTML)
+    update.effective_message.reply_text((gs(chat.id, "markdown_help_text".format(bot_firstname))), parse_mode=ParseMode.HTML)
     update.effective_message.reply_text(
         "Try forwarding the following message to me, and you'll see!"
     )
@@ -663,7 +666,8 @@ def get_readable_time(seconds: int) -> str:
 stats_str = '''
 '''
 
-@kigcmd(command='uptime', can_disable=False, filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
+@sudo_plus
+@kigcmd(command='uptime', can_disable=False)
 def uptimee(update: Update, _):
     uptime = datetime.datetime.fromtimestamp(boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     botuptime = get_readable_time((time.time() - StartTime))
@@ -672,7 +676,8 @@ def uptimee(update: Update, _):
     rspnc += "*• System Start time:* " + str(uptime)
     msg.reply_text(rspnc, parse_mode=ParseMode.MARKDOWN)
 
-@kigcmd(command='stats', can_disable=False, filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
+@dev_plus
+@kigcmd(command='stats', can_disable=False)
 def stats(update, context):
     db_size = SESSION.execute("SELECT pg_size_pretty(pg_database_size(current_database()))").scalar_one_or_none()
     uptime = datetime.datetime.fromtimestamp(boot_time()).strftime("%Y-%m-%d %H:%M:%S")
@@ -743,7 +748,7 @@ def ping(update: Update, _):
 def pingCallback(update: Update, context: CallbackContext):
     query = update.callback_query
     user = query.from_user.id
-    if user != (OWNER_ID|SYS_ADMIN):
+    if user != (OWNER_ID|SYS_ADMIN) or user not in SUDO_USERS:
         query.answer('Not authorised to use this!')
     else:
         start_time = time.time()

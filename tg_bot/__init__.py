@@ -24,13 +24,13 @@ fileConfig('logging.ini')
 
 log = logging.getLogger('[Enterprise]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
-log.info("[Ɩυκє's bot] Ɩυκє's bot is starting. | Licensed under GPLv3.")
-log.info("[Ɩυκє's bot] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/itsLuuke)")
+log.info("[LOGGER] LOGGER is starting. | Licensed under GPLv3.")
+log.info("[LOGGER] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/itsLuuke)")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     log.error(
-        "[Ɩυκє's bot] You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
+        "[LOGGER] You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
     )
     quit(1)
 
@@ -72,8 +72,8 @@ class KigyoINIT:
         self.WEATHER_API = self.parser.get('WEATHER_API', None)
         self.CF_API_KEY =  self.parser.get("CF_API_KEY", None)
         self.bot_id = 0 #placeholder
-        self.bot_name = "Ɩυκє's" #placeholder
-        self.bot_username = "L4K3bot" #placeholder
+        self.bot_name = "luketste" #placeholder
+        self.bot_username = "" #placeholder
         self.ALLOW_CHATS =  self.parser.getboolean("ALLOW_CHATS", True)
         self.SUPPORT_GROUP =  self.parser.get("SUPPORT_GROUP", 0)
         self.IS_DEBUG =  self.parser.getboolean("IS_DEBUG", False)
@@ -139,6 +139,8 @@ SUPPORT_GROUP = KInit.SUPPORT_GROUP
 IS_DEBUG = KInit.IS_DEBUG
 GROUP_BLACKLIST = KInit.GROUP_BLACKLIST
 ANTISPAM_TOGGLE = KInit.ANTISPAM_TOGGLE
+bot_username = KInit.bot_username
+
 BOT_ID = TOKEN.split(":")[0]
 
 

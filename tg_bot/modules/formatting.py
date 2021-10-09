@@ -1,3 +1,5 @@
+from telegram.utils.helpers import escape_markdown
+from tg_bot import dispatcher
 from tg_bot.modules.helper_funcs.decorators import kigcallback
 from telegram import (
     ParseMode,
@@ -45,7 +47,7 @@ def fmt_help(update: Update, context: CallbackContext):
 __mod_name__ = 'Formatting'
 
 def get_help(chat):
-    return [gs(chat, "formt_help_bse"),
+    return [gs(chat, "formt_help_bse".format(escape_markdown(dispatcher.bot.username))),
     [
         InlineKeyboardButton(text="Markdown", callback_data="fmt_help_md"),
         InlineKeyboardButton(text="Filling", callback_data="fmt_help_filling")

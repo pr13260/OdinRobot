@@ -322,21 +322,21 @@ def export_data(update, context):  # sourcery no-metrics
         },
     }
     baccinfo = json.dumps(backup, indent=4)
-    with open("Ɩυκє's bot{}.json".format(chat_id), "w") as f:
+    with open("{}{}.json".format(dispatcher.bot.username, chat_id), "w") as f:
         f.write(str(baccinfo))
     context.bot.sendChatAction(current_chat_id, "upload_document")
     tgl = time.strftime("%H:%M:%S - %d/%m/%Y", time.localtime(time.time()))
     context.bot.sendDocument(
         current_chat_id,
-        document=open("Ɩυκє's bot{}.json".format(chat_id), "rb"),
-        caption="*Successfully Exported backup:*\nChat: `{}`\nChat ID: `{}`\nOn: `{}`\n\nNote: This `Ɩυκє's bot-Backup` was specially made for notes.".format(
-            chat.title, chat_id, tgl,
+        document=open("{}{}.json".format(dispatcher.bot.username, chat_id), "rb"),
+        caption="*Successfully Exported backup:*\nChat: `{}`\nChat ID: `{}`\nOn: `{}`\n\nNote: This `{}-Backup` was specially made for notes.".format(
+            chat.title, chat_id, tgl, dispatcher.bot.username
         ),
         timeout=360,
         reply_to_message_id=msg.message_id,
         parse_mode=ParseMode.MARKDOWN,
     )
-    os.remove("Ɩυκє's bot{}.json".format(chat_id))  # Cleaning file
+    os.remove("{}{}.json".format(dispatcher.bot.username, chat_id))  # Cleaning file
 
 
 # Temporary data

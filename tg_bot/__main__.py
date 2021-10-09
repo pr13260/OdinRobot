@@ -42,6 +42,7 @@ from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
 from tg_bot.modules.language import gs
 
+bot_firstname = dispatcher.bot.first_name.split(" ")[0]
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -157,7 +158,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
+                                url="https://github.com/AbOuLfOoOoOuF/{}".format(escape_markdown(dispatcher.bot.username)),
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
@@ -183,7 +184,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
     if update.effective_chat.type == "private":
         if args and len(args) >= 1:
             if args[0].lower() == "help":
-                send_help(update.effective_chat.id, (gs(chat.id, "pm_help_text")))
+                send_help(update.effective_chat.id, text=(gs(chat.id, "pm_help_text".format(bot_firstname))), parse_mode=ParseMode.MARKDOWN)
             elif args[0].lower() == "markdownhelp":
                 IMPORTED["extras"].markdown_help_sender(update)
             elif args[0].lower() == "nations":
@@ -218,7 +219,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/AbOuLfOoOoOuF/L4K3Bot",
+                                url="https://github.com/AbOuLfOoOoOuF/{}".format(escape_markdown(dispatcher.bot.username)),
                             ),
                             
                             InlineKeyboardButton(
@@ -241,7 +242,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                 ),
             )
     else:
-        update.effective_message.reply_text(gs(chat.id, "grp_start_text"))
+        update.effective_message.reply_text(f"Hey, I'm {bot_firstname}.", parse_mode=ParseMode.MARKDOWN)
     
     if hasattr(update, 'callback_query'):
         query = update.callback_query 
@@ -335,7 +336,7 @@ def help_button(update, context):
                 ]
                     )
             query.message.edit_text(
-                text=gs(chat.id, "pm_help_text"),
+                text=gs(chat.id, "pm_help_text".format(escape_markdown(bot_firstname))),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(kb),
             )
@@ -351,7 +352,7 @@ def help_button(update, context):
                 ]
                     )
             query.message.edit_text(
-                text=gs(chat.id, "pm_help_text"),
+                text=gs(chat.id, "pm_help_text".format(escape_markdown(bot_firstname))),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(kb),
             )
@@ -366,7 +367,7 @@ def help_button(update, context):
                 ]
                     )
             query.message.edit_text(
-                text=gs(chat.id, "pm_help_text"),
+                text=gs(chat.id, "pm_help_text".format(escape_markdown(bot_firstname))),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(kb),
             )
@@ -425,7 +426,7 @@ def get_help(update, context):
         )
 
     else:
-        send_help(chat.id, (gs(chat.id, "pm_help_text")))
+        send_help(chat.id, text=(gs(chat.id, "pm_help_text".format(escape_markdown(bot_firstname)))), parse_mode=ParseMode.MARKDOWN)
 
 
 def send_settings(chat_id, user_id, user=False):
@@ -663,10 +664,11 @@ def main():
         dispatcher.bot.sendMessage(OWNER_ID, "Master, I'm awake!")
         if SUPPORT_GROUP:
             dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
-        log.info(f"Ɩυκє's bot started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
+        log.info(f"{dispatcher.bot.first_name} started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username
         KigyoINIT.bot_name = dispatcher.bot.first_name
+
         updater.start_polling(timeout=15, read_latency=4, allowed_updates=Update.ALL_TYPES, drop_pending_updates=KInit.DROP_UPDATES)
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()
@@ -675,6 +677,6 @@ def main():
     updater.idle()
 
 if __name__ == "__main__":
-    log.info("[Ɩυκє's bot] Successfully loaded modules: " + str(ALL_MODULES))
+    log.info(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
     main()
