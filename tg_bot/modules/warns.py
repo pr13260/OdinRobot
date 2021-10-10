@@ -3,7 +3,7 @@ import re
 from typing import Optional
 
 import telegram
-from tg_bot import WHITELIST_USERS, dispatcher, spamcheck
+from tg_bot import BAN_STICKER, WHITELIST_USERS, dispatcher, spamcheck
 #from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -94,7 +94,7 @@ def warn(
         for warn_reason in reasons:
             reply += f"\n - {html.escape(warn_reason)}"
 
-        # message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
+        message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
         keyboard = None
         log_reason = (
             f"<b>{html.escape(chat.title)}:</b>\n"
@@ -191,7 +191,7 @@ def swarn(
         for warn_reason in reasons:
             reply += f"\n - {html.escape(warn_reason)}"
 
-        # message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
+        message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
         keyboard = None
         log_reason = (
             f"<b>{html.escape(chat.title)}:</b>\n"
@@ -293,7 +293,7 @@ def dwarn(
         for warn_reason in reasons:
             reply += f"\n - {html.escape(warn_reason)}"
 
-        # message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
+        message.bot.send_sticker(chat.id, BAN_STICKER)  # Saitama's sticker
         keyboard = None
         log_reason = (
             f"<b>{html.escape(chat.title)}:</b>\n"
@@ -393,13 +393,13 @@ def warn_user(update: Update, context: CallbackContext) -> str:
     warner: Optional[User] = update.effective_user
 
     user_id, reason = extract_user_and_text(message, args)
-    if message.text.startswith('/s'):
+    if message.text.startswith('/s') or message.text.startswith('!s') or message.text.startswith('>s'):
         silent = True
         if not can_delete(chat, context.bot.id):
             return ""
     else:
         silent = False
-    if message.text.startswith('/d'):
+    if message.text.startswith('/d') or message.text.startswith('!d') or message.text.startswith('>d'):
         delban = True
         if not can_delete(chat, context.bot.id):
             return ""

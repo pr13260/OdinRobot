@@ -6,6 +6,7 @@ from telegram.ext import Filters, CallbackContext
 from telegram.utils.helpers import mention_html
 
 from tg_bot import (
+    BAN_STICKER,
     DEV_USERS,
     MOD_USERS,
     SUDO_USERS,
@@ -34,7 +35,7 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 @connection_status
 @bot_admin
 @kigcmd(command=('dban'), pass_args=True)
-@kigcmd(command=('fban'), pass_args=True)
+@kigcmd(command=('sban'), pass_args=True)
 @kigcmd(command=('ban'), pass_args=True)
 @spamcheck
 @can_restrict
@@ -82,13 +83,13 @@ def ban(update, context):  # sourcery no-metrics
             message.reply_text("This user has immunity and cannot be banned.")
         return log_message
 
-    if message.text.startswith('/s'):
+    if message.text.startswith('/s') or message.text.startswith('!s') or message.text.startswith('>s'):
         silent = True
         if not can_delete(chat, context.bot.id):
             return ""
     else:
         silent = False
-    if message.text.startswith('/d'):
+    if message.text.startswith('/d') or message.text.startswith('!d') or message.text.startswith('>d'):
         delban = True
         if not can_delete(chat, context.bot.id):
             return ""
@@ -116,7 +117,7 @@ def ban(update, context):  # sourcery no-metrics
                 message.reply_to_message.delete()
             return log
 
-        # context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
+        context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         context.bot.sendMessage(
             chat.id,
             "{} was banned by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
@@ -195,7 +196,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
 
     log = (
         f"<b>{html.escape(chat.title)}:</b>\n"
-        "#TEMP BANNED\n"
+        "#TEMP_BANNED\n"
         f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
         f"<b>User:</b> {mention_html(member.user.id, member.user.first_name)}\n"
         f"<b>Time:</b> {time_val}"
@@ -205,7 +206,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
 
     try:
         chat.kick_member(user_id, until_date=bantime)
-        # bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
+        bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         bot.sendMessage(
             chat.id,
             f"Banned! User {mention_html(member.user.id, member.user.first_name)} will be banned for {time_val}.\nReason: {reason}",
@@ -235,7 +236,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
 
 
 @connection_status
-@kigcmd(command='kick', pass_args=True)
+@kigcmd(command=['kick', 'punch'], pass_args=True)
 @spamcheck
 @bot_admin
 @can_restrict
@@ -270,7 +271,7 @@ def kick(update: Update, context: CallbackContext) -> str:
 
     res = chat.unban_member(user_id)  # unban on current user = kick
     if res:
-        # bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
+        bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         bot.sendMessage(
             chat.id,
             f"{mention_html(member.user.id, member.user.first_name)} was kicked by {mention_html(user.id, user.first_name)} in {message.chat.title}\n<b>Reason</b>: <code>{reason}</code>",
