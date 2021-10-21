@@ -55,7 +55,7 @@ class KigyoINIT:
         self.DEL_CMDS: bool = self.parser.getboolean("DEL_CMDS", False)
         self.STRICT_GBAN: bool = self.parser.getboolean("STRICT_GBAN", False)
         self.ALLOW_EXCL: bool = self.parser.getboolean("ALLOW_EXCL", False)
-        self.CUSTOM_CMD = ['/', '!', ">"]
+        self.CUSTOM_CMD: List[str] = ['/', '!', ">"]
         self.BAN_STICKER: str = self.parser.get("BAN_STICKER", None)
         self.TOKEN: str = self.parser.get("TOKEN")
         self.DB_URI: str = self.parser.get("SQLALCHEMY_DATABASE_URI")
@@ -64,7 +64,6 @@ class KigyoINIT:
         self.MESSAGE_DUMP: int = self.parser.getint('MESSAGE_DUMP', None)
         self.GBAN_LOGS: int = self.parser.getint('GBAN_LOGS', None)
         self.NO_LOAD = self.parser.get("NO_LOAD").split()
-
         self.NO_LOAD: List[str] = list(map(str, self.NO_LOAD))
         self.spamwatch_api: str = self.parser.get('spamwatch_api', None)
         self.CASH_API_KEY: str = self.parser.get('CASH_API_KEY', None)
@@ -89,6 +88,8 @@ class KigyoINIT:
         self.DROP_UPDATES = self.parser.getboolean("DROP_UPDATES", True)
         self.BOT_API_URL = self.parser.get('BOT_API_URL', "https://api.telegram.org/bot")
         self.BOT_API_FILE_URL = self.parser.get('BOT_API_FILE_URL', "https://api.telegram.org/file/bot")
+
+
 
 
     def init_sw(self):
@@ -174,7 +175,7 @@ if not KInit.DROP_UPDATES:
     
 else:
     updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
-
+    
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher = updater.dispatcher
 
