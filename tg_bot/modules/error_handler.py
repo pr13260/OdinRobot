@@ -5,7 +5,7 @@ import random
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler
-
+from psycopg2 import errors as sqlerrors
 from tg_bot import KInit, dispatcher, DEV_USERS, OWNER_ID, log
 
 
@@ -35,7 +35,8 @@ def error_callback(update: Update, context: CallbackContext):
     e = html.escape(f"{context.error}")
     if e.find(KInit.TOKEN) != -1:
         e = e.replace(KInit.TOKEN, "TOKEN")
-    if update.effective_chat.type != "channel":
+
+    if update.effective_chat.type != "channel" and KInit.DEBUG:
         try:
             if str(context.error).find(str(ConnectionResetError)) != "-1":
                 pass
@@ -107,9 +108,10 @@ def list_errors(update: Update, context: CallbackContext):
         context.bot.send_document(
             update.effective_chat.id,
             open("errors_msg.txt", "rb"),
-            caption=f"Too many errors have occured..",
+            caption='Too many errors have occured..',
             parse_mode="html",
         )
+
         return
 
 
