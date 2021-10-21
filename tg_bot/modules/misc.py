@@ -26,7 +26,8 @@ from tg_bot import (
     spamcheck,
     sw,
     StartTime,
-    SYS_ADMIN
+    SYS_ADMIN,
+    KInit
 )
 from tg_bot.__main__ import STATS, USER_INFO, TOKEN
 from tg_bot.modules.sql import SESSION
@@ -238,9 +239,7 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
         elif user_member.status == "member":
                 text += f"\nㅤ<b>Presence:</b> Detected"
         elif user_member.status == "administrator":
-            result = requests.post(
-                f"https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id={chat.id}&user_id={user.id}"
-            )
+            result = bot.get_chat_member(chat.id, user.id).to_json()
             result = result.json()["result"]
             if "custom_title" in result.keys():
                 custom_title = result["custom_title"]
@@ -487,9 +486,7 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
         elif user_member.status == "member":
                 text += f"\nㅤ<b>Presence:</b> Detected"
         elif user_member.status == "administrator":
-            result = requests.post(
-                f"https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id={chat.id}&user_id={user.id}"
-            )
+            result = bot.get_chat_member(chat.id, user.id).to_json()
             result = result.json()["result"]
             if "custom_title" in result.keys():
                 custom_title = result["custom_title"]
