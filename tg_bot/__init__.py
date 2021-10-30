@@ -70,6 +70,7 @@ class KigyoINIT:
         self.TIME_API_KEY: str = self.parser.get('TIME_API_KEY', None)
         self.WALL_API: str = self.parser.get('WALL_API', None)
         self.LASTFM_API_KEY: str = self.parser.get('LASTFM_API_KEY', None)
+        self.WEATHER_API: str = self.parser.get('WEATHER_API', None)
         self.CF_API_KEY: str =  self.parser.get("CF_API_KEY", None)
         self.bot_id = 0 #placeholder
         self.bot_name = " Ōɖìղ" #placeholder
@@ -84,10 +85,8 @@ class KigyoINIT:
         self.IS_DEBUG =  self.parser.getboolean("IS_DEBUG", False)
         self.ANTISPAM_TOGGLE =  self.parser.getboolean("ANTISPAM_TOGGLE", True)
         self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
-        self.DEBUG = self.parser.getboolean("IS_DEBUG", False)
-        self.DROP_UPDATES = self.parser.getboolean("DROP_UPDATES", True)
-        self.BOT_API_URL = self.parser.get('BOT_API_URL', "https://api.telegram.org/bot")
-        self.BOT_API_FILE_URL = self.parser.get('BOT_API_FILE_URL', "https://api.telegram.org/file/bot")
+        self.GLOBALANNOUNCE =  self.parser.getboolean("GLOBALANNOUNCE", False)
+
 
 
 
@@ -129,9 +128,9 @@ GBAN_LOGS = KInit.GBAN_LOGS
 NO_LOAD = KInit.NO_LOAD
 OWNER_USER = [OWNER_ID]
 SYS_ADMIN = KInit.SYS_ADMIN
-MOD_USERS = [OWNER_ID] + get_user_list("mods")
-SUDO_USERS = [OWNER_ID] + get_user_list("sudos")
-DEV_USERS = [OWNER_ID] + get_user_list("devs")
+MOD_USERS = [OWNER_ID] + [SYS_ADMIN] + get_user_list("mods")
+SUDO_USERS = [OWNER_ID] + [SYS_ADMIN] + get_user_list("sudos")
+DEV_USERS = [OWNER_ID] + [SYS_ADMIN] + get_user_list("devs")
 SUPPORT_USERS = get_user_list("supports")
 WHITELIST_USERS = get_user_list("whitelists")
 SPAMMERS = get_user_list("spammers")
@@ -149,6 +148,7 @@ IS_DEBUG = KInit.IS_DEBUG
 GROUP_BLACKLIST = KInit.GROUP_BLACKLIST
 ANTISPAM_TOGGLE = KInit.ANTISPAM_TOGGLE
 bot_username = KInit.bot_username
+GLOBALANNOUNCE = KInit.GLOBALANNOUNCE
 
 BOT_ID = TOKEN.split(":")[0]
 

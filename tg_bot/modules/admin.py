@@ -1,11 +1,14 @@
 import html
 
 
-from telegram import ParseMode, Update
+from telegram import ParseMode, Update, parsemode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
 from telegram.utils.helpers import escape_markdown, mention_html
+from telethon import events
+from telethon.tl.types import ChannelParticipantsAdmins
+from tg_bot import telethn
 
 from tg_bot import SUDO_USERS, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import (
@@ -199,7 +202,7 @@ def refresh_admin(update, context):
         ADMIN_CACHE.pop(update.effective_chat.id)
     except KeyError:
         pass
-    update.effective_message.reply_text("Admins cache is up to date!")
+    update.effective_message.reply_text("Admins cache is always up to date!")
 
 @kigcmd(command="title", can_disable=False)
 @spamcheck
@@ -207,12 +210,15 @@ def refresh_admin(update, context):
 @bot_admin
 @can_promote
 @user_admin
-def set_title(update: Update, context: CallbackContext):
+@loggable
+def set_title(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
     chat = update.effective_chat
     message = update.effective_message
+
+    user = update.effective_user
 
     user_id, title = extract_user_and_text(message, args)
     try:
@@ -259,15 +265,42 @@ def set_title(update: Update, context: CallbackContext):
         message.reply_text("I can only set titles for the admins I promote!")
         return
 
+    bot.sendMessage(
+        chat.id,
+        f"Sucessfully set title for <code>{user_member.user.first_name or user_id}</code> "
+        f"to <code>{html.escape(title[:16])}</code>!",
+        parse_mode=ParseMode.HTML,
+    )
+
+    log_message = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#ADMIN\nTitle set\n"
+        f"<b>By Admin:</b> {mention_html(user.id, user.first_name)}\n"
+        f"<b>To Admin:</b> {mention_html(user_member.user.id, user_member.user.first_name)}\n"
+        f"<b>New Title:</b> '<code>{html.escape(title[:16])}</code>'"
+
+    )
+    return log_message
+
 
 @kigcmd(command=["invitelink", "link"], can_disable=False)
 @spamcheck
 @bot_admin
 @user_admin
 @connection_status
-def invite(update: Update, context: CallbackContext):
+@loggable
+def invite(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat
+    user = update.effective_user
+    promoter = chat.get_member(user.id)
+
+    if (
+        not (promoter.can_invite_users or promoter.status == "creator")
+        and not user.id in SUDO_USERS
+    ):
+        update.effective_message.reply_text("You lack the CAN_INVITE_USERS right!")
+        return
 
     if chat.username:
         update.effective_message.reply_text(f"https://t.me/{chat.username}")
@@ -276,6 +309,16 @@ def invite(update: Update, context: CallbackContext):
         if bot_member.can_invite_users:
             invitelink = bot.exportChatInviteLink(chat.id)
             update.effective_message.reply_text(invitelink)
+
+            log_message = (
+                f"<b>{html.escape(chat.title)}:</b>\n"
+                f"#ADMIN\nInvite link exported\n"
+                f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<b>Invite Link:</b> '<code>{invitelink}</code>'"
+
+            )
+            return log_message
+
         else:
             update.effective_message.reply_text(
                 "I don't have access to the invite link, try changing my permissions!"
@@ -287,29 +330,55 @@ def invite(update: Update, context: CallbackContext):
 
 
 
-@kigcmd(command=["admin", "admins", "staff", "adminlist"])
-@spamcheck
-def adminlist(update, context):
-    administrators = update.effective_chat.get_administrators()
-    text = "Admins in *{}*:".format(update.effective_chat.title or "this chat")
-    for admin in administrators:
-        user = admin.user
+from telethon.tl.types import ChannelParticipantCreator
 
-
-        if user.first_name == "":
-            name = "☠ Zombie"
-
-        if admin.status == "creator":
-            name = "[{}](tg://user?id={})".format(user.first_name, user.id)
-            text += "\n*Creator:*"
-            text += "\nㅤ👑 {}".format(name)
+@telethn.on(events.NewMessage(pattern=r"(?i)^[/>!](admin|admins|staff|adminlist)($| |@odinrobot($| ))"))
+async def adminlist(event):
+    try:
+        _ = event.chat.title
+    except:
+        return
+    
+    temp = await event.reply("Fetching full admins list..")
+    text = "Admins in **{}**".format(event.chat.title)
+    admn = telethn.iter_participants(
+        event.chat_id, 50, filter=ChannelParticipantsAdmins)
+    creator = ""
+    admin = []
+    bots = []
+    async for user in admn:
+        x = user.status
+        y = user.participant
+        if isinstance(y, ChannelParticipantCreator):
+            if user.first_name == "":
+                name = "☠ Zombie"
+            else:
+                name = "[{}](tg://user?id={})".format(user.first_name.split()[0], user.id)
+            creator = "\nㅤㅤ• {}".format(name)
+        elif user.bot:
+            if user.first_name == "":
+                name = "☠ Zombie"
+            else:
+                name = "[{}](tg://user?id={})".format(user.first_name.split(" bot")[0], user.id) # .split()[0] bots names arent long ig?
+            bots.append("\nㅤㅤ• {}".format(name))
         else:
-            name = "[{}](tg://user?id={})".format(user.first_name, user.id)
-            text += "\nㅤ{}".format(name)
+            if user.first_name == "":
+                name = "☠ Zombie"
+            else:
+                name = "[{}](tg://user?id={})".format(user.first_name.split()[0], user.id)
+            admin.append("\nㅤㅤ• {}".format(name))
+    text += "\nㅤ**Creator:**"
+    text += creator
+    text += f"\nㅤ**Admins:** {len(admin)}"
+    text += "".join(admin)
+    text += f"\nㅤ**Bots:** {len(bots)}"
+    text += "".join(bots)
+    members = await telethn.get_participants(event.chat_id)
+    mm = len(members)
+    text += "\n**Members:** {}".format(mm)
+    text += "\n**Note:** these values are up to date"
 
-    update.effective_message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
-
-
+    await temp.edit(text, parse_mode="markdown")
 
 
 def get_help(chat):

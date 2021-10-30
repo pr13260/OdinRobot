@@ -82,9 +82,9 @@ def get_id(update: Update, context: CallbackContext):
             user2 = message.reply_to_message.forward_from
 
             msg.reply_text(
-                f"ㅤ<b>Telegram ID:</b>,"
-                f"• {html.escape(user2.first_name)} - <code>{user2.id}</code>.\n"
-                f"• {html.escape(user1.first_name)} - <code>{user1.id}</code>.",
+                f"<b>Telegram IDs:</b>\n"
+                f"ㅤ{html.escape(user2.first_name)}\nㅤㅤ<code>{user2.id}</code>.\n"
+                f"ㅤ{html.escape(user1.first_name)}\nㅤㅤ<code>{user1.id}</code>.",
                 parse_mode=ParseMode.HTML,
             )
 
@@ -92,7 +92,10 @@ def get_id(update: Update, context: CallbackContext):
 
             user = bot.get_chat(user_id)
             msg.reply_text(
-                f"{html.escape(user.first_name)}'s id is <code>{user.id}</code>.",
+
+                f"<b>Telegram IDs:</b>\n"
+                f"ㅤ{html.escape(user.first_name)}\nㅤㅤ<code>{user.id}</code>.\n",
+
                 parse_mode=ParseMode.HTML,
             )
 
@@ -100,13 +103,14 @@ def get_id(update: Update, context: CallbackContext):
 
         if chat.type == "private":
             msg.reply_text(
-                f"Your id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
+                f"<b>Your id is:</b> \nㅤㅤ<code>{chat.id}</code>.", parse_mode=ParseMode.HTML
             )
 
         else:
             msg.reply_text(
-                f"This group's id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
+                f"<b>This group's id is:</b> \nㅤㅤ<code>{chat.id}</code>.", parse_mode=ParseMode.HTML
             )
+
 @kigcmd(command='gifid')
 @spamcheck
 def gifid(update: Update, _):
@@ -159,9 +163,9 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
     if user.username:
         text += f"\nㅤ<b>Username:</b> @{html.escape(user.username)}"
     text += f"\nㅤ<b>User ID:</b> <code>{user.id}</code>"
-    if not user.id == OWNER_ID:
+    if not user.id in [OWNER_ID, SYS_ADMIN]:
         if ANTISPAM_TOGGLE is False:
-            text += "\nAntispam module is currently turned off."
+            text += "\nㅤ<b>Antispam Status:</b> <code>N/A</code>"
         else:
             try:
                 detecting = GLOBAL_USER_DATA["AntiSpam"][user.id]['status']
@@ -202,16 +206,24 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
                 text += f"\nㅤ<b>Warns:</b> {num_warns}/{limit}"
         except:
             pass
-        try:   #? approval
-            from tg_bot.modules.sql import approve_sql as asql
-            if asql.is_approved(chat.id, user.id):
-                text += "\nㅤ<b>Approved:</b> True"
-            else:
-                text += "\nㅤ<b>Approved:</b> False"
-        except:
-            pass
+        # * approval moved to "get chat member"
+        # try:   #? approval
+        #     user_member = chat.get_member(user.id)
+        #     if not user_member.status == "adminstrator":
+        #         try:
+        #             from tg_bot.modules.sql import approve_sql as asql
+        #             if asql.is_approved(chat.id, user.id):
+        #                 text += "\nㅤ<b>Approved:</b> True"
+        #             else:
+        #                 text += "\nㅤ<b>Approved:</b> False"
+        #         except:
+        #             pass
+        # except:
+        #     pass
 
     if user.id == OWNER_ID:
+        text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Owner</a>".format(escape_markdown(dispatcher.bot.username))
+    elif user.id == SYS_ADMIN:
         text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Owner</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in DEV_USERS:
         text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Developer</a>".format(escape_markdown(dispatcher.bot.username))
@@ -234,16 +246,25 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
         user_member = chat.get_member(user.id)
         if user_member.status == "left":
                 text += f"\nㅤ<b>Presence:</b> Not here"
-        if user_member.status == "kicked":
+        elif user_member.status == "kicked":
                 text += f"\nㅤ<b>Presence:</b> Banned"
         elif user_member.status == "member":
                 text += f"\nㅤ<b>Presence:</b> Detected"
-        elif user_member.status == "administrator":
-            result = bot.get_chat_member(chat.id, user.id).to_json()
-            result = result.json()["result"]
+
+                try:   #? approval
+                    from tg_bot.modules.sql import approve_sql as asql
+                    if asql.is_approved(chat.id, user.id):
+                        text += "\nㅤ<b>Approved:</b> True"
+                    else:
+                        text += "\nㅤ<b>Approved:</b> False"
+                except:
+                    pass
+
+        if user_member.status == "administrator":
+            result = bot.get_chat_member(chat.id, user.id).to_dict()
             if "custom_title" in result.keys():
                 custom_title = result["custom_title"]
-                text += f"\nㅤ<b>Title:</b> '<code>{custom_title}</code>'"
+                text += f"\nㅤ<b>Title:</b> <code>{custom_title}</code>"
             else:
                 text += f"\nㅤ<b>Presence:</b> Admin"
     except BadRequest:
@@ -262,7 +283,7 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
             text += mod_info
     if (
         user.id
-        in [777000, 1087968824, dispatcher.bot.id, OWNER_ID]
+        in [777000, 1087968824, dispatcher.bot.id, OWNER_ID, SYS_ADMIN]
         + DEV_USERS
         + SUDO_USERS
         + WHITELIST_USERS
@@ -389,9 +410,9 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 ##################################################################
 
     if update.effective_user.id == (OWNER_ID or SYS_ADMIN):
-        if not user.id == OWNER_ID:
+        if not user.id in [OWNER_ID, SYS_ADMIN]:
             if ANTISPAM_TOGGLE is False:
-                text += "\nAntispam module is currently turned off."
+                text += "\nㅤ<b>Antispam Status:</b> <code>N/A</code>"
             else:
                 try:
                     detecting = GLOBAL_USER_DATA["AntiSpam"][user.id]['status']
@@ -433,14 +454,20 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
                     text += f"\nㅤ<b>Warns:</b> {num_warns}/{limit}"
             except:
                 pass
-            try:   #? approval
-                from tg_bot.modules.sql import approve_sql as asql
-                if asql.is_approved(chat.id, user.id):
-                    text += "\nㅤ<b>Approved:</b> True"
-                else:
-                    text += "\nㅤ<b>Approved:</b> False"
-            except:
-                pass
+        # * approval moved to "get chat member"
+        # try:   #? approval
+        #     user_member = chat.get_member(user.id)
+        #     if not user_member.status == "adminstrator":
+        #         try:
+        #             from tg_bot.modules.sql import approve_sql as asql
+        #             if asql.is_approved(chat.id, user.id):
+        #                 text += "\nㅤ<b>Approved:</b> True"
+        #             else:
+        #                 text += "\nㅤ<b>Approved:</b> False"
+        #         except:
+        #             pass
+        # except:
+        #     pass
         if user.id in [777000, 1087968824]:
             text += ""
         else:
@@ -454,6 +481,8 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
     else:
         if user.id == OWNER_ID:
             text += f""
+        if user.id == SYS_ADMIN:
+            text += f""
         elif user.id in [777000, 1087968824]:
             text += ""
         elif user.id is bot.id:
@@ -466,6 +495,8 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     if user.id == OWNER_ID:
         text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Owner</a>".format(escape_markdown(dispatcher.bot.username))
+    elif user.id == SYS_ADMIN:
+        text += ""
     elif user.id in DEV_USERS:
         text += "\nㅤ<b>User status:</b> <a href='https://t.me/{}?start=nations'>Developer</a>".format(escape_markdown(dispatcher.bot.username))
     elif user.id in SUDO_USERS:
@@ -481,16 +512,25 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
         user_member = chat.get_member(user.id)
         if user_member.status == "left":
                 text += f"\nㅤ<b>Presence:</b> Not here"
-        if user_member.status == "kicked":
+        elif user_member.status == "kicked":
                 text += f"\nㅤ<b>Presence:</b> Banned"
         elif user_member.status == "member":
                 text += f"\nㅤ<b>Presence:</b> Detected"
-        elif user_member.status == "administrator":
-            result = bot.get_chat_member(chat.id, user.id).to_json()
-            result = result.json()["result"]
+                if not user.id in WHITELISTS:
+                    try:   #? approval
+                        from tg_bot.modules.sql import approve_sql as asql
+                        if asql.is_approved(chat.id, user.id):
+                            text += "\nㅤ<b>Approved:</b> True"
+                        else:
+                            text += "\nㅤ<b>Approved:</b> False"
+                    except:
+                        pass
+
+        if user_member.status == "administrator":
+            result = bot.get_chat_member(chat.id, user.id).to_dict()
             if "custom_title" in result.keys():
                 custom_title = result["custom_title"]
-                text += f"\nㅤ<b>Title:</b> '<code>{custom_title}</code>'"
+                text += f"\nㅤ<b>Title:</b> <code>{custom_title}</code>"
             else:
                 text += f"\nㅤ<b>Presence:</b> Admin"
     except BadRequest:
@@ -509,7 +549,7 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     if (
         user.id
-        in [777000, 1087968824, dispatcher.bot.id, OWNER_ID]
+        in [777000, 1087968824, dispatcher.bot.id, OWNER_ID, SYS_ADMIN]
         + DEV_USERS
         + SUDO_USERS
         + SUPPORT_USERS
@@ -535,7 +575,8 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
         text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
     )
 
-
+WHITELISTS = ([777000, 1087968824, dispatcher.bot.id, OWNER_ID, SYS_ADMIN] + DEV_USERS + SUDO_USERS + WHITELIST_USERS)
+ELEVATED = ([777000, 1087968824, dispatcher.bot.id, OWNER_ID, SYS_ADMIN] + DEV_USERS + SUDO_USERS + SUPPORT_USERS + WHITELIST_USERS + MOD_USERS)
 
 @kigcmd(command='pfp', pass_args=True)
 @spamcheck
@@ -566,20 +607,19 @@ def infopfp(update: Update, context: CallbackContext):  # sourcery no-metrics
         return
 
     #temp = message.reply_text("<code>Stealing this user's Profile picture...</code>", parse_mode=ParseMode.HTML)
-    
+
     text = (
-        f"ID: <code>{user.id}</code>\n"
-        f"First Name: {mention_html(user.id, user.first_name)}"
+        f"<b>User Info:</b>\n"
+        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name)}"
     )
-
     if user.last_name:
-        text += f"\nLast Name: {html.escape(user.last_name)}"
-
+        text += f"\nㅤ<b>Last Name:</b> {html.escape(user.last_name)}"
     if user.username:
-        text += f"\nUsername: @{html.escape(user.username)}"
+        text += f"\nㅤ<b>Username:</b> @{html.escape(user.username)}"
+    text += f"\nㅤ<b>User ID:</b> <code>{user.id}</code>"
 
     if not INFOPIC:
-        text += f"\nThis Person doesn't have a Profile picture\n"
+        text += "\nThis Person doesn't have a Profile picture\n"
     if INFOPIC:
         try:
             profile = bot.get_user_profile_photos(user.id).photos[0][-1]
@@ -588,8 +628,8 @@ def infopfp(update: Update, context: CallbackContext):  # sourcery no-metrics
             _file = _file.download(out=BytesIO())
             _file.seek(0)
 
-            message.reply_document(
-                document=_file,
+            message.reply_photo(
+                photo=_file,
                 caption=(text),
                 parse_mode=ParseMode.HTML,
             )

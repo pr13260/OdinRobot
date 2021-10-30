@@ -4,7 +4,7 @@ from telethon import events
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
 
-from tg_bot import IS_DEBUG, telethn, dispatcher, ANTISPAM_TOGGLE
+from tg_bot import GLOBALANNOUNCE, IS_DEBUG, telethn, dispatcher, ANTISPAM_TOGGLE
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
@@ -48,6 +48,25 @@ def asdebug(update: Update, context: CallbackContext):
     else:
         message.reply_text("Antispam Debug mode is currently off.")
 
+@kigcmd(command='gannounce')
+@dev_plus
+def asdebug(update: Update, context: CallbackContext):
+    global GLOBALANNOUNCE
+    args = update.effective_message.text.split(None, 1)
+    message = update.effective_message
+    print(GLOBALANNOUNCE)
+    if len(args) > 1:
+        if args[1] in ("yes", "on"):
+            GLOBALANNOUNCE = True
+            message.reply_text("Global announcemet is now on.")
+        elif args[1] in ("no", "off"):
+            GLOBALANNOUNCE = False
+            message.reply_text("Global announcemet is now off.")
+    elif GLOBALANNOUNCE:
+        message.reply_text("Global announcemet is currently on.")
+    else:
+        message.reply_text("Global announcemet is currently off.")
+
 @kigcmd(command='spamcheck')
 @dev_plus
 def astoggle(update: Update, context: CallbackContext):
@@ -68,7 +87,7 @@ def astoggle(update: Update, context: CallbackContext):
         message.reply_text("Antispam module is currently off.")
 
 
-@telethn.on(events.NewMessage(pattern="[/!].*"))
+@telethn.on(events.NewMessage(pattern="[/!>].*"))
 async def i_do_nothing_yes(event):
     global DEBUG_MODE
     if DEBUG_MODE:
@@ -89,7 +108,14 @@ async def i_do_nothing_yes(event):
 @dev_plus
 def logs(update: Update, context: CallbackContext):
     user = update.effective_user
-    with open("log.txt", "rb") as f:
+    with open("logs.txt", "rb") as f:
+        context.bot.send_document(document=f, filename=f.name, chat_id=user.id)
+
+@kigcmd(command='updates')
+@dev_plus
+def logs(update: Update, context: CallbackContext):
+    user = update.effective_user
+    with open("updates.txt", "rb") as f:
         context.bot.send_document(document=f, filename=f.name, chat_id=user.id)
 
 

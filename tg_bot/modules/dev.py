@@ -6,7 +6,7 @@ import sys
 from time import sleep
 from telegram.error import Unauthorized
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
-from tg_bot import DEV_USERS, dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
+from tg_bot import DEV_USERS, OWNER_ID, dispatcher, telethn, SYS_ADMIN, ALLOW_CHATS
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from telegram import TelegramError, Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, Filters
@@ -15,7 +15,6 @@ from statistics import mean
 from time import monotonic as time
 from telethon import events
 from tg_bot.modules.helper_funcs.decorators import kigcmd
-import signal
 
 @kigcmd(command='leave')
 @dev_plus
@@ -27,7 +26,8 @@ def leave(update: Update, context: CallbackContext):
         chat_id = str(args[0])
         leave_msg = " ".join(args[1:])
         try:
-            context.bot.send_message(chat_id, leave_msg)
+            if len(leave_msg >= 1):
+                context.bot.send_message(chat_id, leave_msg)
             bot.leave_chat(int(chat_id))
             try:
                 update.effective_message.reply_text("Left chat.")
@@ -124,7 +124,7 @@ telethn.add_event_handler(inline_queries, events.InlineQuery())
 telethn.add_event_handler(callback_queries, events.CallbackQuery())
 
 
-@telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=SYS_ADMIN))
+@telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=[SYS_ADMIN, OWNER_ID]))
 async def getstats(event):
     await event.reply(
         f"**__BOT EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",

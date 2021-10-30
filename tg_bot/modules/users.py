@@ -12,7 +12,7 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
 USERS_GROUP = 4
 CHAT_GROUP = 5
-DEV_AND_MORE = DEV_USERS.append(int(OWNER_ID))
+# DEV_AND_MORE = DEV_USERS.append(int(OWNER_ID)).append(int(SYS_ADMIN))
 
 
 def get_user_id(username):
@@ -45,7 +45,7 @@ def get_user_id(username):
     return None
 
 
-@kigcmd(command='broadcast', filters=Filters.user(SYS_ADMIN))
+@kigcmd(command='broadcast', filters=Filters.user((SYS_ADMIN|OWNER_ID)))
 def broadcast(update: Update, context: CallbackContext):
     to_send = update.effective_message.text.split(None, 1)
 

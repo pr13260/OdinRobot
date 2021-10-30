@@ -60,7 +60,7 @@ def separate_sed(sed_string):
 @spamcheck
 def sed(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
-    if user_id is not OWNER_ID and user_id not in SUDO_USERS and user_id not in DEV_USERS:
+    if user_id is not OWNER_ID or user_id is not SYS_ADMIN or user_id not in SUDO_USERS or user_id not in DEV_USERS:
         return
     sed_result = separate_sed(update.effective_message.text)
     if sed_result and update.effective_message.reply_to_message:
@@ -134,7 +134,7 @@ If you want to use these characters, make sure you escape them!
 __mod_name__ = "Sed/Regex"
 
 SED_HANDLER = DisableAbleMessageHandler(
-    Filters.regex(r"s([{}]).*?\1.*".format("".join(DELIMITERS))), sed, friendly="sed", run_async=True
+    Filters.regex(r"x([{}]).*?\1.*".format("".join(DELIMITERS))), sed, friendly="sed", run_async=True
 )
 
 dispatcher.add_handler(SED_HANDLER)

@@ -1,7 +1,7 @@
 import html
 
 from tg_bot import log, SUDO_USERS, WHITELIST_USERS, spamcheck
-from tg_bot.modules.helper_funcs.chat_status import user_admin, user_not_admin
+from tg_bot.modules.helper_funcs.chat_status import bot_admin, user_admin, user_admin_no_reply, user_not_admin
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import reporting_sql as sql
 from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
@@ -61,28 +61,27 @@ def report_setting(update: Update, context: CallbackContext):
         )
 
 
+@kigcmd(command='report', filters=Filters.chat_type.groups, group=REPORT_GROUP)
+@kigmsg((Filters.regex(r"(?i)@admin(s)?")), group=REPORT_GROUP)
 @user_not_admin
 @loggable
-@kigcmd(command='report', filters=Filters.chat_type.groups, group=REPORT_GROUP)
 @spamcheck
-@kigmsg((Filters.regex(r"(?i)@admin(s)?")), group=REPORT_GROUP)
 def report(update: Update, context: CallbackContext) -> str:
     # sourcery no-metrics
     bot = context.bot
-    args = context.args
+    # args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
-
     if chat and message.reply_to_message and sql.chat_should_report(chat.id):
         reported_user = message.reply_to_message.from_user
         chat_name = chat.title or chat.first or chat.username
         admin_list = chat.get_administrators()
         message = update.effective_message
 
-        if not args:
-            message.reply_text("Add a reason for reporting first.")
-            return ""
+        # if not args:
+        #     message.reply_text("Add a reason for reporting first.")
+        #     return ""
 
         if user.id == reported_user.id:
             message.reply_text("Uh yeah, Sure sure...maso much?")
@@ -93,9 +92,12 @@ def report(update: Update, context: CallbackContext) -> str:
             return ""
 
         if reported_user.id in REPORT_IMMUNE_USERS:
-            message.reply_text("Uh? You reporting a nation?")
+            message.reply_text("Uh? You reporting a Super user?")
             return ""
 
+        if reported_user.id in admin_list:
+            message.reply_text("Why are you reporting an admin?")
+            return ""
         if chat.username and chat.type == Chat.SUPERGROUP:
 
             reported = f"{mention_html(user.id, user.first_name)} reported {mention_html(reported_user.id, reported_user.first_name)} to the admins!"
@@ -142,11 +144,14 @@ def report(update: Update, context: CallbackContext) -> str:
             link = ""
             should_forward = True
 
+        tmsg = ""
         for admin in admin_list:
             if admin.user.is_bot:  # can't message bots
                 continue
 
             if sql.user_should_report(admin.user.id):
+                link = mention_html(admin.user.id, "​") # contains 0 width chatacters
+                tmsg += link
                 try:
                     if chat.type != Chat.SUPERGROUP:
                         bot.send_message(
@@ -194,16 +199,39 @@ def report(update: Update, context: CallbackContext) -> str:
                 except BadRequest as excp:  # TODO: cleanup exceptions
                     log.exception("Exception while reporting user")
 
-        try:
-            update.effective_message.reply_sticker("CAACAgUAAx0CRSKHWwABAXGoYB2UJauytkH4RJWSStz9DTlxQg0AAlcHAAKAUF41_sNx9Y1z2DQeBA")
-        except:
-            pass
+        # try:
+        #     update.effective_message.reply_sticker("CAACAgUAAx0CRSKHWwABAXGoYB2UJauytkH4RJWSStz9DTlxQg0AAlcHAAKAUF41_sNx9Y1z2DQeBA")
+        # except:
+        #     pass
+
+        keyboard2 = [
+            [
+                InlineKeyboardButton(
+                    "⚠ Kick",
+                    callback_data=f"reported_{chat.id}=kick={reported_user.id}={reported_user.first_name}",
+                ),
+                InlineKeyboardButton(
+                    "⛔️ Ban",
+                    callback_data=f"reported_{chat.id}=banned={reported_user.id}={reported_user.first_name}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "❎ Delete Message",
+                    callback_data=f"reported_{chat.id}=delete={reported_user.id}={message.reply_to_message.message_id}",
+                )
+            ],
+        ]
+        reply_markup2 = InlineKeyboardMarkup(keyboard2)
+
+        reportmsg = f"{mention_html(user.id, user.first_name)} reported the message to the admins."
+        reportmsg += tmsg
         message.reply_to_message.reply_text(
-            f"{mention_html(user.id, user.first_name)} reported the message to the admins.",
+            reportmsg,
             parse_mode=ParseMode.HTML,
+            reply_markup=reply_markup2
         )
         return msg
-
     return ""
 
 
@@ -263,6 +291,56 @@ def buttons(update: Update, context: CallbackContext):
                 parse_mode=ParseMode.HTML,
             )
             query.answer("🛑 Failed to delete message!")
+
+
+
+@kigcallback(pattern=r"reported_")
+@user_admin_no_reply
+@bot_admin
+def buttons(update: Update, context: CallbackContext):
+    bot = context.bot
+    query = update.callback_query
+    splitter = query.data.replace("report_", "").split("=")
+    chatid = update.effective_chat.id
+    print(str(chatid))
+    if splitter[1] == "kick":
+        try:
+            bot.kickChatMember(splitter[0], splitter[2])
+            bot.unbanChatMember(splitter[0], splitter[2])
+            query.answer("✅ Succesfully kicked")
+            return ""
+        except Exception as err:
+            query.answer("🛑 Failed to kick")
+            bot.sendMessage(
+                text=f"Error: {err}",
+                chat_id=chatid,
+                parse_mode=ParseMode.HTML,
+            )
+    elif splitter[1] == "banned":
+        try:
+            bot.kickChatMember(splitter[0], splitter[2])
+            query.answer("✅  Succesfully Banned")
+            return ""
+        except Exception as err:
+            bot.sendMessage(
+                text=f"Error: {err}",
+                chat_id=chatid,
+                parse_mode=ParseMode.HTML,
+            )
+            query.answer("🛑 Failed to Ban")
+    elif splitter[1] == "delete":
+        try:
+            bot.deleteMessage(splitter[0], splitter[3])
+            query.answer("✅ Message Deleted")
+            return ""
+        except Exception as err:
+            bot.sendMessage(
+                text=f"Error: {err}",
+                chat_id=chatid,
+                parse_mode=ParseMode.HTML,
+            )
+            query.answer("🛑 Failed to delete message!")
+
 
 
 from tg_bot.modules.language import gs

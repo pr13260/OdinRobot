@@ -1,24 +1,41 @@
 import html
 from typing import Optional
+from telegram.callbackquery import CallbackQuery
+import re
+from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
+from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
+from telegram.user import User
 
-from tg_bot import WHITELIST_USERS, spamcheck
+from tg_bot import (
+    WHITELIST_USERS, 
+    spamcheck,
+    DEV_USERS,
+    MESSAGE_DUMP,
+    MOD_USERS,
+    SUDO_USERS,
+    SUPPORT_USERS,
+    OWNER_ID,
+    WHITELIST_USERS,
+)
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
     connection_status,
     is_user_admin,
+    is_user_ban_protected,
     user_admin,
+    user_admin_no_reply,
     user_mod,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.string_handling import extract_time
 from tg_bot.modules.log_channel import loggable
-from telegram import Bot, Chat, ChatPermissions, ParseMode, Update
+from telegram import Bot, Chat, ChatPermissions, ParseMode, Update, replymarkup
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.language import gs
-from tg_bot.modules.helper_funcs.decorators import kigcmd
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
 
 def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
@@ -36,8 +53,21 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
     if user_id == bot.id:
         return "I'm not gonna MUTE myself, How high are you?"
 
-    if is_user_admin(chat, user_id, member) or user_id in WHITELIST_USERS:
-        return "Can't. Find someone else to mute but not this one."
+    if is_user_ban_protected(chat, user_id, member) and user_id not in DEV_USERS:
+        if user_id == OWNER_ID:
+            return "I'd never ban my owner."
+        elif user_id in DEV_USERS:
+            return "I can't act against our own."
+        elif user_id in SUDO_USERS:
+            return "My sudos are ban immune"
+        elif user_id in SUPPORT_USERS:
+            return "My support users are ban immune"
+        elif user_id in WHITELIST_USERS:
+            return "Bring an order from My Devs to fight a Whitelist user."
+        elif user_id in MOD_USERS:
+            return "Moderators cannot be muted, report abuse at @TheBotsSupport."
+        else:
+            return "Can't. Find someone else to mute but not this one."
 
     return None
 
@@ -77,19 +107,100 @@ def mute(update: Update, context: CallbackContext) -> str:
     if member.can_send_messages is None or member.can_send_messages:
         chat_permissions = ChatPermissions(can_send_messages=False)
         bot.restrict_chat_member(chat.id, user_id, chat_permissions)
-        bot.sendMessage(
-            chat.id,
-            "{} was muted by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
-                mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
-            ),
-            parse_mode=ParseMode.HTML,
+        mutemsg = "{} was muted by {} in <b>{}</b>".format(
+                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title
         )
+        if reason:
+            mutemsg += "\n<b>Reason</b>: <code>{reason}</code>"
+
+
+        keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "🔊 Unmute", callback_data="cb_unmute({})".format(user_id)
+                    )
+                ]
+            ]
+        )
+
+        context.bot.send_message(
+            chat.id,
+            mutemsg,
+            parse_mode=ParseMode.HTML,
+            reply_markup=keyboard
+            )
+
+
         return log
 
     else:
         message.reply_text("This user is already muted!")
 
     return ""
+
+
+
+@kigcallback(pattern=r"cb_unmute")
+@user_admin_no_reply
+@bot_admin
+@loggable
+def button(update: Update, context: CallbackContext) -> str:
+    query: Optional[CallbackQuery] = update.callback_query
+    user: Optional[User] = update.effective_user
+    match = re.match(r"cb_unmute\((.+?)\)", query.data)
+    if match:
+        bot = context.bot
+        user_id = match.group(1)
+        chat: Optional[Chat] = update.effective_chat
+        user_member = chat.get_member(user_id)
+
+        if user_member.status in ["kicked", "left"]:
+            user_member.reply_text(
+                "This user isn't even in the chat, unmuting them won't make them talk more than they "
+                "already do!"
+            )
+
+        elif (
+                user_member.can_send_messages
+                and user_member.can_send_media_messages
+                and user_member.can_send_other_messages
+                and user_member.can_add_web_page_previews
+            ):
+            update.effective_message.edit_tex("This user already has the right to speak.")
+        else:
+            chat_permissions = ChatPermissions(
+                can_send_messages=True,
+                can_invite_users=True,
+                can_pin_messages=True,
+                can_send_polls=True,
+                can_change_info=True,
+                can_send_media_messages=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+            )
+            try:
+                bot.restrict_chat_member(chat.id, int(user_id), chat_permissions)
+            except BadRequest:
+                pass
+
+
+            print(user_member)
+            update.effective_message.edit_text(
+                # "{} was unmuted by {}.",#.format(mention_html(user_id, user_member.first_name), mention_html(user.id, user.first_name)),
+                "{} was unmuted by {}.".format(mention_html(user_id, user_member.user.first_name), mention_html(user.id, user.first_name)),
+                parse_mode=ParseMode.HTML,
+            )
+            return (
+                f"<b>{html.escape(chat.title)}:</b>\n"
+                f"#UNMUTE\n"
+                f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+                f"<b>User:</b> {mention_html(user_member.user.id, user_member.user.first_name)}"
+            )
+
+
+    return ""
+
 
 @kigcmd(command='unmute')
 @spamcheck

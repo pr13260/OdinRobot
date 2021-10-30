@@ -35,6 +35,7 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 @connection_status
 @bot_admin
 @kigcmd(command=('dban'), pass_args=True)
+@kigcmd(command=('dsban'), pass_args=True)
 @kigcmd(command=('sban'), pass_args=True)
 @kigcmd(command=('ban'), pass_args=True)
 @spamcheck
@@ -95,6 +96,12 @@ def ban(update, context):  # sourcery no-metrics
             return ""
     else:
         delban = False
+    if message.text.startswith('/ds') or message.text.startswith('!ds') or message.text.startswith('>ds'):
+        delsilent = True
+        if not can_delete(chat, context.bot.id):
+            return ""
+    else:
+        delsilent = False
     log = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#BANNED\n"
@@ -108,23 +115,32 @@ def ban(update, context):  # sourcery no-metrics
         chat.kick_member(user_id)
 
         if silent:
-            if message.reply_to_message:
-                message.reply_to_message.delete()
+            if delsilent:
+                if message.reply_to_message:
+                    message.reply_to_message.delete()
             message.delete()
             return log
         if delban:
             if message.reply_to_message:
                 message.reply_to_message.delete()
             return log
-
         context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
-        context.bot.sendMessage(
-            chat.id,
-            "{} was banned by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
-                mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
-            ),
-            parse_mode=ParseMode.HTML,
-        )
+        if reason:
+            context.bot.sendMessage(
+                chat.id,
+                "{} was banned by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
+                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
+                ),
+                parse_mode=ParseMode.HTML,
+            )
+        else:
+            context.bot.sendMessage(
+                chat.id,
+                "{} was banned by {} in <b>{}</b>".format(
+                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title
+                ),
+                parse_mode=ParseMode.HTML,
+            )
         return log
 
     except BadRequest as excp:
@@ -207,11 +223,21 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
     try:
         chat.kick_member(user_id, until_date=bantime)
         bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
-        bot.sendMessage(
-            chat.id,
-            f"Banned! User {mention_html(member.user.id, member.user.first_name)} will be banned for {time_val}.\nReason: {reason}",
-            parse_mode=ParseMode.HTML,
-        )
+
+        if reason:
+            bot.sendMessage(
+                chat.id,
+                f"Banned! User {mention_html(member.user.id, member.user.first_name)} will be banned for {time_val}.\nReason: {reason}",
+                parse_mode=ParseMode.HTML,
+            )
+
+        else:
+            bot.sendMessage(
+                chat.id,
+                f"Banned! User {mention_html(member.user.id, member.user.first_name)} will be banned for {time_val}.",
+                parse_mode=ParseMode.HTML,
+            )
+
         return log
 
     except BadRequest as excp:
@@ -272,11 +298,23 @@ def kick(update: Update, context: CallbackContext) -> str:
     res = chat.unban_member(user_id)  # unban on current user = kick
     if res:
         bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
-        bot.sendMessage(
-            chat.id,
-            f"{mention_html(member.user.id, member.user.first_name)} was kicked by {mention_html(user.id, user.first_name)} in {message.chat.title}\n<b>Reason</b>: <code>{reason}</code>",
-            parse_mode=ParseMode.HTML,
-        )
+
+        if reason:
+
+            bot.sendMessage(
+                chat.id,
+                f"{mention_html(member.user.id, member.user.first_name)} was kicked by {mention_html(user.id, user.first_name)} in {message.chat.title}\n<b>Reason</b>: <code>{reason}</code>",
+                parse_mode=ParseMode.HTML,
+            )
+
+        else:
+
+            bot.sendMessage(
+                chat.id,
+                f"{mention_html(member.user.id, member.user.first_name)} was kicked by {mention_html(user.id, user.first_name)} in {message.chat.title}",
+                parse_mode=ParseMode.HTML,
+            )
+
         log = (
             f"<b>{html.escape(chat.title)}:</b>\n"
             f"#KICKED\n"
@@ -297,9 +335,11 @@ def kick(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='kickme', pass_args=True, filters=Filters.chat_type.groups)
 @bot_admin
 @can_restrict
+@loggable
 @spamcheck
-def kickme(update: Update, context: CallbackContext):
+def kickme(update: Update, context: CallbackContext) -> str:
     user_id = update.effective_message.from_user.id
+    user = update.effective_message.from_user
     if is_user_admin(update.effective_chat, user_id):
         update.effective_message.reply_text("I wish I could... but you're an admin.")
         return
@@ -307,6 +347,16 @@ def kickme(update: Update, context: CallbackContext):
     res = update.effective_chat.unban_member(user_id)  # unban on current user = kick
     if res:
         update.effective_message.reply_text("*kicks you out of the group*")
+
+        log = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#KICKED\n"
+            "self kick"
+            f"<b>User:</b> {mention_html(user.id, user.first_name)}\n"
+        )
+
+        return log
+
     else:
         update.effective_message.reply_text("Huh? I can't :/")
 
@@ -346,13 +396,27 @@ def unban(update: Update, context: CallbackContext) -> str:
         return log_message
 
     chat.unban_member(user_id)
-    bot.sendMessage(
-            chat.id,
-            "{} was unbanned by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
-                mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
-            ),
-            parse_mode=ParseMode.HTML,
-        )
+
+    if reason:
+
+        bot.sendMessage(
+                chat.id,
+                "{} was unbanned by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
+                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
+                ),
+                parse_mode=ParseMode.HTML,
+            )
+
+    else:
+
+        bot.sendMessage(
+                chat.id,
+                "{} was unbanned by {} in <b>{}</b>".format(
+                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title
+                ),
+                parse_mode=ParseMode.HTML,
+            )
+
 
     log = (
         f"<b>{html.escape(chat.title)}:</b>\n"

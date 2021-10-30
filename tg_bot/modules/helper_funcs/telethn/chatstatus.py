@@ -28,6 +28,15 @@ async def user_is_admin(user_id: int, message):
             break
     return status
 
+async def user_can_purge(user_id: int, message):
+    status = False
+    if message.is_private:
+        return True
+
+    perms = await telethn.get_permissions(message.chat_id, user_id)
+    status = perms.delete_messages
+    return status
+
 
 async def is_user_admin(user_id: int, chat_id):
     status = False

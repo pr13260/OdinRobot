@@ -7,7 +7,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from requests import get
 from telegram import Bot, Update, ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler
+from telegram.ext import Updater, CommandHandler
 from telegram.ext import CallbackContext, run_async
 from ujson import loads
 from yaml import load, Loader

@@ -15,7 +15,7 @@ import subprocess
 namespaces = {}
 
 
-def namespace_of(chat, update, bot):
+def namespace_of(chat, update, bot, context):
     if chat not in namespaces:
         namespaces[chat] = {
             "__builtins__": globals()["__builtins__"],
@@ -24,6 +24,7 @@ def namespace_of(chat, update, bot):
             "effective_user": update.effective_user,
             "effective_chat": update.effective_chat,
             "update": update,
+            "ctx": context,
         }
 
     return namespaces[chat]
@@ -50,18 +51,18 @@ def send(msg, bot, update):
 
 
 
-@kigcmd(command=("e", "ev", "eva", "eval"), filters=Filters.user(SYS_ADMIN))
+@kigcmd(command=("e", "ev", "eva", "eval"), filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
 def evaluate(update: Update, context: CallbackContext):
     bot = context.bot
-    send(do(eval, bot, update), bot, update)
+    send(do(eval, bot, update, context), bot, update)
 
 
-@kigcmd(command=("x", "ex", "exe", "exec", "py"), filters=Filters.user(SYS_ADMIN))
+@kigcmd(command=("x", "ex", "exe", "exec", "py"), filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
 def execute(update: Update, context: CallbackContext):
     bot = context.bot
-    send(do(exec, bot, update), bot, update)
+    send(do(exec, bot, update, context), bot, update)
 
-@kigcmd(command=("sh", "shell"), filters=Filters.user(SYS_ADMIN))
+@kigcmd(command=("sh", "shell"), filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
 def shell(update: Update, context: CallbackContext):
     message = update.effective_message
     cmd = message.text.split(" ", 1)
@@ -106,12 +107,11 @@ def cleanup_code(code):
     return code.strip("` \n")
 
 
-def do(func, bot, update):
+def do(func, bot, update, context):
     log_input(update)
     content = update.message.text.split(" ", 1)[-1]
     body = cleanup_code(content)
-    env = namespace_of(update.message.chat_id, update, bot)
-
+    env = namespace_of(update.message.chat_id, update, bot, context)
     os.chdir(os.getcwd())
     with open(
         os.path.join(os.getcwd(), "tg_bot/modules/helper_funcs/temp.txt"), "w",
@@ -153,7 +153,7 @@ def do(func, bot, update):
 
 
 
-@kigcmd(command="clearlocals", filters=Filters.user(SYS_ADMIN))
+@kigcmd(command="clearlocals", filters=Filters.user(SYS_ADMIN) | Filters.user(OWNER_ID))
 def clear(update: Update, context: CallbackContext):
     bot = context.bot
     log_input(update)

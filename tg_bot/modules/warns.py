@@ -1,9 +1,10 @@
 import html
 import re
 from typing import Optional
+from sqlalchemy.sql.expression import false
 
 import telegram
-from tg_bot import BAN_STICKER, WHITELIST_USERS, dispatcher, spamcheck
+from tg_bot import BAN_STICKER, DEV_USERS, OWNER_ID, SUDO_USERS, WHITELIST_USERS, dispatcher, spamcheck
 #from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -49,21 +50,39 @@ WARN_HANDLER_GROUP = 9
 CURRENT_WARNING_FILTER_STRING = "<b>Current warning filters in this chat:</b>\n"
 WARNS_GROUP = 2
 
+def warn_immune(message, chat, uid, warner):
+
+    if is_user_admin(chat, uid):
+        if uid is OWNER_ID:
+            message.reply_text("This is my CREATOR, how dare you!")
+            return True
+        if uid in DEV_USERS:
+            message.reply_text("This user is one of my Devs, go cry somewhere else.")
+            return True
+        if uid in SUDO_USERS:
+            message.reply_text("This user is a SUDO user, i'm not gonna warn him!")
+            return True
+        else:
+            message.reply_text("Damn admins, They are too far to be warned!")
+            return True
+
+    if uid in WHITELIST_USERS:
+        if warner:
+            message.reply_text("Whitelisted users are warn immune.")
+            return True
+        else:
+            message.reply_text(
+                "A whitelisted user triggered an auto warn filter!\nI can't warn them users but they should avoid abusing this."
+            )
+            return True
+    else:
+        return False
+
 # Not async
 def warn(
     user: User, chat: Chat, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
-    if is_user_admin(chat, user.id):
-        message.reply_text("Damn admins, They are too far to be kicked!")
-        return
-
-    if user.id in WHITELIST_USERS:
-        if warner:
-            message.reply_text("Whitelisted users are warn immune.")
-        else:
-            message.reply_text(
-                "Neptunian triggered an auto warn filter!\nI can't warn Neptunians users but they should avoid abusing this."
-            )
+    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
         return
 
     if warner:
@@ -112,7 +131,12 @@ def warn(
                     InlineKeyboardButton(
                         "🔘 Remove warn", callback_data="rm_warn({})".format(user.id)
                     )
-                ]
+                ],
+                [
+                    InlineKeyboardButton(
+                        "📝 Read the rules", url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id)
+                    )
+                ],
             ]
         )
 
@@ -120,6 +144,7 @@ def warn(
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
             f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"Please take some of your precious time to read the rules!"
         )
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"
@@ -147,20 +172,9 @@ def warn(
 
 # Not async
 def swarn(
-    user: User, chat: Chat, reason: str, message: Message, warner: User = None
+    user: User, chat: Chat, reason: str, message: Message, dels, warner: User = None,
 ) -> str:  # sourcery no-metrics
-    if is_user_admin(chat, user.id):
-        message.reply_text("Damn admins, They are too far to be kicked!")
-        return
-
-
-    if user.id in WHITELIST_USERS:
-        if warner:
-            message.reply_text("Whitelisted users are warn immune.")
-        else:
-            message.reply_text(
-                "Neptunian triggered an auto warn filter!\nI can't warn Neptunians users but they should avoid abusing this."
-            )
+    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
         return
 
     if warner:
@@ -209,7 +223,12 @@ def swarn(
                     InlineKeyboardButton(
                         "🔘 Remove warn", callback_data="rm_warn({})".format(user.id)
                     )
-                ]
+                ],
+                [
+                    InlineKeyboardButton(
+                        "📝 Read the rules", url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id)
+                    )
+                ],
             ]
         )
 
@@ -217,6 +236,7 @@ def swarn(
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
             f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"Please take some of your precious time to read the rules!"
         )
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"
@@ -231,8 +251,9 @@ def swarn(
         )
 
     try:
-        if message.reply_to_message:
-            message.reply_to_message.delete()
+        if dels:
+            if message.reply_to_message:
+                message.reply_to_message.delete()
         message.reply_text(reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         message.delete()
     except BadRequest as excp:
@@ -252,17 +273,7 @@ def swarn(
 def dwarn(
     user: User, chat: Chat, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
-    if is_user_admin(chat, user.id):
-        message.reply_text("Damn admins, They are too far to be kicked!")
-        return
-
-    if user.id in WHITELIST_USERS:
-        if warner:
-            message.reply_text("Whitelisted users are warn immune.")
-        else:
-            message.reply_text(
-                "Neptunian triggered an auto warn filter!\nI can't warn Neptunians users but they should avoid abusing this."
-            )
+    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
         return
 
     if warner:
@@ -311,7 +322,12 @@ def dwarn(
                     InlineKeyboardButton(
                         "🔘 Remove warn", callback_data="rm_warn({})".format(user.id)
                     )
-                ]
+                ],
+                [
+                    InlineKeyboardButton(
+                        "📝 Read the rules", url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id)
+                    )
+                ],
             ]
         )
 
@@ -319,6 +335,7 @@ def dwarn(
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
             f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"Please take some of your precious time to read the rules!"
         )
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"
@@ -381,6 +398,7 @@ def button(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='swarn', filters=Filters.chat_type.groups)
 @kigcmd(command='dwarn', filters=Filters.chat_type.groups)
+@kigcmd(command='dswarn', filters=Filters.chat_type.groups)
 @kigcmd(command='warn', filters=Filters.chat_type.groups)
 @spamcheck
 @user_mod
@@ -405,7 +423,14 @@ def warn_user(update: Update, context: CallbackContext) -> str:
             return ""
     else:
         delban = False
+    if message.text.startswith('/ds') or message.text.startswith('!ds') or message.text.startswith('>ds'):
+        delsilent = True
+        if not can_delete(chat, context.bot.id):
+            return ""
+    else:
+        delsilent = False
     if silent:
+        dels = False
         if user_id:
             if (
                 message.reply_to_message
@@ -415,11 +440,31 @@ def warn_user(update: Update, context: CallbackContext) -> str:
                     message.reply_to_message.from_user,
                     chat,
                     reason,
-                    message.reply_to_message,
+                    message,
+                    dels,
                     warner,
                 )
             else:
-                return swarn(chat.get_member(user_id).user, chat, reason, message, warner)
+                return swarn(chat.get_member(user_id).user, chat, reason, message, dels, warner)
+        else:
+            message.reply_text("That looks like an invalid User ID to me.")
+    if delsilent:
+        dels = True
+        if user_id:
+            if (
+                message.reply_to_message
+                and message.reply_to_message.from_user.id == user_id
+            ):
+                return swarn(
+                    message.reply_to_message.from_user,
+                    chat,
+                    reason,
+                    message,
+                    dels,
+                    warner,
+                )
+            else:
+                return swarn(chat.get_member(user_id).user, chat, reason, message, dels, warner)
         else:
             message.reply_text("That looks like an invalid User ID to me.")
     elif delban:
@@ -432,7 +477,7 @@ def warn_user(update: Update, context: CallbackContext) -> str:
                     message.reply_to_message.from_user,
                     chat,
                     reason,
-                    message.reply_to_message,
+                    message,
                     warner,
                 )
             else:

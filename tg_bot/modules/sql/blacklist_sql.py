@@ -9,10 +9,12 @@ class BlackListFilters(BASE):
     __tablename__ = "blacklist"
     chat_id = Column(String(14), primary_key=True)
     trigger = Column(UnicodeText, primary_key=True, nullable=False)
+    trig_act = Column(Integer, default=0)
 
-    def __init__(self, chat_id, trigger):
+    def __init__(self, chat_id, trigger, trig_act):
         self.chat_id = str(chat_id)  # ensure string
         self.trigger = trigger
+        self.trig_act = int(trig_act)
 
     def __repr__(self):
         return "<Blacklist filter '%s' for %s>" % (self.trigger, self.chat_id)
@@ -22,6 +24,7 @@ class BlackListFilters(BASE):
             isinstance(other, BlackListFilters)
             and self.chat_id == other.chat_id
             and self.trigger == other.trigger
+            and self.trig_act == other.trig_act
         )
 
 
@@ -52,25 +55,27 @@ CHAT_BLACKLISTS = {}
 CHAT_SETTINGS_BLACKLISTS = {}
 
 
-def add_to_blacklist(chat_id, trigger):
+def add_to_blacklist(chat_id, trigger, action):
     with BLACKLIST_FILTER_INSERTION_LOCK:
-        blacklist_filt = BlackListFilters(str(chat_id), trigger)
+        blacklist_filt = BlackListFilters(str(chat_id), trigger, action)
 
         SESSION.merge(blacklist_filt)  # merge to avoid duplicate key issues
         SESSION.commit()
         global CHAT_BLACKLISTS
         if CHAT_BLACKLISTS.get(str(chat_id), set()) == set():
-            CHAT_BLACKLISTS[str(chat_id)] = {trigger}
+            CHAT_BLACKLISTS[str(chat_id)] = {(trigger, action)}
         else:
-            CHAT_BLACKLISTS.get(str(chat_id), set()).add(trigger)
+            CHAT_BLACKLISTS.get(str(chat_id), set()).add((trigger, action))
 
 
 def rm_from_blacklist(chat_id, trigger):
     with BLACKLIST_FILTER_INSERTION_LOCK:
         blacklist_filt = SESSION.query(BlackListFilters).get((str(chat_id), trigger))
         if blacklist_filt:
-            if trigger in CHAT_BLACKLISTS.get(str(chat_id), set()):  # sanity check
-                CHAT_BLACKLISTS.get(str(chat_id), set()).remove(trigger)
+            chatbl = CHAT_BLACKLISTS.get(str(chat_id))
+            bl = set(filter(lambda x: x[0] == trigger, chatbl)).pop()
+            if bl in CHAT_BLACKLISTS.get(str(chat_id), set()):  # sanity check
+                CHAT_BLACKLISTS.get(str(chat_id), set()).remove(bl)
 
             SESSION.delete(blacklist_filt)
             SESSION.commit()
@@ -78,7 +83,6 @@ def rm_from_blacklist(chat_id, trigger):
 
         SESSION.close()
         return False
-
 
 def get_chat_blacklist(chat_id):
     return CHAT_BLACKLISTS.get(str(chat_id), set())
@@ -159,7 +163,7 @@ def __load_chat_blacklists():
 
         all_filters = SESSION.query(BlackListFilters).all()
         for x in all_filters:
-            CHAT_BLACKLISTS[x.chat_id] += [x.trigger]
+            CHAT_BLACKLISTS[x.chat_id] += [(x.trigger, x.trig_act)]
 
         CHAT_BLACKLISTS = {x: set(y) for x, y in CHAT_BLACKLISTS.items()}
 

@@ -52,6 +52,17 @@ def pin(update: Update, context: CallbackContext) -> str:
             or args[0].lower() == "violent"
         )
 
+    message = update.effective_message
+    pinner = chat.get_member(user.id)
+
+    if (
+        not (pinner.can_pin_messages or pinner.status == "creator")
+        and user.id not in SUDO_USERS
+    ):
+        message.reply_text("You don't have the necessary rights to do that!")
+        return
+
+
     if prev_message and is_group:
         try:
             pinn = prev_message.message_id
@@ -64,7 +75,7 @@ def pin(update: Update, context: CallbackContext) -> str:
             else:
                 pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], pinn)
 
-            dispatcher.bot.sendMessage(chat.id, "I have pinned [this message]({})".format(pinmsg), parse_mode="markdown")
+            dispatcher.bot.sendMessage(chat.id, "I have pinned [this message]({})".format(pinmsg), parse_mode="markdown", disable_web_page_preview=True)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 dispatcher.bot.sendMessage(chat.id, f"I couldn't pin the message from some reason.")
@@ -91,6 +102,15 @@ def unpin(update: Update, context: CallbackContext) -> str:
     user = update.effective_user
 
     message = update.effective_message
+    unpinner = chat.get_member(user.id)
+
+    if (
+        not (unpinner.can_pin_messages or unpinner.status == "creator")
+        and user.id not in SUDO_USERS
+    ):
+        message.reply_text("You don't have the necessary rights to do that!")
+        return
+
     reply_msg = message.reply_to_message
     if not reply_msg:
         print("not rp")
@@ -281,7 +301,8 @@ def permapin(update, context):
 @spamcheck
 @can_pin
 @user_admin
-def permanent_pin_set(update, context):
+@loggable
+def permanent_pin_set(update, context) -> str:
     user = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
     args = context.args
@@ -361,7 +382,7 @@ def permanent_pin(update, context):
     args = context.args
 
     get_permapin = sql.get_permapin(chat.id)
-    if get_permapin and not user.id == context.bot.id:
+    if get_permapin and user.id != context.bot.id:
         try:
             to_del = context.bot.pinChatMessage(chat.id, get_permapin, disable_notification=True)
         except BadRequest:

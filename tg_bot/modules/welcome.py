@@ -222,7 +222,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Devs
             elif new_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "Whoa! A member of the My Devs just joined!",
+                    "Whoa! A member of my Devs just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -609,6 +609,13 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
             if left_mem.id == OWNER_ID:
                 update.effective_message.reply_text(
                     "Sorry to see you leave :(", reply_to_message_id=reply
+                )
+                return
+
+            # Give the other bot a special goodbye
+            if left_mem.id == 1826542418:
+                update.effective_message.reply_text(
+                    "<i>You can rest now...</i>", reply_to_message_id=reply, parse_mode=ParseMode.HTML
                 )
                 return
 

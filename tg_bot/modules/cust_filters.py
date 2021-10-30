@@ -626,29 +626,11 @@ __mod_name__ = "Filters"
 
 
 
-'''FILTER_HANDLER = CommandHandler("filter", filters, run_async=False)
-STOP_HANDLER = CommandHandler("stop", stop_filter, run_async=False)
-RMALLFILTER_HANDLER = CommandHandler(
-    "removeallfilters", rmall_filters, filters=Filters.chat_type.groups
-)
-LIST_HANDLER = DisableAbleCommandHandler("filters", list_handlers, admin_ok=True)'''
 RMALLFILTER_CALLBACK = CallbackQueryHandler(rmall_callback, pattern=r"filters_.*")
-'''CUST_FILTER_HANDLER = MessageHandler(
-    CustomFilters.has_text & ~Filters.update.edited_message, reply_filter
-)'''
 
-'''dispatcher.add_handler(FILTER_HANDLER)
-dispatcher.add_handler(STOP_HANDLER)
-dispatcher.add_handler(LIST_HANDLER)
-dispatcher.add_handler(RMALLFILTER_HANDLER)'''
-'''dispatcher.add_handler(CUST_FILTER_HANDLER, HANDLER_GROUP)'''
 dispatcher.add_handler(RMALLFILTER_CALLBACK)
 
 __handlers__ = [
-#    FILTER_HANDLER,
-#    STOP_HANDLER,
-#    LIST_HANDLER,
-#    RMALLFILTER_HANDLER,
-#    CUST_FILTER_HANDLER,
+
     HANDLER_GROUP,
 ]

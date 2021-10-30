@@ -116,6 +116,7 @@ bans_help: |
     - /ban <userhandle>: bans a user. (via handle, or reply)
     - /sban <userhandle>: bans a user silently.
     - /dban <userhandle>: bans a user deleting the replied to message.
+    - /dsban <userhandle>: bans a user deleting the sent and replied to message.
     - /tban <userhandle> x(m/h/d): bans a user for x time. (via handle, or reply). m = minutes, h = hours, d = days.
     - /unban <userhandle>: unbans a user. (via handle, or reply)
     - /kick <userhandle>: kick a user out of the group, (via handle, or reply)
@@ -125,12 +126,23 @@ blacklist_help: |
 
     *NOTE*: Blacklists do not affect group admins.
 
-     • `/blacklist`*:* View the current blacklisted words.
+     • `/blacklist`(s) or `/blocklist`(s)*:* View the current blacklisted words.
 
     Admin only:
-     • `/addblacklist <triggers>`*:* Add a trigger to the blacklist. Each line is considered one trigger, so using different lines will allow you to add multiple triggers.
+     • `/addblacklist <triggers> {optional action}`*:* Add a trigger to the blacklist. Each line is considered one trigger, so using different lines will allow you to add multiple triggers.
+     • `/addblocklist <triggers> {optional action}`*:* Same as addblacklist
      • `/unblacklist <triggers>`*:* Remove triggers from the blacklist. Same newline logic applies here, so you can remove multiple triggers at once.
+     • `/unblocklist <triggers>`*:* Same as unblacklist
      • `/blacklistmode <off/del/warn/ban/kick/mute/tban/tmute>`*:* Action to perform when someone sends blacklisted words.
+     • `/blacklistmode <off/del/warn/ban/kick/mute/tban/tmute>`*:* Same as blacklistmode
+
+    Owner only:
+     • `/removeallblacklists`*:* Removes all blacklists from the chat.
+     • `/removeallblocklists`*:* Same as removeallblacklists.
+
+    *NOTE:* You can set custom actions for each blacklist.
+    The possible actions are:
+        `default` - `delete` - `warn` - `mute` - `kick` - `ban`
 
 cleaner_help: |
     - /cleanbluetext <on/off/yes/no> - clean commands after sending
@@ -459,7 +471,8 @@ warns_help: |
       *Admins only:*
       • `/warn <userhandle>`*:* warn a user. After 3 warns, the user will be banned from the group. Can also be used as a reply.
       • `/swarn <userhandle>`*:* same as `/warn` but warns the user silently.
-      • `/dwarn <userhandle>`*:* same as `/warn` but deleted the replied to message.
+      • `/dwarn <userhandle>`*:* same as `/warn` but deletes the replied to message.
+      • `/dswarn <userhandle>`*:* same as `/warn` but deletes the sent and replied to message.
       • `/resetwarn <userhandle>`*:* reset the warns for a user. Can also be used as a reply.
       • `/resetwarns <userhandle>`*:* reset the warns for a user. Can also be used as a reply.
       • `/addwarn <keyword> <reply message>`*:* set a warning filter on a certain keyword. If you want your keyword to

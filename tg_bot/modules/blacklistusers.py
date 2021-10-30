@@ -7,6 +7,7 @@ from tg_bot import (
     OWNER_ID,
     SUDO_USERS,
     SUPPORT_USERS,
+    SYS_ADMIN,
     WHITELIST_USERS,
     dispatcher,
 )
@@ -20,9 +21,9 @@ from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 BLACKLISTWHITELIST = (
-    [OWNER_ID] + DEV_USERS + SUDO_USERS + WHITELIST_USERS + SUPPORT_USERS + MOD_USERS
+    [OWNER_ID] + [SYS_ADMIN] + DEV_USERS + SUDO_USERS + WHITELIST_USERS + SUPPORT_USERS + MOD_USERS
 )
-BLABLEUSERS = [OWNER_ID] + DEV_USERS
+BLABLEUSERS = [OWNER_ID] + DEV_USERS + [SYS_ADMIN]
 
 @kigcmd(command='ignore', pass_args=True)
 @dev_plus

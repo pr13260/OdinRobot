@@ -1,5 +1,6 @@
-from dearpygui.core import *
-from dearpygui.simple import *
+# from dearpygui.core import *
+# from dearpygui.simple import *
+import dearpygui.dearpygui as d
 from platform import python_version
 from tg_bot.__main__ import STATS
 
@@ -8,18 +9,20 @@ try:
 except ImportError:
     pver = "N/A"
 
-with window("About"):
-    add_text(" Ōɖìղ • オーディン telegram bot")
-    add_text("Maintained with <3 by AbOuLfOoOoOuF(github.com/AbOuLfOoOoOuF)")
-    add_text("Enviroment:")
-    add_text(f"Bot lib: python-telegram-bot v{pver}.", bullet=True)
-    add_text(f"Python version: {python_version()}.", bullet=True)
-    add_text("Source:")
-    add_text("GitHub: github.com/AbOuLfOoOoOuF", bullet=True)
+# with d.window("About"):
+with d.window():
+    d.add_text("Ōɖìղ • オーディン telegram bot")
+    d.add_text("Maintained with <3 by ルーク(github.com/AbOuLfOoOoOuF)")
+    d.add_text("Enviroment:")
+    d.add_text(f"Bot lib: python-telegram-bot v{pver}.", bullet=True)
+    d.add_text(f"Python version: {python_version()}.", bullet=True)
+    d.add_text("Source:")
+    d.add_text("GitHub: github.com/AbOuLfOoOoOuF", bullet=True)
+    d.add_text("\n*Bot statistics*:\n"+ "\n".join([mod.__stats__() for mod in STATS]))
 
-with window("stats"):
-    add_text("\n*Bot statistics*:\n"+ "\n".join([mod.__stats__() for mod in STATS]))
+# with d.window("stats"):
 
 
 
-start_dearpygui(primary_window="About")
+# d.start_dearpygui()
+d.start_dearpygui(primary_window="About")

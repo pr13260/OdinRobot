@@ -483,7 +483,7 @@ def sudolist(update: Update, context: CallbackContext):
 @whitelist_plus
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
-    true_dev = list(set(DEV_USERS) - {OWNER_ID})
+    true_dev = list(set(DEV_USERS) - {OWNER_ID} - {SYS_ADMIN})
     reply = "<b>My Developers :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
@@ -539,7 +539,7 @@ def nationshelpp(update: Update, context: CallbackContext):
         \n <b>exec</b> (sys_admin)\
         \n <b>eval</b> (sys_admin)\
         \n <b>broadcast(all/group/users)</b> : broadcast a message (sys_admin)"
-    if user_id is not OWNER_ID and user_id not in SUDO_USERS and user_id not in DEV_USERS and user_id not in SUPPORT_USERS and user_id not in WHITELIST_USERS:
+    if user_id is not (OWNER_ID|SYS_ADMIN) and user_id not in SUDO_USERS and user_id not in DEV_USERS and user_id not in SUPPORT_USERS and user_id not in WHITELIST_USERS:
         return
     else:
         update.effective_message.reply_text(cmdlisttt, parse_mode=ParseMode.HTML)
