@@ -7,7 +7,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler
 from psycopg2 import errors as sqlerrors
 from tg_bot import KInit, dispatcher, DEV_USERS, OWNER_ID, log
-
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 class ErrorsDict(dict):
     "A custom dict to store errors and their count"
@@ -90,7 +90,7 @@ def error_callback(update: Update, context: CallbackContext):
         parse_mode="html",
     )
 
-
+@kigcmd(command="errors", run_async=True)
 def list_errors(update: Update, context: CallbackContext):
     if update.effective_user.id not in DEV_USERS:
         return
@@ -119,4 +119,4 @@ def list_errors(update: Update, context: CallbackContext):
 
 
 dispatcher.add_error_handler(error_callback)
-dispatcher.add_handler(CommandHandler("errors", list_errors))
+

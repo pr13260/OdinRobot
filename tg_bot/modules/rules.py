@@ -17,6 +17,8 @@ from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import escape_markdown
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 
 @kigcmd(command='rules', filters=Filters.chat_type.groups)
 @spamcheck
@@ -75,10 +77,13 @@ def send_rules(update, chat_id, from_pm=False):
 
 @kigcmd(command='setrules', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def set_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     msg = update.effective_message  # type: Optional[Message]
+    chat = update.effective_chat  # type: Optional[Chat]
+    u = update.effective_user  # type: Optional[User]
+    user = res_user(u, msg.message_id, chat)
     raw_text = msg.text
     args = raw_text.split(None, 1)  # use python's maxsplit to separate cmd and args
     if len(args) == 2:
@@ -93,9 +98,13 @@ def set_rules(update: Update, context: CallbackContext):
 
 @kigcmd(command='clearrules', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def clear_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
+    chat = update.effective_chat  # type: Optional[Chat]
+    msg = update.effective_message  # type: Optional[Message]
+    u = update.effective_user  # type: Optional[User]
+    user = res_user(u, msg.message_id, chat)
     sql.set_rules(chat_id, "")
     update.effective_message.reply_text("Successfully cleared rules!")
 

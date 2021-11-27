@@ -47,6 +47,7 @@ from tg_bot.modules.helper_funcs.alternate import (
     send_action,
 )
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
+from tg_bot.modules.sql.users_sql import get_user_com_chats
 
 # Hello bot owner, I spent many hours of my life for feds, Please don't remove this if you still respect MrYacha and peaktogoo and AyraHikari too
 # Federation by MrYacha 2018-2019
@@ -615,7 +616,7 @@ def fed_ban(update, context):  # sourcery no-metrics
         return
 
     if int(user_id) in SUDO_USERS:
-        message.reply_text("I will not ban a Royal Nation")
+        message.reply_text("I will not ban a SUDO user!")
         return
 
     if int(user_id) in WHITELIST_USERS:
@@ -737,7 +738,8 @@ def fed_ban(update, context):  # sourcery no-metrics
                     ),
                     parse_mode="HTML",
                 )
-        for fedschat in fed_chats:
+        chats = get_user_com_chats(user_id)
+        for fedschat in (fed_chats and chats):
             try:
                 # Do not spam all fed chats
                 """
@@ -748,7 +750,7 @@ def fed_ban(update, context):  # sourcery no-metrics
 							 "\n<b>User ID:</b> <code>{}</code>" \
 							 "\n<b>Reason:</b> {}".format(fed_name, mention_html(user.id, user.first_name), user_target, fban_user_id, reason), parse_mode="HTML")
 				"""
-                context.bot.kick_chat_member(fedschat, fban_user_id)
+                context.bot.ban_chat_member(fedschat, fban_user_id)
             except BadRequest as excp:
                 if excp.message in FBAN_ERRORS:
                     try:
@@ -783,11 +785,12 @@ def fed_ban(update, context):  # sourcery no-metrics
         # Fban for fed subscriber
         subscriber = list(sql.get_subscriber(fed_id))
         if len(subscriber) != 0:
-            for fedsid in subscriber:
+            chats = get_user_com_chats(user_id)
+            for fedsid in (subscriber and chats):
                 all_fedschat = sql.all_fed_chats(fedsid)
                 for fedschat in all_fedschat:
                     try:
-                        context.bot.kick_chat_member(fedschat, fban_user_id)
+                        context.bot.ban_chat_member(fedschat, fban_user_id)
                     except BadRequest as excp:
                         if excp.message in FBAN_ERRORS:
                             try:
@@ -898,7 +901,8 @@ def fed_ban(update, context):  # sourcery no-metrics
                 parse_mode="HTML",
             )
     chats_in_fed = 0
-    for fedschat in fed_chats:
+    chats = get_user_com_chats(user_id)
+    for fedschat in (fed_chats and chats):
         chats_in_fed += 1
         try:
             # Do not spamming all fed chats
@@ -910,7 +914,7 @@ def fed_ban(update, context):  # sourcery no-metrics
 							"\n<b>User ID:</b> <code>{}</code>" \
 							"\n<b>Reason:</b> {}".format(fed_name, mention_html(user.id, user.first_name), user_target, fban_user_id, reason), parse_mode="HTML")
 			"""
-            context.bot.kick_chat_member(fedschat, fban_user_id)
+            context.bot.ban_chat_member(fedschat, fban_user_id)
         except BadRequest as excp:
             if excp.message in FBAN_ERRORS:
                 pass
@@ -938,11 +942,12 @@ def fed_ban(update, context):  # sourcery no-metrics
         # Fban for fed subscriber
         subscriber = list(sql.get_subscriber(fed_id))
         if len(subscriber) != 0:
-            for fedsid in subscriber:
+            chats = get_user_com_chats(user_id)
+            for fedsid in (subscriber and chats):
                 all_fedschat = sql.all_fed_chats(fedsid)
                 for fedschat in all_fedschat:
                     try:
-                        context.bot.kick_chat_member(fedschat, fban_user_id)
+                        context.bot.ban_chat_member(fedschat, fban_user_id)
                     except BadRequest as excp:
                         if excp.message in FBAN_ERRORS:
                             try:
@@ -2301,17 +2306,16 @@ def is_user_fed_owner(fed_id, user_id):
         return False
 
 
-def welcome_fed(update, context):
-    chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+def welcome_fed(update, chat, user_id):
 
     fed_id = sql.get_fed_id(chat.id)
-    fban, fbanreason, fbantime = sql.get_fban_user(fed_id, user.id)
+    fban, fbanreason, fbantime = sql.get_fban_user(fed_id, user_id)
     if fban:
-        update.effective_message.reply_text(
-            "This user is banned in current federation! I will remove him."
-        )
-        context.bot.kick_chat_member(chat.id, user.id)
+        msgg ="This user is banned in current federation! I will remove him.\n"
+        if fbanreason != "No reason given.":
+            msgg += "**Reason:** " + str(fbanreason)
+        update.effective_message.reply_text(msgg)
+        update.effective_chat.ban_member(user_id)
         return True
     else:
         return False
@@ -2346,7 +2350,7 @@ def __user_info__(user_id, chat_id):
             )
 
         elif fban:
-            text = "ㅤ<b>FedBanned</b>: Yes"
+            text = "\nㅤ<b>FedBanned</b>: Yes"
             text += "\nㅤ<b>Reason</b>: {}".format(fbanreason)
         else:
             text = "ㅤ<b>FedBanned</b>: No"
@@ -2416,7 +2420,7 @@ def fed_help(update: Update, context: CallbackContext):
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton(text="Back", callback_data=f"help_module({__mod_name__.lower()})"),
-            InlineKeyboardButton(text='Report Error', url='https://t.me/TheBotsSupport')]]
+            InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport')]]
         ),
     )
     bot.answer_callback_query(query.id)

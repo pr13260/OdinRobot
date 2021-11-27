@@ -168,6 +168,7 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
             text += "\nㅤ<b>Antispam Status:</b> <code>N/A</code>"
         else:
             try:
+                
                 detecting = GLOBAL_USER_DATA["AntiSpam"][user.id]['status']
                 if detecting:
                     status = "\nㅤ<b>Flood Status:</b>"
@@ -703,8 +704,8 @@ def get_readable_time(seconds: int) -> str:
 stats_str = '''
 '''
 
-@sudo_plus
 @kigcmd(command='uptime', can_disable=False)
+@sudo_plus
 def uptimee(update: Update, _):
     uptime = datetime.datetime.fromtimestamp(boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     botuptime = get_readable_time((time.time() - StartTime))
@@ -713,8 +714,8 @@ def uptimee(update: Update, _):
     rspnc += "*• System Start time:* " + str(uptime)
     msg.reply_text(rspnc, parse_mode=ParseMode.MARKDOWN)
 
-@dev_plus
 @kigcmd(command='stats', can_disable=False)
+@dev_plus
 def stats(update, context):
     db_size = SESSION.execute("SELECT pg_size_pretty(pg_database_size(current_database()))").scalar_one_or_none()
     uptime = datetime.datetime.fromtimestamp(boot_time()).strftime("%Y-%m-%d %H:%M:%S")
@@ -748,9 +749,9 @@ def stats(update, context):
     try:
         update.effective_message.reply_text(status +
             "\n*╒═══「 Bot statistics: 」*\n"
-            + "\n".join([mod.__stats__() for mod in STATS]) +
-            "\n\n[⍙ GitHub ⍚](https://github.com/AbOuLfOoOoOuF)\n\n" +
-            "╘══「 by [ルーク](https://t.me/itsLuuke) 」\n",
+            + "\n".join([mod.__stats__() for mod in STATS])
+            + "\n\n⍙ [GitHub](https://github.com/itsLuuke) ⍚ [OdinRobot](https://github.com/OdinRobot) \n\n"
+            + "╘══「 by [ルーク](https://t.me/itsLuuke) 」\n",
         parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb), disable_web_page_preview=True)
     except BaseException:
         update.effective_message.reply_text(
@@ -760,7 +761,7 @@ def stats(update, context):
                         "\n*Bot statistics*:\n"
                         + "\n".join(mod.__stats__() for mod in STATS)
                     )
-                    + "\n\n⍙ [GitHub](https://github.com/AbOuLfOoOoOuF) ⍚ [OdinRobot](https://github.com/OdinRobot) \n\n"
+                    + "\n\n⍙ [GitHub](https://github.com/itsLuuke) ⍚ [OdinRobot](https://github.com/OdinRobot) \n\n"
                 )
                 + "╘══「 by [ルーク](https://t.me/itsLuuke) 」\n"
             ),
@@ -770,6 +771,7 @@ def stats(update, context):
         )
 
 @kigcmd(command='ping')
+@sudo_plus
 def ping(update: Update, _):
     msg = update.effective_message
     start_time = time.time()
@@ -785,7 +787,7 @@ def ping(update: Update, _):
 def pingCallback(update: Update, context: CallbackContext):
     query = update.callback_query
     user = query.from_user.id
-    if user != (OWNER_ID|SYS_ADMIN) or user not in SUDO_USERS:
+    if user != (OWNER_ID|SYS_ADMIN) and user not in SUDO_USERS:
         query.answer('Not authorised to use this!')
     else:
         start_time = time.time()

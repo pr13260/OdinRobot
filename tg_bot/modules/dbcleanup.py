@@ -130,12 +130,5 @@ def callback_button(update: Update, context: CallbackContext):
         )
         bot.sendMessage(chat_id, reply)
 
-
-'''DB_CLEANUP_HANDLER = CommandHandler("dbcleanup", dbcleanup, run_async=True)
-BUTTON_HANDLER = CallbackQueryHandler(callback_button, pattern="db_.*", run_async=True)
-
-dispatcher.add_handler(DB_CLEANUP_HANDLER)
-dispatcher.add_handler(BUTTON_HANDLER)'''
-
 __mod_name__ = "DB Cleanup"
-'''__handlers__ = [DB_CLEANUP_HANDLER, BUTTON_HANDLER]'''
+

@@ -1,10 +1,10 @@
 from tg_bot.modules.disable import DisableAbleCommandHandler, DisableAbleMessageHandler
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, InlineQueryHandler
+from telegram.ext import CallbackQueryHandler, InlineQueryHandler
 from telegram.ext.filters import BaseFilter
-from tg_bot import dispatcher as d, log
+from tg_bot import dispatcher as d, log, telethn
 from typing import Optional, Union, List
-
-
+from tg_bot.modules.helper_funcs.handlers import CustomCommandHandler as CommandHandler, CustomMessageHandler as MessageHandler, SpamChecker
+from telethon import events
 
 class KigyoTelegramHandler:
     def __init__(self, d):
@@ -85,3 +85,64 @@ kigcmd = KigyoTelegramHandler(d).command
 kigmsg = KigyoTelegramHandler(d).message
 kigcallback = KigyoTelegramHandler(d).callbackquery
 kiginline = KigyoTelegramHandler(d).inlinequery
+
+
+def register(**args):
+    pattern = args.get('pattern', None)
+    disable_edited = args.get('disable_edited', False)
+    groups_only = args.get('groups_only', False)
+    no_args = args.get('no_args', False)
+    raw = args.get('raw', False)
+
+    if pattern is not None:
+        if raw:
+            reg = "(?i)[/!>]"
+            args['pattern'] = reg + pattern
+        else:
+            reg = "(?i)[/!>]"
+            reg += pattern
+            if no_args:
+                reg += "($|@OdinRobot$)"
+            else:
+                reg += "( |@OdinRobot )?(.*)"
+            args['pattern'] = reg
+
+    if "disable_edited" in args:
+        del args['disable_edited']
+
+    if "no_args" in args:
+        del args['no_args']
+
+    if "raw" in args:
+        del args['raw']
+
+    if "groups_only" in args:
+        del args['groups_only']
+
+    def decorator(func):
+        async def wrapper(check):
+            if check.edit_date and check.is_channel and not check.is_group:
+                return
+            user_id = check.sender_id
+            if SpamChecker.check_user(user_id):
+                return
+            if groups_only and not check.is_group:
+                await check.respond("This command can only be used in groups")
+                return
+            try:
+                await func(check)
+            except events.StopPropagation:
+                raise events.StopPropagation
+            except KeyboardInterrupt:
+                pass
+            else:
+                pass
+
+        if not disable_edited:
+            telethn.add_event_handler(wrapper, events.MessageEdited(**args))
+        telethn.add_event_handler(wrapper, events.NewMessage(**args))
+        log.debug(f"[TLTHNCMD] Loaded handler {pattern} for function {func.__name__}")
+
+        return wrapper
+
+    return decorator

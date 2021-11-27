@@ -149,7 +149,7 @@ def rban(update: Update, context: CallbackContext):
         return
 
     try:
-        chat.kick_member(user_id)
+        chat.ban_member(user_id)
         message.reply_text("Banned from chat!")
     except BadRequest as excp:
         if excp.message == "Reply message not found":
@@ -539,16 +539,3 @@ def recho(update: Update, context: CallbackContext):
         except TelegramError:
             message.reply_text("Couldn't send the message. Perhaps I'm not part of that group?")
 
-
-
-'''RBAN_HANDLER = CommandHandler("rban", rban, filters=CustomFilters.dev_filter, run_async=True)
-RUNBAN_HANDLER = CommandHandler("runban", runban, filters=CustomFilters.dev_filter, run_async=True)
-RKICK_HANDLER = CommandHandler("rpunch", rkick, filters=CustomFilters.dev_filter, run_async=True)
-RMUTE_HANDLER = CommandHandler("rmute", rmute, filters=CustomFilters.dev_filter, run_async=True)
-RUNMUTE_HANDLER = CommandHandler("runmute", runmute, filters=CustomFilters.dev_filter, run_async=True)
-
-dispatcher.add_handler(RBAN_HANDLER)
-dispatcher.add_handler(RUNBAN_HANDLER)
-dispatcher.add_handler(RKICK_HANDLER)
-dispatcher.add_handler(RMUTE_HANDLER)
-dispatcher.add_handler(RUNMUTE_HANDLER)'''

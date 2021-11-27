@@ -2,12 +2,15 @@ import time
 from asyncio import sleep
 from telethon import events
 from telethon.tl.types import ChannelParticipantsAdmins
+from tg_bot.modules.helper_funcs.decorators import register
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot import BOT_ID, telethn
 from tg_bot.modules.helper_funcs.telethn.chatstatus import (
     can_delete_messages, user_can_purge, user_is_admin)
 from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
 
+
+@register(pattern='(purge|p)', groups_only=True, no_args=True)
 async def purge_messages(event):
     start = time.perf_counter()
     if event.from_id is None:
@@ -61,6 +64,7 @@ async def purge_messages(event):
         await prmsg.delete()
 
 
+@register(pattern='(del|d)', groups_only=True, no_args=True)
 async def delete_messages(event):
 
     if event.from_id is None:
@@ -107,12 +111,5 @@ def get_help(chat):
 
 
 
-PURGE_HANDLER = purge_messages, events.NewMessage(pattern="^[!/>]purge$")
-DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/>]del$")
-
-telethn.add_event_handler(*PURGE_HANDLER)
-telethn.add_event_handler(*DEL_HANDLER)
-
 __mod_name__ = "Purges"
 __command_list__ = ["del", "purge"]
-__handlers__ = [PURGE_HANDLER, DEL_HANDLER]

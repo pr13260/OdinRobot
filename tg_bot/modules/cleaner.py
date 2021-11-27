@@ -18,6 +18,8 @@ from telegram.ext import (
 )
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 CMD_STARTERS = ("/", "!") if ALLOW_EXCL else "/"
 BLUE_TEXT_CLEAN_GROUP = 13
 CommandHandlerList = (CommandHandler, CustomCommandHandler, DisableAbleCommandHandler)
@@ -67,11 +69,13 @@ def clean_blue_text_must_click(update: Update, context: CallbackContext):
 @spamcheck
 @connection_status
 @bot_can_delete
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_blue_text_must_click(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
     bot, args = context.bot, context.args
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
     if len(args) >= 1:
         val = args[0].lower()
         if val in ("off", "no"):
@@ -101,11 +105,13 @@ def set_blue_text_must_click(update: Update, context: CallbackContext):
 
 @kigcmd(command='ignorecleanbluetext', pass_args=True)
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def add_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
+    u = update.effective_user
     args = context.args
+    user = res_user(u, message.message_id, chat)
     if len(args) >= 1:
         val = args[0].lower()
         added = sql.chat_ignore_command(chat.id, val)
@@ -123,11 +129,13 @@ def add_bluetext_ignore(update: Update, context: CallbackContext):
 
 @kigcmd(command='unignorecleanbluetext', pass_args=True)
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def remove_bluetext_ignore(update: Update, context: CallbackContext):
     message = update.effective_message
+    u = update.effective_user
     chat = update.effective_chat
     args = context.args
+    user = res_user(u, message.message_id, chat)
     if len(args) >= 1:
         val = args[0].lower()
         removed = sql.chat_unignore_command(chat.id, val)

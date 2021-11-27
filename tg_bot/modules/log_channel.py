@@ -7,6 +7,8 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd
 from tg_bot.modules.helper_funcs.misc import is_module_loaded
 from tg_bot.modules.language import gs
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 def get_help(chat):
     return gs(chat, "log_help")
 
@@ -33,8 +35,12 @@ if is_module_loaded(FILENAME):
                 result += f"\n<b>Event Stamp</b>: <code>{datetime.utcnow().strftime(datetime_fmt)}</code>"
 
                 try:
-                    if message.chat.type == chat.SUPERGROUP and message.chat.username:
-                        result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+                    if message.chat.type == chat.SUPERGROUP:
+                        if message.chat.username:
+                            result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+                        else:
+                            cid = str(chat.id).replace("-100", '')
+                            result += f'\n<b>Link:</b> <a href="https://t.me/c/{cid}/{message.message_id}">click here</a>'
                 except AttributeError:
                     result += f'\n<b>Link:</b> No link for manual actions.'
                 log_chat = sql.get_chat_log_channel(chat.id)
@@ -58,9 +64,13 @@ if is_module_loaded(FILENAME):
                     datetime.utcnow().strftime(datetime_fmt)
                 )
 
-                if message.chat.type == chat.SUPERGROUP and message.chat.username:
-                    result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
-                log_chat = str(GBAN_LOGS)
+                if message.chat.type == chat.SUPERGROUP:
+                    if message.chat.username:
+                        result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+                    else:
+                        cid = str(chat.id).replace("-100", '')
+                        result += f'\n<b>Link:</b> <a href="https://t.me/c/{cid}/{message.message_id}">click here</a>'
+                        log_chat = str(GBAN_LOGS)
                 if log_chat:
                     send_log(context, log_chat, chat.id, result)
 
@@ -96,8 +106,8 @@ if is_module_loaded(FILENAME):
                     + "\n\nFormatting has been disabled due to an unexpected error.",
                 )
 
-    @user_admin
     @kigcmd(command='logchannel')
+    @user_admin
     @spamcheck
     def logging(update: Update, context: CallbackContext):
         bot = context.bot
@@ -116,8 +126,8 @@ if is_module_loaded(FILENAME):
         else:
             message.reply_text("No log channel has been set for this group!")
 
-    @user_admin
     @kigcmd(command='setlog')
+    @user_admin
     @spamcheck
     def setlog(update: Update, context: CallbackContext):
         bot = context.bot
@@ -159,8 +169,8 @@ if is_module_loaded(FILENAME):
                 " - forward the /setlog to the group\n"
             )
 
-    @user_admin
     @kigcmd(command='unsetlog')
+    @user_admin
     @spamcheck
     def unsetlog(update: Update, context: CallbackContext):
         bot = context.bot

@@ -16,6 +16,7 @@ from tg_bot import (
     spamcheck,
     log
 )
+
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
@@ -24,31 +25,55 @@ from tg_bot.modules.helper_funcs.chat_status import (
     can_delete,
     is_user_ban_protected,
     is_user_in_chat,
-    user_admin,
-    user_mod,
+    u_can_delete,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.string_handling import extract_time
 from tg_bot.modules.log_channel import loggable, gloggable
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
-@connection_status
-@bot_admin
+def cannot_ban(user_id, message):
+    
+    if user_id == OWNER_ID:
+        message.reply_text("I'd never ban my owner.")
+    elif user_id in DEV_USERS:
+        message.reply_text("I can't act against our own.")
+    elif user_id in SUDO_USERS:
+        message.reply_text("My sudos are ban immune")
+    elif user_id in SUPPORT_USERS:
+        message.reply_text("My support users are ban immune")
+    elif user_id in WHITELIST_USERS:
+        message.reply_text("Bring an order from My Devs to fight a Whitelist user.")
+    elif user_id in MOD_USERS:
+        message.reply_text("Moderators cannot be banned, report abuse at @TheBotsSupport.")
+    else:
+        message.reply_text("This user has immunity and cannot be banned.")
+
+ban_myself = "Oh yeah, ban myself, noob!"
+
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 @kigcmd(command=('dban'), pass_args=True)
 @kigcmd(command=('dsban'), pass_args=True)
 @kigcmd(command=('sban'), pass_args=True)
 @kigcmd(command=('ban'), pass_args=True)
 @spamcheck
+@connection_status
+@bot_admin
 @can_restrict
-@user_mod
 @loggable
-def ban(update, context):  # sourcery no-metrics
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
+    bot = context.bot
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
     args = context.args
+    user = res_user(u, message.message_id, chat)
+    # user = u
     log_message = ""
     reason = ""
+
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -60,45 +85,41 @@ def ban(update, context):  # sourcery no-metrics
     except BadRequest as excp:
         if excp.message != "User not found":
             raise
-
         message.reply_text("Can't seem to find this person.")
         return log_message
+
     if user_id == context.bot.id:
-        message.reply_text("Oh yeah, ban myself, noob!")
+        message.reply_text(ban_myself)
         return log_message
 
-    if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
-        if user_id == OWNER_ID:
-            message.reply_text("I'd never ban my owner.")
-        elif user_id in DEV_USERS:
-            message.reply_text("I can't act against our own.")
-        elif user_id in SUDO_USERS:
-            message.reply_text("My sudos are ban immune")
-        elif user_id in SUPPORT_USERS:
-            message.reply_text("My support users are ban immune")
-        elif user_id in WHITELIST_USERS:
-            message.reply_text("Bring an order from My Devs to fight a Whitelist user.")
-        elif user_id in MOD_USERS:
-            message.reply_text("Moderators cannot be banned, report abuse at @TheBotsSupport.")
-        else:
-            message.reply_text("This user has immunity and cannot be banned.")
+    if is_user_ban_protected(chat, user_id, member) and user.id not in DEV_USERS:
+        cannot_ban(user_id, message)
         return log_message
 
-    if message.text.startswith('/s') or message.text.startswith('!s') or message.text.startswith('>s'):
+    if message.text.startswith(('/s','!s','>s')):
         silent = True
         if not can_delete(chat, context.bot.id):
+            message.reply_text("I don't have permission to delete messages here!")
             return ""
     else:
         silent = False
-    if message.text.startswith('/d') or message.text.startswith('!d') or message.text.startswith('>d'):
+    if message.text.startswith(('/d','!d','>d')):
         delban = True
         if not can_delete(chat, context.bot.id):
+            message.reply_text("I dont't have permission to delete messages here!")
+            return ""
+        if not u_can_delete(chat, user.id):
+            message.reply_text("You dont't have permission to delete messages here!")
             return ""
     else:
         delban = False
-    if message.text.startswith('/ds') or message.text.startswith('!ds') or message.text.startswith('>ds'):
+    if message.text.startswith(('/ds','!ds','>ds')):
         delsilent = True
         if not can_delete(chat, context.bot.id):
+            message.reply_text("I dont't have permission to delete messages here!")
+            return ""
+        if not u_can_delete(chat, user.id):
+            message.reply_text("You dont't have permission to delete messages here!")
             return ""
     else:
         delsilent = False
@@ -112,12 +133,11 @@ def ban(update, context):  # sourcery no-metrics
         log += "\n<b>Reason:</b> {}".format(reason)
 
     try:
-        chat.kick_member(user_id)
+        chat.ban_member(user_id)
 
         if silent:
-            if delsilent:
-                if message.reply_to_message:
-                    message.reply_to_message.delete()
+            if delsilent and message.reply_to_message:
+                message.reply_to_message.delete() 
             message.delete()
             return log
         if delban:
@@ -144,38 +164,38 @@ def ban(update, context):  # sourcery no-metrics
         return log
 
     except BadRequest as excp:
-        if excp.message == "Reply message not found":
-            # Do not reply
-            message.reply_text("Banned!", quote=False)
+        if excp.message == 'Reply message not found':
+            message.reply_text('Banhammered!', quote=False)
             return log
         else:
-            log.warning(update)
-            log.exception(
-                "ERROR banning user %s in chat %s (%s) due to %s",
-                user_id,
-                chat.title,
-                chat.id,
-                excp.message,
+            bot = dispatcher.bot
+            bot.sendMessage(MESSAGE_DUMP, str(update))
+            bot.sendMessage(
+                MESSAGE_DUMP,
+                'ERROR banning user {} in chat {} ({}) due to {}'.format(
+                    user_id, chat.title, chat.id, excp.message
+                ),
             )
-            message.reply_text("Well damn, I can't ban that user.")
 
+            message.reply_text("Well damn, I can't ban that user.")
     return ""
 
 
-@connection_status
 @kigcmd(command='tban', pass_args=True)
+@connection_status
 @spamcheck
 @bot_admin
 @can_restrict
-@user_mod
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def temp_ban(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
     log_message = ""
     reason = ""
     bot, args = context.bot, context.args
+    user = res_user(u, message.message_id, chat)
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -190,11 +210,11 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
         message.reply_text("I can't seem to find this user.")
         return log_message
     if user_id == bot.id:
-        message.reply_text("I'm not gonna BAN myself, are you crazy?")
+        message.reply_text(ban_myself)
         return log_message
 
-    if is_user_ban_protected(chat, user_id, member):
-        message.reply_text("I don't feel like it.")
+    if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
+        cannot_ban(user_id, message)
         return log_message
 
     if not reason:
@@ -221,7 +241,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
         log += "\n<b>Reason:</b> {}".format(reason)
 
     try:
-        chat.kick_member(user_id, until_date=bantime)
+        chat.ban_member(user_id, until_date=bantime)
         bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
 
         if reason:
@@ -248,32 +268,33 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
             )
             return log
         else:
-            log.warning(update)
-            log.exception(
-                "ERROR banning user %s in chat %s (%s) due to %s",
+            bot.sendMessage(MESSAGE_DUMP, str(update))
+            bot.sendMessage(MESSAGE_DUMP, 
+                "ERROR banning user {} in chat {} ({}) due to {}".format(
                 user_id,
                 chat.title,
                 chat.id,
                 excp.message,
-            )
+            ))
             message.reply_text("Well damn, I can't ban that user.")
 
     return log_message
 
 
-@connection_status
 @kigcmd(command=['kick', 'punch'], pass_args=True)
 @spamcheck
+@connection_status
 @bot_admin
 @can_restrict
-@user_mod
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def kick(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
     log_message = ""
     bot, args = context.bot, context.args
+    user = res_user(u, message.message_id, chat)
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -291,8 +312,8 @@ def kick(update: Update, context: CallbackContext) -> str:
         message.reply_text("Yeahhh I'm not gonna do that.")
         return log_message
 
-    if is_user_ban_protected(chat, user_id):
-        message.reply_text("I really wish I could kick this user....")
+    if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
+        cannot_ban(user_id, message)
         return log_message
 
     res = chat.unban_member(user_id)  # unban on current user = kick
@@ -340,8 +361,9 @@ def kick(update: Update, context: CallbackContext) -> str:
 def kickme(update: Update, context: CallbackContext) -> str:
     user_id = update.effective_message.from_user.id
     user = update.effective_message.from_user
+    chat = update.effective_chat
     if is_user_admin(update.effective_chat, user_id):
-        update.effective_message.reply_text("I wish I could... but you're an admin.")
+        update.effective_message.reply_text("Haha you're stuck with us here.")
         return
 
     res = update.effective_chat.unban_member(user_id)  # unban on current user = kick
@@ -366,14 +388,15 @@ def kickme(update: Update, context: CallbackContext) -> str:
 @spamcheck
 @bot_admin
 @can_restrict
-@user_mod
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def unban(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
-    user = update.effective_user
+    u = update.effective_user
     chat = update.effective_chat
     log_message = ""
     bot, args = context.bot, context.args
+    user = res_user(u, message.message_id, chat)
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:

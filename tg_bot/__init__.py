@@ -26,7 +26,7 @@ fileConfig('logging.ini')
 log = logging.getLogger('[Enterprise]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
 log.info("[LOGGER] LOGGER is starting. | Licensed under GPLv3.")
-log.info("[LOGGER] Project maintained by: github.com/AbOuLfOoOoOuF (t.me/itsLuuke)")
+log.info("[LOGGER] Project maintained by: github.com/itsLuuke (t.me/itsLuuke)")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
@@ -86,6 +86,7 @@ class KigyoINIT:
         self.ANTISPAM_TOGGLE =  self.parser.getboolean("ANTISPAM_TOGGLE", True)
         self.GROUP_BLACKLIST =  self.parser.get("GROUP_BLACKLIST", [])
         self.GLOBALANNOUNCE =  self.parser.getboolean("GLOBALANNOUNCE", False)
+        self.BACKUP_PASS =  self.parser.get("BACKUP_PASS", None)
 
 
 
@@ -149,6 +150,7 @@ GROUP_BLACKLIST = KInit.GROUP_BLACKLIST
 ANTISPAM_TOGGLE = KInit.ANTISPAM_TOGGLE
 bot_username = KInit.bot_username
 GLOBALANNOUNCE = KInit.GLOBALANNOUNCE
+BACKUP_PASS = KInit.BACKUP_PASS
 
 BOT_ID = TOKEN.split(":")[0]
 
@@ -237,4 +239,3 @@ def spamcheck(func):
             return False
         return func(update, context, *args, **kwargs)
     return check_user
-

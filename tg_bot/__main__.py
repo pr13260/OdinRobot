@@ -122,7 +122,7 @@ def test(update: Update, context: CallbackContext):
     '''
     # pprint(ast.literal_eval(str(update)))
     # update.effective_message.reply_text("Hola tester! _I_ *have* `markdown`", parse_mode=ParseMode.MARKDOWN)
-    update.effective_message.reply_text("This person edited a message")
+    update.effective_message.reply_text("*text*")
     print(update.effective_message)
 
 @kigcallback(pattern=r'start_back')
@@ -156,14 +156,24 @@ def start(update: Update, context: CallbackContext):    # sourcery no-metrics
                                 url=f"https://t.me/TheBotsSupport",
                             ),
                             InlineKeyboardButton(
-                                text=gs(chat.id, "src_btn"),
-                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
-                            ),
-                            InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
                                     context.bot.username
                                 ),
+                            ),
+                            InlineKeyboardButton(
+                                text="Try inline",
+                                switch_inline_query_current_chat=""
+                            ),
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                text=gs(chat.id, "src_btn"),
+                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
+                            ),
+                            InlineKeyboardButton(
+                                text=gs(chat.id, "reommended_fed_btn"),
+                                url="t.me/OdinFed"
                             ),
                         ],
                         [
@@ -184,6 +194,22 @@ def start(update: Update, context: CallbackContext):    # sourcery no-metrics
         if args and len(args) >= 1:
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, (gs(chat.id, "pm_help_text")))
+            elif args[0].lower().startswith("ghelp_"):
+                mod = args[0].lower().split("_", 1)[1]
+                if not HELPABLE.get(mod, False):
+                    return
+                xx = HELPABLE[mod].get_help(chat)
+                if isinstance(xx, list):
+                    txt = str(xx[0])
+                    kb = [xx[1], [InlineKeyboardButton(text="Back", callback_data="help_back")]]
+                else:
+                    txt = str(xx)
+                    kb = [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
+                send_help(
+                    update.effective_chat.id,
+                    txt,
+                    InlineKeyboardMarkup(kb),
+                )
             elif args[0].lower() == "markdownhelp":
                 IMPORTED["extras"].markdown_help_sender(update)
             elif args[0].lower() == "nations":
@@ -217,26 +243,32 @@ def start(update: Update, context: CallbackContext):    # sourcery no-metrics
                                 url=f"https://t.me/TheBotsSupport",
                             ),
                             InlineKeyboardButton(
-                                text=gs(chat.id, "src_btn"),
-                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
-                            ),
-                            
-                            InlineKeyboardButton(
                                 text=gs(chat.id, "add_bot_to_group_btn"),
                                 url="t.me/{}?startgroup=true".format(
                                     context.bot.username
                                 ),
                             ),
+                            InlineKeyboardButton(
+                                text="Try inline",
+                                switch_inline_query_current_chat=""
+                            ),
                         ],
                         [
-
+                            InlineKeyboardButton(
+                                text=gs(chat.id, "src_btn"),
+                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
+                            ),
+                            InlineKeyboardButton(
+                                text=gs(chat.id, "reommended_fed_btn"),
+                                url="t.me/OdinFed"
+                            ),
+                        ],
+                        [
                             InlineKeyboardButton(
                                 text="Help",
                                 callback_data="help_back",
                                 ),
-
                         ]
-                        
                     ]
                 ),
             )
@@ -332,7 +364,7 @@ def help_button(update, context):
                 [
                     InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
                     InlineKeyboardButton(text='Back', callback_data='start_back'),
-                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                    InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")
                 ]
                     )
             query.message.edit_text(
@@ -348,7 +380,7 @@ def help_button(update, context):
                 [
                     InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
                     InlineKeyboardButton(text='Back', callback_data='start_back'),
-                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                    InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")
                 ]
                     )
             query.message.edit_text(
@@ -363,7 +395,7 @@ def help_button(update, context):
                 [
                     InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport'),
                     InlineKeyboardButton(text='Back', callback_data='start_back'),
-                    InlineKeyboardButton(text=gs(chat.id, "add_bot_to_group_btn"), url="t.me/{}?startgroup=true".format(context.bot.username))
+                    InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")
                 ]
                     )
             query.message.edit_text(
@@ -393,7 +425,28 @@ def get_help(update, context):
 
     # ONLY send help in PM
     if chat.type != chat.PRIVATE:
-
+        if len(args) >= 2:
+            if any(args[1].lower() == x for x in HELPABLE):
+                module = args[1].lower()
+                update.effective_message.reply_text(
+                    f"Contact me in PM to get help of {module.capitalize()}",
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    text="Help",
+                                    url="t.me/{}?start=ghelp_{}".format(
+                                        context.bot.username, module
+                                    ),
+                                )
+                            ]
+                        ]
+                    ),
+                )
+                return
+            else:
+                dispatcher.bot.send_message(chat.id, "'{}' is not a module".format(args[1].lower()))
+                return
         update.effective_message.reply_text(
             "Contact me in PM to get the list of possible commands.",
             reply_markup=InlineKeyboardMarkup(
@@ -409,21 +462,29 @@ def get_help(update, context):
         )
         return
 
-    elif len(args) >= 2 and any(args[1].lower() == x for x in HELPABLE):
-        module = args[1].lower()
-        text = (
-            "Here is the available help for the *{}* module:\n".format(
-                HELPABLE[module].__mod_name__
+    elif len(args) >= 2:
+        if any(args[1].lower() == x for x in HELPABLE):
+            mod = args[1].lower()
+            text = (
+                "Here is the available help for the *{}* module:\n".format(
+                    HELPABLE[mod].__mod_name__
+                )
+                + str(HELPABLE[mod].get_help(chat))
             )
-            + HELPABLE[module].get_help
-        )
-        send_help(
-            chat.id,
-            text,
-            InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
-            ),
-        )
+            xx = HELPABLE[mod].get_help(chat)
+            if isinstance(xx, list):
+                txt = str(xx[0])
+                kb = [xx[1], [InlineKeyboardButton(text="Back", callback_data="help_back")]]
+            else:
+                txt = str(xx)
+                kb = [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
+            send_help(
+                update.effective_chat.id,
+                txt,
+                InlineKeyboardMarkup(kb),
+            )
+        else:
+            dispatcher.bot.send_message(chat.id, "'{}' is not a module".format(args[1].lower()))
 
     else:
         send_help(chat.id, (gs(chat.id, "pm_help_text")))
@@ -662,8 +723,8 @@ def main():
 
     else:
         dispatcher.bot.sendMessage(OWNER_ID, "Master, I'm awake!")
-        if SUPPORT_GROUP:
-            dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
+        # if SUPPORT_GROUP:
+        #     dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
         log.info(f"{dispatcher.bot.first_name} started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username

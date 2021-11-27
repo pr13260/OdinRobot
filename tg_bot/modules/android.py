@@ -16,7 +16,9 @@ from tg_bot import dispatcher, spamcheck
 from tg_bot.modules.sql.clear_cmd_sql import get_clearcmd
 from tg_bot.modules.github import getphh
 from tg_bot.modules.helper_funcs.misc import delete
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
+@kigcmd(command=['magisk', 'su', 'root'], run_async=True, can_disable=True)
 @spamcheck
 def magisk(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -45,6 +47,7 @@ def magisk(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command='checkfw', run_async=True, can_disable=True)
 @spamcheck
 def checkfw(update: Update, context: CallbackContext):
     args = context.args
@@ -91,6 +94,7 @@ def checkfw(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command='getfw', run_async=True, can_disable=True)
 @spamcheck
 def getfw(update: Update, context: CallbackContext):
     args = context.args
@@ -148,6 +152,7 @@ def getfw(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command='phh', run_async=True, can_disable=True)
 @spamcheck
 def phh(update: Update, context: CallbackContext):
     args = context.args
@@ -167,6 +172,7 @@ def phh(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command='miui', run_async=True, can_disable=True)
 @spamcheck
 def miui(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -212,6 +218,7 @@ def miui(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command=['ofox', 'orangefox'], run_async=True, can_disable=True)
 @spamcheck
 def orangefox(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -271,6 +278,7 @@ def orangefox(update: Update, context: CallbackContext):
     if cleartime:
         context.dispatcher.run_async(delete, delmsg, cleartime.time)
 
+@kigcmd(command='twrp', run_async=True, can_disable=True)
 @spamcheck
 def twrp(update: Update, context: CallbackContext):
     message = update.effective_message
@@ -327,27 +335,6 @@ __help__ = """
 • `/checkfw <model> <csc>` - Samsung only - shows the latest firmware info for the given device, taken from samsung servers
 • `/getfw <model> <csc>` - Samsung only - gets firmware download links from samfrew, sammobile and sfirmwares for the given device
 """
-
-MAGISK_HANDLER = CommandHandler(["magisk", "root", "su"], magisk, run_async=True)
-ORANGEFOX_HANDLER = CommandHandler("orangefox", orangefox, run_async=True)
-TWRP_HANDLER = CommandHandler("twrp", twrp, run_async=True)
-GETFW_HANDLER = CommandHandler("getfw", getfw, run_async=True)
-CHECKFW_HANDLER = CommandHandler("checkfw", checkfw, run_async=True)
-PHH_HANDLER = CommandHandler("phh", phh, run_async=True)
-MIUI_HANDLER = CommandHandler("miui", miui, run_async=True)
-
-
-dispatcher.add_handler(MAGISK_HANDLER)
-dispatcher.add_handler(ORANGEFOX_HANDLER)
-dispatcher.add_handler(TWRP_HANDLER)
-dispatcher.add_handler(GETFW_HANDLER)
-dispatcher.add_handler(CHECKFW_HANDLER)
-dispatcher.add_handler(PHH_HANDLER)
-dispatcher.add_handler(MIUI_HANDLER)
-
-
-__command_list__ = ["magisk", "root", "su", "orangefox", "twrp", "checkfw", "getfw", "phh", "miui"]
-__handlers__ = [MAGISK_HANDLER, ORANGEFOX_HANDLER, TWRP_HANDLER, GETFW_HANDLER, CHECKFW_HANDLER, PHH_HANDLER, MIUI_HANDLER]
 
 from tg_bot.modules.language import gs
 

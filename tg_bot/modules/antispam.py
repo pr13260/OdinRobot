@@ -3,6 +3,8 @@ import time
 import requests
 from datetime import datetime
 from io import BytesIO
+from tg_bot.modules.feds import welcome_fed
+from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql.users_sql import get_user_com_chats
 import tg_bot.modules.sql.antispam_sql as sql
 from tg_bot import (
@@ -22,6 +24,7 @@ from tg_bot import (
 from tg_bot.modules.helper_funcs.chat_status import (
     is_user_admin,
     support_plus,
+    u_can_change_info,
     user_admin,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user, extract_user_and_text
@@ -233,7 +236,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
             continue
 
         try:
-            bot.kick_chat_member(chat_id, user_id)
+            bot.ban_chat_member(chat_id, user_id)
             gbanned_chats += 1
 
         except BadRequest as excp:
@@ -440,7 +443,7 @@ def check_and_ban(update, user_id, should_message=True):
 
                     if bl_check:
                         bl_res = (status.get("results").get("attributes").get("blacklist_reason"))
-                        update.effective_chat.kick_member(user_id)
+                        update.effective_chat.ban_member(user_id)
                         if should_message:
                             update.effective_message.reply_text(
                             f"This person was blacklisted on @SpamProtectionBot and has been removed!\nReason: <code>{bl_res}</code>",
@@ -459,7 +462,7 @@ def check_and_ban(update, user_id, should_message=True):
         sw_ban = None
 
     if sw_ban:
-        update.effective_chat.kick_member(user_id)
+        update.effective_chat.ban_member(user_id)
         if should_message:
             update.effective_message.reply_text(
                 f"This person has been detected as a spammer by @SpamWatch and has been removed!\nReason: <code>{sw_ban.reason}</code>",
@@ -468,7 +471,7 @@ def check_and_ban(update, user_id, should_message=True):
         return
 
     if sql.is_user_gbanned(user_id):
-        update.effective_chat.kick_member(user_id)
+        update.effective_chat.ban_member(user_id)
         if should_message:
             text = (
                 f"<b>Alert</b>: this user is globally banned.\n"
@@ -496,17 +499,20 @@ def enforce_gban(update: Update, context: CallbackContext):
 
             if user and not is_user_admin(chat, user.id):
                 check_and_ban(update, user.id)
+                welcome_fed(update, chat, user.id)
                 return
 
             if msg.new_chat_members:
                 new_members = update.effective_message.new_chat_members
                 for mem in new_members:
                     check_and_ban(update, mem.id)
+                    welcome_fed(update, chat, mem.id)
 
             if msg.reply_to_message:
                 user = msg.reply_to_message.from_user
                 if user and not is_user_admin(chat, user.id):
                     check_and_ban(update, user.id, should_message=False)
+                    welcome_fed(update, chat, user.id)
     except Forbidden as e:
         err_msg = "An error has happened with enforce_gban\n"
         err_msg += str(e)
@@ -521,22 +527,44 @@ def enforce_gban(update: Update, context: CallbackContext):
 @kigcmd(command=["antispam", "gbanstat"])
 @spamcheck
 @user_admin
-def gbanstat(update: Update, context: CallbackContext):
+@loggable
+def gbanstat(update: Update, context: CallbackContext) -> str:
     args = context.args
     if len(args) > 0:
-        if args[0].lower() in ["on", "yes"]:
-            sql.enable_gbans(update.effective_chat.id)
-            update.effective_message.reply_text(
-                "I've enabled gbans in this group. This will help protect you "
-                "from spammers, unsavoury characters, and the biggest trolls."
-            )
-        elif args[0].lower() in ["off", "no"]:
-            sql.disable_gbans(update.effective_chat.id)
-            update.effective_message.reply_text(
-                "I've disabled gbans in this group. GBans wont affect your users "
-                "anymore. You'll be less protected from any trolls and spammers "
-                "though!"
-            )
+        user = update.effective_user
+        message = update.effective_message
+        chat = update.effective_chat
+        if u_can_change_info(chat, user):
+            if args[0].lower() in ["on", "yes"]:
+                sql.enable_gbans(update.effective_chat.id)
+                update.effective_message.reply_text(
+                    "I've enabled gbans in this group. This will help protect you "
+                    "from spammers, unsavoury characters, and the biggest trolls."
+                )
+                logmsg = (
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#ANTISPAM_TOGGLED\n"
+                    f"Antispam has been <b>enabled</b>\n"
+                    f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+                )
+                return logmsg
+            elif args[0].lower() in ["off", "no"]:
+                sql.disable_gbans(update.effective_chat.id)
+                update.effective_message.reply_text(
+                    "I've disabled gbans in this group. GBans wont affect your users "
+                    "anymore. You'll be less protected from any trolls and spammers "
+                    "though!"
+                )
+                logmsg = (
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#ANTISPAM_TOGGLED\n"
+                    f"Antispam has been <b>disabled</b>\n"
+                    f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+                )
+                return logmsg
+        else:
+            message.reply_text("You lack the {} right!".format('can_change_info'.upper()))
+            return ''
     else:
         update.effective_message.reply_text(
             "Give me some arguments to choose a setting! on/off, yes/no!\n\n"
@@ -545,6 +573,7 @@ def gbanstat(update: Update, context: CallbackContext):
             "When False, they won't, leaving you at the possible mercy of "
             "spammers.".format(sql.does_chat_gban(update.effective_chat.id))
         )
+        return ''
 
 
 def __stats__():

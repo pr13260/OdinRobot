@@ -32,7 +32,7 @@ from telegram import (
     MAX_MESSAGE_LENGTH,
 )
 
-@spamcheck
+# @spamcheck
 def getphh(index):
     recentRelease = api.getReleaseData(api.getData("phhusson/treble_experimentations"), index)
     if recentRelease is None:
@@ -57,7 +57,7 @@ def getphh(index):
         message += "    <code>Size: "  + size + " MB</code>\n"
     return message
 
-@spamcheck
+# @spamcheck
 # do not async
 def getData(url, index):
     if not api.getData(url):
@@ -116,24 +116,24 @@ def getRelease(update: Update, context: CallbackContext):
     deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
     return
 
-@spamcheck
-def hashFetch(update: Update, context: CallbackContext):  # kanged from notes
-    bot, args = context.bot, context.args
-    message = update.effective_message.text
-    msg = update.effective_message
-    fst_word = message.split()[0]
-    no_hash = fst_word[1:]
-    url, index = getRepo(bot, update, no_hash)
-    if url is None and index is None:
-        deletion(update, context, msg.reply_text(
-            "There was a problem parsing your request. Likely this is not a saved repo shortcut",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-        ))
-        return
-    text = getData(url, index)
-    deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
-    return
+# @spamcheck
+# def hashFetch(update: Update, context: CallbackContext):  # kanged from notes
+#     bot, args = context.bot, context.args
+#     message = update.effective_message.text
+#     msg = update.effective_message
+#     fst_word = message.split()[0]
+#     no_hash = fst_word[1:]
+#     url, index = getRepo(bot, update, no_hash)
+#     if url is None and index is None:
+#         deletion(update, context, msg.reply_text(
+#             "There was a problem parsing your request. Likely this is not a saved repo shortcut",
+#             parse_mode=ParseMode.MARKDOWN,
+#             disable_web_page_preview=True,
+#         ))
+#         return
+#     text = getData(url, index)
+#     deletion(update, context, msg.reply_text(text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True))
+#     return
 
 @spamcheck
 def cmdFetch(update: Update, context: CallbackContext):
@@ -258,7 +258,7 @@ CHANGELOG_HANDLER = DisableAbleCommandHandler(
     "changelog", changelog, admin_ok=True, run_async=True
 )
 
-HASHFETCH_HANDLER = MessageHandler(Filters.regex(r"^&[^\s]+"), hashFetch)
+# HASHFETCH_HANDLER = MessageHandler(Filters.regex(r"^&[^\s]+"), hashFetch)
 
 
 dispatcher.add_handler(RELEASE_HANDLER)
@@ -266,7 +266,7 @@ dispatcher.add_handler(FETCH_HANDLER)
 dispatcher.add_handler(SAVEREPO_HANDLER)
 dispatcher.add_handler(DELREPO_HANDLER)
 dispatcher.add_handler(LISTREPO_HANDLER)
-dispatcher.add_handler(HASHFETCH_HANDLER)
+# dispatcher.add_handler(HASHFETCH_HANDLER)
 dispatcher.add_handler(VERCHECKER_HANDLER)
 dispatcher.add_handler(CHANGELOG_HANDLER)
 

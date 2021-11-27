@@ -5,7 +5,6 @@ from telegram.error import BadRequest
 import tg_bot.modules.sql.notes_sql as sql
 from tg_bot import dispatcher, log as LOGGER, OWNER_ID, spamcheck
 from tg_bot.__main__ import DATA_IMPORT
-from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.alternate import typing_action
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 # from tg_bot.modules.rules import get_rules
@@ -20,15 +19,17 @@ from tg_bot.modules.sql import disable_sql as disabledsql
 import tg_bot.modules.sql.locks_sql as locksql
 from tg_bot.modules.connection import connected
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 @kigcmd(command='import')
 @spamcheck
-@user_admin
 @typing_action
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def import_data(update, context):
     msg = update.effective_message
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
     # TODO: allow uploading doc with command, not just as reply
     # only work with a doc
 
@@ -117,13 +118,16 @@ def import_data(update, context):
 
 @kigcmd(command='export')
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def export_data(update, context):  # sourcery no-metrics
     chat_data = context.chat_data
     msg = update.effective_message  # type: Optional[Message]
-    user = update.effective_user  # type: Optional[User]
-    chat_id = update.effective_chat.id
+    u = update.effective_user  # type: Optional[User]
     chat = update.effective_chat
+    
+    user = res_user(u, msg.message_id, chat)
+    
+    chat_id = update.effective_chat.id
     current_chat_id = update.effective_chat.id
     conn = connected(context.bot, update, chat, user.id, need_admin=True)
     if conn:

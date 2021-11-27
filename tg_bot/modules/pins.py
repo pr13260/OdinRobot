@@ -27,19 +27,22 @@ from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from telegram.parsemode import ParseMode
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 @kigcmd(command="pin", can_disable=False)
 @spamcheck
 @bot_admin
 @can_pin
-@user_mod
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_PIN_MESSAGES)
 def pin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
-    user = update.effective_user
+    u = update.effective_user
     chat = update.effective_chat
+    message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     is_group = chat.type != "private" and chat.type != "channel"
     prev_message = update.effective_message.reply_to_message
@@ -51,17 +54,6 @@ def pin(update: Update, context: CallbackContext) -> str:
             or args[0].lower() == "loud"
             or args[0].lower() == "violent"
         )
-
-    message = update.effective_message
-    pinner = chat.get_member(user.id)
-
-    if (
-        not (pinner.can_pin_messages or pinner.status == "creator")
-        and user.id not in SUDO_USERS
-    ):
-        message.reply_text("You don't have the necessary rights to do that!")
-        return
-
 
     if prev_message and is_group:
         try:
@@ -94,22 +86,15 @@ def pin(update: Update, context: CallbackContext) -> str:
 @spamcheck
 @bot_admin
 @can_pin
-@user_mod
 @loggable
 def unpin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
 
     message = update.effective_message
-    unpinner = chat.get_member(user.id)
 
-    if (
-        not (unpinner.can_pin_messages or unpinner.status == "creator")
-        and user.id not in SUDO_USERS
-    ):
-        message.reply_text("You don't have the necessary rights to do that!")
-        return
+    user = res_user(u, message.message_id, chat)
 
     reply_msg = message.reply_to_message
     if not reply_msg:
@@ -157,9 +142,9 @@ def unpin(update: Update, context: CallbackContext) -> str:
         )
         return log_message
 
+@kigcmd(command="unpinall", filters=Filters.chat_type.groups)
 @spamcheck
 @bot_admin
-@kigcmd(command="unpinall", filters=Filters.chat_type.groups)
 @spamcheck
 def rmall_filters(update, context):
     chat = update.effective_chat
@@ -214,22 +199,16 @@ def unpin_callback(update, context: CallbackContext) -> str:
             )
             return log_message
 
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
             return ""
 
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
-            return ""
     elif query.data == "pinned_cancel":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             msg.edit_text("Unpinning all pinned messages has been cancelled.")
             return
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
-            return ""
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
             return ""
 
 
@@ -264,11 +243,14 @@ import tg_bot.modules.sql.admin_sql as sql
 @kigcmd(command="permapin", filters=Filters.chat_type.groups, run_async=True)
 @spamcheck
 @can_pin
-@user_admin
 @connection_status
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PIN_MESSAGES)
 def permapin(update, context):
 
     message = update.effective_message  # type: Optional[Message]
+    u = update.effective_user  # type: Optional[User]
+    chat = update.effective_chat  # type: Optional[Chat]
+    user = res_user(u, message.message_id, chat)
 
     chat_id = update.effective_chat.id
 
@@ -300,12 +282,14 @@ def permapin(update, context):
 @kigcmd(command="cleanlinked", pass_args=True, filters=Filters.chat_type.groups, run_async=True)
 @spamcheck
 @can_pin
-@user_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PIN_MESSAGES)
 def permanent_pin_set(update, context) -> str:
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
     args = context.args
+    msg = update.effective_message  # type: Optional[Message]
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id, need_admin=True)
     if conn:

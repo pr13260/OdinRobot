@@ -12,17 +12,20 @@ from telegram.ext import (
 )
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 REPORT_GROUP = 12
 REPORT_IMMUNE_USERS = SUDO_USERS + WHITELIST_USERS
 
 @kigcmd(command='reports')
 @spamcheck
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def report_setting(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     chat = update.effective_chat
     msg = update.effective_message
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
 
     if chat.type == chat.PRIVATE:
         if len(args) >= 1:
@@ -87,7 +90,7 @@ def report(update: Update, context: CallbackContext) -> str:
             message.reply_text("Uh yeah, Sure sure...maso much?")
             return ""
 
-        if user.id == bot.id:
+        if reported_user.id == bot.id:
             message.reply_text("Nice try.")
             return ""
 
@@ -229,7 +232,7 @@ def report(update: Update, context: CallbackContext) -> str:
         message.reply_to_message.reply_text(
             reportmsg,
             parse_mode=ParseMode.HTML,
-            reply_markup=reply_markup2
+            #reply_markup=reply_markup2
         )
         return msg
     return ""
@@ -350,3 +353,5 @@ def get_help(chat):
 
 
 __mod_name__ = "Reporting"
+
+

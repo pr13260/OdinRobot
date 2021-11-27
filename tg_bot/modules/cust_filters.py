@@ -13,7 +13,7 @@ from telegram.ext import (
 from telegram.utils.helpers import mention_html, escape_markdown, mention_html
 
 from tg_bot import dispatcher, log, SUDO_USERS, spamcheck
-from tg_bot.modules.helper_funcs.chat_status import is_user_admin, user_admin
+from tg_bot.modules.helper_funcs.chat_status import is_user_admin
 from tg_bot.modules.helper_funcs.extraction import extract_text
 from tg_bot.modules.helper_funcs.filters import CustomFilters
 from tg_bot.modules.helper_funcs.misc import build_keyboard_parser
@@ -32,6 +32,7 @@ from tg_bot.modules.connection import connected
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 HANDLER_GROUP = 10
 
@@ -99,15 +100,18 @@ def list_handlers(update, context):
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @kigcmd(command='filter', run_async=False)
 @spamcheck
-@user_admin
 @typing_action
-def filters(update, context):  # sourcery no-metrics
+@loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+def filters(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     msg = update.effective_message
     args = msg.text.split(
         None, 1
     )  # use python's maxsplit to separate Cmd, keyword, and reply_text
+
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id)
     if conn is not False:
@@ -157,7 +161,7 @@ def filters(update, context):  # sourcery no-metrics
         if not text:
             send_message(
                 update.effective_message,
-                "There is no note message - You can't JUST have buttons, you need a message to go with it!",
+                "There is no filter message - You can't JUST have buttons, you need a message to go with it!",
             )
             return
 
@@ -218,18 +222,28 @@ def filters(update, context):  # sourcery no-metrics
             "Saved filter '{}' in *{}*!".format(keyword, chat_name),
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
+        logmsg = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#ADDFILTER\n"
+        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+        f"<b>Note:</b> {keyword}"
+        )
+        return logmsg
     raise DispatcherHandlerStop
 
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @kigcmd(command='stop', run_async=False)
 @spamcheck
-@user_admin
 @typing_action
-def stop_filter(update, context):
+@loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+def stop_filter(update, context) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     args = update.effective_message.text.split(None, 1)
+    message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id)
     if conn is not False:
@@ -240,13 +254,13 @@ def stop_filter(update, context):
         chat_name = "Local filters" if chat.type == "private" else chat.title
     if len(args) < 2:
         send_message(update.effective_message, "What should i stop?")
-        return
+        return ''
 
     chat_filters = sql.get_chat_triggers(chat_id)
 
     if not chat_filters:
         send_message(update.effective_message, "No filters active here!")
-        return
+        return ''
 
     for keyword in chat_filters:
         if keyword == args[1]:
@@ -256,7 +270,16 @@ def stop_filter(update, context):
                 "Okay, I'll stop replying to that filter in *{}*.".format(chat_name),
                 parse_mode=telegram.ParseMode.MARKDOWN,
             )
-            raise DispatcherHandlerStop
+            logmsg = (
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#STOPFILTER\n"
+                    f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+                    f"<b>Filter:</b> {keyword}"
+                )
+            try:
+                raise DispatcherHandlerStop
+            finally:
+                return logmsg
 
     send_message(
         update.effective_message,
@@ -553,22 +576,16 @@ def rmall_callback(update, context) -> str:
             )
             return log_message
 
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
             return ""
 
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
-            return ""
     elif query.data == "filters_cancel":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             msg.edit_text("Clearing of all filters has been cancelled.")
             return ""
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
-            return ""
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
             return ""
 
 
@@ -590,7 +607,7 @@ def get_exception(excp, filt, chat):
 def addnew_filter(update, chat_id, keyword, text, file_type, file_id, buttons):
     msg = update.effective_message
     totalfilt = sql.get_chat_triggers(chat_id)
-    if len(totalfilt) >= 1000:  # Idk why i made this like function....
+    if len(totalfilt) >= 150:  # Idk why i made this like function....
         msg.reply_text("This group has reached its max filters limit of 150.")
         return False
     else:
@@ -624,13 +641,3 @@ def get_help(chat):
 
 __mod_name__ = "Filters"
 
-
-
-RMALLFILTER_CALLBACK = CallbackQueryHandler(rmall_callback, pattern=r"filters_.*")
-
-dispatcher.add_handler(RMALLFILTER_CALLBACK)
-
-__handlers__ = [
-
-    HANDLER_GROUP,
-]

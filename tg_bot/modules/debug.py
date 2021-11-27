@@ -4,9 +4,9 @@ from telethon import events
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler
 
-from tg_bot import GLOBALANNOUNCE, IS_DEBUG, telethn, dispatcher, ANTISPAM_TOGGLE
+from tg_bot import API_HASH, APP_ID, BACKUP_PASS, CASH_API_KEY, CF_API_KEY, DB_URI, GLOBALANNOUNCE, IS_DEBUG, LASTFM_API_KEY, TIME_API_KEY, TOKEN, telethn, dispatcher, ANTISPAM_TOGGLE, spamwatch_api
 from tg_bot.modules.helper_funcs.chat_status import dev_plus
-from tg_bot.modules.helper_funcs.decorators import kigcmd
+from tg_bot.modules.helper_funcs.decorators import kigcmd, register
 
 DEBUG_MODE = False
 
@@ -58,14 +58,14 @@ def asdebug(update: Update, context: CallbackContext):
     if len(args) > 1:
         if args[1] in ("yes", "on"):
             GLOBALANNOUNCE = True
-            message.reply_text("Global announcemet is now on.")
+            message.reply_text("Global announcement is now on.")
         elif args[1] in ("no", "off"):
             GLOBALANNOUNCE = False
-            message.reply_text("Global announcemet is now off.")
+            message.reply_text("Global announcement is now off.")
     elif GLOBALANNOUNCE:
-        message.reply_text("Global announcemet is currently on.")
+        message.reply_text("Global announcement is currently on.")
     else:
-        message.reply_text("Global announcemet is currently off.")
+        message.reply_text("Global announcement is currently off.")
 
 @kigcmd(command='spamcheck')
 @dev_plus
@@ -86,8 +86,8 @@ def astoggle(update: Update, context: CallbackContext):
     else:
         message.reply_text("Antispam module is currently off.")
 
-
-@telethn.on(events.NewMessage(pattern="[/!>].*"))
+@register(pattern='.*')
+# @telethn.on(events.NewMessage(pattern="[/!>].*"))
 async def i_do_nothing_yes(event):
     global DEBUG_MODE
     if DEBUG_MODE:
@@ -107,21 +107,46 @@ async def i_do_nothing_yes(event):
 @kigcmd(command='logs')
 @dev_plus
 def logs(update: Update, context: CallbackContext):
+
+    if not os.path.exists('logs.txt'):
+        update.effective_message.reply_text("File doesn't exist")
+        return
+
     user = update.effective_user
-    with open("logs.txt", "rb") as f:
+
+    logsname = "{}_logs.txt".format(dispatcher.bot.username)
+
+    # https://pythonexamples.org/python-replace-string-in-file/
+    logstxt = open("logs.txt", "rt")
+    with open(logsname, "wt") as logsout:
+        for line in logstxt:
+        	logsout.write(line.replace(str(DB_URI), '$DATABASE').replace(str(TOKEN), '$TOKEN').replace(str(APP_ID), '$APP_ID').replace(str(API_HASH), '$API_HASH').replace(str(CASH_API_KEY), '$CASH_API_KEY').replace(str(TIME_API_KEY), '$TIME_API_KEY').replace(str(LASTFM_API_KEY), '$LASTFM_API_KEY').replace(str(CF_API_KEY), '$CF_API_KEY').replace(str(spamwatch_api), '$spamwatch_api').replace(str(BACKUP_PASS), '$BACKUP_PASS'))
+        logstxt.close()
+
+    with open(logsname, "rb") as f:
         context.bot.send_document(document=f, filename=f.name, chat_id=user.id)
+
 
 @kigcmd(command='updates')
 @dev_plus
-def logs(update: Update, context: CallbackContext):
+def updates_log(update: Update, context: CallbackContext):
     user = update.effective_user
-    with open("updates.txt", "rb") as f:
+
+    if not os.path.exists('updates.txt'):
+        update.effective_message.reply_text("File doesn't exist")
+        return
+    updatesname = "{}_updates.txt".format(dispatcher.bot.username)
+
+    # https://pythonexamples.org/python-replace-string-in-file/
+    updatestxt = open("updates.txt", "rt")
+    with open(updatesname, "wt") as updatesout:
+        for line in updatestxt:
+        	updatesout.write(line.replace(str(DB_URI), '$DATABASE').replace(str(TOKEN), '$TOKEN').replace(str(APP_ID), '$APP_ID').replace(str(API_HASH), '$API_HASH').replace(str(CASH_API_KEY), '$CASH_API_KEY').replace(str(TIME_API_KEY), '$TIME_API_KEY').replace(str(LASTFM_API_KEY), '$LASTFM_API_KEY').replace(str(CF_API_KEY), '$CF_API_KEY').replace(str(spamwatch_api), '$spamwatch_api').replace(str(BACKUP_PASS), '$BACKUP_PASS'))
+        updatestxt.close()
+
+    with open(updatesname, "rb") as f:
+
         context.bot.send_document(document=f, filename=f.name, chat_id=user.id)
 
 
-'''DEBUG_HANDLER = CommandHandler("debug", debug)
-dispatcher.add_handler(DEBUG_HANDLER)'''
-
 __mod_name__ = "Debug"
-'''__command_list__ = ["debug"]
-__handlers__ = [DEBUG_HANDLER]'''

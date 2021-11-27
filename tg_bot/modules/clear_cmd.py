@@ -4,17 +4,20 @@ from telegram.ext import CommandHandler, CallbackContext, run_async
 
 import tg_bot.modules.sql.clear_cmd_sql as sql
 from tg_bot import dispatcher, spamcheck
-from tg_bot.modules.helper_funcs.chat_status import user_admin, connection_status
+from tg_bot.modules.helper_funcs.chat_status import connection_status
 from tg_bot.modules.helper_funcs.decorators import kigcmd
+
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 @kigcmd(command='clearcmd')
 @spamcheck
-@user_admin
 @connection_status
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def clearcmd(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
     args = context.args
+    user = res_user(update.effective_user, message.message_id, chat)
     msg = ""
 
     commands = [
@@ -106,25 +109,4 @@ def clearcmd(update: Update, context: CallbackContext):
 def __migrate__(old_chat_id, new_chat_id):
     sql.migrate_chat(old_chat_id, new_chat_id)
 
-
-__help__ = """
-*Get module configuration:*
-• `/clearcmd`: provides all commands that has been set in current group with their deletion time
-• `/clearcmd list`: list all available commands for this module
-• `/clearcmd <command>`: get the deletion time for a specific `<command>`
-
-*Set module configuration:*
-• `/clearcmd <command> <time>`: set a deletion `<time>` for a specific `<command>` in current group. All outputs of that command will be deleted in that group after time value in seconds. Time can be set between 5 and 300 seconds
-
-*Restore module configuration:*
-• `/clearcmd restore`: the deletion time set for ALL commands will be removed in current group
-• `/clearcmd <command> restore`: the deletion time set for a specific `<command>` will be removed in current group
-"""
-
-'''CLEARCMD_HANDLER = CommandHandler("clearcmd", clearcmd, run_async=True)
-
-dispatcher.add_handler(CLEARCMD_HANDLER)'''
-
 __mod_name__ = "Clear Commands"
-'''__command_list__ = ["clearcmd"]
-__handlers__ = [CLEARCMD_HANDLER]'''

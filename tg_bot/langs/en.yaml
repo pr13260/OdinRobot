@@ -9,23 +9,23 @@ set_chat_lang: "Great, {} it is from now on!"
 
 
 pm_start_text: |
-   Hi {}, I'm {},
+   Hi {}, I'm [{}](https://telegra.ph/file/3b56aca656c31ea44dfb7.jpg),
    I am a modular group management bot with some fun extras ;)
    
-   I can do a variety of things, most common of em are:
-   - Restrict users with *ban permissions*.
-   - Greet users with media + text and buttons, with proper formatting.
-   - Restrict users who flood your chat using my *anti-flood* module.
-   - *Warn* users according to the options set and restrict em accordingly.
-   - Save notes and filters with proper formatting and reply markup.
-   
-   Theres even more! this is just the tip of the iceberg. Do note I need
-   to be promoted with proper admin permissions to function properly. 
-   Else I won't be able to function as said.
+   I can do a variety of things, and help u manage your group efficiently!
    
    All commands can be accessed by using: / ! or >
    *Click on help to learn more!*
+
+#    - Restrict users with *ban permissions*.
+#    - Greet users with media + text and buttons, with proper formatting.
+#    - Restrict users who flood your chat using my *anti-flood* module.
+#    - *Warn* users according to the options set and restrict em accordingly.
+#    - Save notes and filters with proper formatting and reply markup.
    
+#    Theres even more! this is just the tip of the iceberg. Do note I need
+#    to be promoted with proper admin permissions to function properly. 
+#    Else I won't be able to function as said.
 grp_start_text: "Hey, I'm {}."
 
 pm_help_text: |
@@ -42,6 +42,7 @@ pm_help_text: |
 #    • /language: Change bot language.
 
 add_bot_to_group_btn: "Add me!"
+reommended_fed_btn: "Recommended Federation"
 support_chat_link_btn: "Support"
 updates_channel_link_btn: "Updates"
 src_btn: "Source code"
@@ -54,6 +55,7 @@ admin_help: |
    *Admins only:*
    • `/invitelink`*:* gets invitelink
    • `/promote`*:* promotes the user replied to
+   • `/fullpromote`*:* promotes the user replied to with full permissions
    • `/demote`*:* demotes the user replied to
    • `/admincache`*:* refreshes the admins cache (useless as it is always updated)
    • `/title <title here>`*:* sets a custom title for an admin that the bot promoted
@@ -65,8 +67,8 @@ admin_help: |
 
    announce is a module that keeps u updated with admin cations in your group weather its done manually or by other bots. Turn it on to get announcements on every admin action in your group. Note that no matter if this is on or off everythong will be logged to the log channel.
 
-#   • /delete: deletes the message you replied to
-#   • /purge: deletes all messages between this and the replied to message.
+   • `/setanon <user_id/mention>`*:* Will make the user anonymous (if no user is given then will set the sender to anonymous)
+   • `/unsetanon <user_id/mention>`*:* Will make the user non anonymous (if no user is given then will set the sender to non anonymous)
 
 afk_help: |
    - /afk <reason>: mark yourself as AFK(away from keyboard).
@@ -145,10 +147,23 @@ blacklist_help: |
         `default` - `delete` - `warn` - `mute` - `kick` - `ban`
 
 cleaner_help: |
+    *Bluetext cleaner:*
     - /cleanbluetext <on/off/yes/no> - clean commands after sending
     - /ignorecleanbluetext <word> - prevent auto cleaning of the command
     - /unignorecleanbluetext <word> - remove prevent auto cleaning of the command
     - /listcleanbluetext - list currently whitelisted commands
+
+    *Clear cmd:*
+    - /clearcmd: provides all commands that has been set in current group with their deletion time
+    - /clearcmd list: list all available commands for this module
+    - /clearcmd <command>: get the deletion time for a specific `<command>`
+
+    *Set module configuration:*
+    - /clearcmd <command> <time>: set a deletion `<time>` for a specific `<command>` in current group. All outputs of that command will be deleted in that group after time value in seconds. Time can be set between 5 and 300 seconds
+
+    *Restore module configuration:*
+    - /clearcmd restore: the deletion time set for ALL commands will be removed in current group
+    - /clearcmd <command> restore: the deletion time set for a specific `<command>` will be removed in current group
 
 connections_help: |
     - /connect: connect a chat (Can be done in a group by /connect or /connect <chat id> in PM)
@@ -493,13 +508,9 @@ greetings_help: |
        • `/resetwelcome`*:* reset to the default welcome message.
        • `/resetgoodbye`*:* reset to the default goodbye message.
        • `/cleanwelcome <on/off>`*:* On new member, try to delete the previous welcome message to avoid spamming the chat.
-       • `/welcomemutehelp`*:* gives information about welcome mutes.
        • `/cleanservice <on/off`*:* deletes telegrams welcome/left service messages.
        *Example:*
       user joined chat, user left chat.
-
-      *Welcome markdown:*
-       • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
 
 nation_help: |
     Some users have access levels we call as *Super Users*
@@ -552,6 +563,7 @@ android_help: |
        • `/magisk`, `/su`, `/root`: fetches latest magisk
        *OrangeFox Recovery Project:* 
        • `/orangefox` `<devicecodename>`: fetches lastest OrangeFox Recovery available for a given device codename
+       • `/ofox` `<devicecodename>`: same as orangefox
        *TWRP:* 
        • `/twrp <devicecodename>`: fetches lastest TWRP available for a given device codename
        *MIUI:*
@@ -585,3 +597,41 @@ pins_help: |
    • `/unpinall`*:* unpins all pinned messages in a chat.
 
    if you want to use these functions make sure to pin adn unpin the messages with the bot and not manually
+
+
+
+welcome_mutes: |
+  You can get the bot to mute new people who join your group and hence prevent spambots from flooding your group.
+  The following options are possible:
+  • <code>/welcomemute soft</code><b>:</b> restricts new members from sending media for 24 hours.
+  • <code>/welcomemute strong</code><b>:</b> mutes new members till they tap on a button thereby verifying they're human.
+  • <code>/welcomemute captcha</code><b>:</b>  mutes new members till they solve a button captcha thereby verifying they're human.
+  • <code>/welcomemute off</code><b>:</b> turns off welcomemute.
+  <b>Note:</b> Strong mode kicks a user from the chat if they dont verify in 120seconds. They can always rejoin thoug
+
+
+
+welcome_help: |
+  Your group's welcome/goodbye messages can be personalised in multiple ways. If you want the messages
+   to be individually generated, like the default welcome message is, you can use *these* variables:
+   • <code>{first}</code><b>:</b> this represents the user's *first* name
+   • <code>{last}</code><b>:</b> this represents the user's *last* name. Defaults to *first name* if user has no 
+  last name.
+   • <code>{fullname}</code><b>:</b> this represents the user's *full* name. Defaults to *first name* if user has no 
+  last name.
+   • <code>{username}</code><b>:</b> this represents the user's *username*. Defaults to a *mention* of the user's 
+  first name if has no username.
+   • <code>{mention}</code><b>:</b> this simply *mentions* a user - tagging them with their first name.
+   • <code>{id}</code><b>:</b> this represents the user's *id*
+   • <code>{count}</code><b>:</b> this represents the user's *member number*.
+   • <code>{chatname}</code><b>:</b> this represents the *current chat name*.
+  Each variable MUST be surrounded by <code>{}</code> to be replaced.
+  Welcome messages also support markdown, so you can make any elements bold/italic/code/links. 
+  Buttons are also supported, so you can make your welcomes look awesome with some nice intro 
+  buttons.
+  "To create a button linking to your rules, use this: <code>[Rules](buttonurl://t.me/{dispatcher.bot.username}?start=group_id)</code>. 
+  Simply replace <code>group_id</code> with your group's id, which can be obtained via /id, and you're good to 
+  go. Note that group ids are usually preceded by a <code>-</code> sign; this is required, so please don't 
+  remove it.
+  You can even set images/gifs/videos/voice messages as the welcome message by 
+  replying to the desired media, and calling <code>/setwelcome</code>.

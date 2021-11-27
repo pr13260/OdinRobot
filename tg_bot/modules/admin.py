@@ -1,7 +1,7 @@
 import html
 
 
-from telegram import ParseMode, Update, parsemode
+from telegram import ParseMode, Update, message, parsemode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
@@ -15,7 +15,6 @@ from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_promote,
     connection_status,
-    user_admin,
     ADMIN_CACHE,
     user_mod,
 )
@@ -23,31 +22,111 @@ from tg_bot.modules.helper_funcs.chat_status import (
 from tg_bot.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.language import gs
-from tg_bot.modules.helper_funcs.decorators import kigcmd
+from tg_bot.modules.helper_funcs.decorators import kigcmd, register
+
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
+@kigcmd(command="fullpromote", can_disable=False)
+@spamcheck
+@connection_status
+@bot_admin
+@can_promote
+@loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+def fullpromote(update: Update, context: CallbackContext) -> str:
+    bot = context.bot
+    args = context.args
+
+    message = update.effective_message
+    chat = update.effective_chat
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
+
+    user_id, title = extract_user_and_text(message, args)
+
+    if not user_id:
+        message.reply_text(
+            "You don't seem to be referring to a user or the ID specified is incorrect.."
+        )
+        return
+
+    try:
+        user_member = chat.get_member(user_id)
+    except:
+        return
+
+    if user_member.status in ("administrator", "creator"):
+        message.reply_text("This user is already an admin!")
+        return
+
+    if user_id == bot.id:
+        message.reply_text("Yeah I wish I could promote myself...")
+        return
+
+    # set same perms as bot - bot can't assign higher perms than itself!
+    bot_member = chat.get_member(bot.id)
+
+    try:
+        chat.promote_member
+        bot.promoteChatMember(
+            chat.id,
+            user_id,
+            can_change_info=bot_member.can_change_info,
+            can_post_messages=bot_member.can_post_messages,
+            can_edit_messages=bot_member.can_edit_messages,
+            can_delete_messages=bot_member.can_delete_messages,
+            can_invite_users=bot_member.can_invite_users,
+            can_promote_members=bot_member.can_promote_members,
+            can_restrict_members=bot_member.can_restrict_members,
+            can_pin_messages=bot_member.can_pin_messages,
+            can_manage_voice_chats=bot_member.can_manage_voice_chats,
+            is_anonymous=bot_member.is_anonymous,
+        )
+        if title:
+            bot.setChatAdministratorCustomTitle(chat.id, user_id, title)
+        try:
+            ADMIN_CACHE.pop(update.effective_chat.id)
+        except KeyError:
+            pass
+        bot.sendMessage(
+            chat.id,
+            f"<b>{user_member.user.first_name or user_id}</b> was promoted by <b>{message.from_user.first_name}</b> with full perms.",
+            parse_mode=ParseMode.HTML,
+        ) 
+    except BadRequest as err:
+        if err.message == "User_not_mutual_contact":
+            message.reply_text("How am I mean to promote someone who isn't in the group?")
+        else:
+            message.reply_text("An error occured while promoting.")
+        return
+
+
+
+    log_message = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#PROMOTED\n"
+        f"Full promote\n"
+        f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+        f"<b>User:</b> {mention_html(user_member.user.id, user_member.user.first_name)}"
+    )
+
+    return log_message
 
 @kigcmd(command="promote", can_disable=False)
 @spamcheck
 @connection_status
 @bot_admin
 @can_promote
-@user_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
 def promote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
     message = update.effective_message
     chat = update.effective_chat
-    user = update.effective_user
-
-    promoter = chat.get_member(user.id)
-
-    if (
-        not (promoter.can_promote_members or promoter.status == "creator")
-        and not user.id in SUDO_USERS
-    ):
-        message.reply_text("You lack the CAN_ADD_ADMINS right!")
-        return
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
 
     user_id, title = extract_user_and_text(message, args)
 
@@ -121,15 +200,16 @@ def promote(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_promote
-@user_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
 def demote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
     chat = update.effective_chat
     message = update.effective_message
-    user = update.effective_user
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
 
     user_id = extract_user(message, args)
     if not user_id:
@@ -168,6 +248,7 @@ def demote(update: Update, context: CallbackContext) -> str:
             can_pin_messages=False,
             can_promote_members=False,
             can_manage_voice_chats=False,
+            is_anonymous=False,
         )
 
         try:
@@ -204,31 +285,42 @@ def refresh_admin(update, context):
         pass
     update.effective_message.reply_text("Admins cache is always up to date!")
 
+
 @kigcmd(command="title", can_disable=False)
 @spamcheck
 @connection_status
 @bot_admin
 @can_promote
-@user_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
 def set_title(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
     chat = update.effective_chat
     message = update.effective_message
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
 
-    user = update.effective_user
 
     user_id, title = extract_user_and_text(message, args)
+
+    if not user_id:
+        user_id = user.id
+        title = " ".join(args)
+        user_member = chat.get_member(user_id)
+
     try:
         user_member = chat.get_member(user_id)
     except:
-        return
-
-    if not user_id:
         message.reply_text(
             "You don't seem to be referring to a user or the ID specified is incorrect.."
+        )
+        return
+
+    if user_member.status == "creator" and user_id == user.id:
+        message.reply_text(
+            "Okay -_-"
         )
         return
 
@@ -286,21 +378,16 @@ def set_title(update: Update, context: CallbackContext) -> str:
 @kigcmd(command=["invitelink", "link"], can_disable=False)
 @spamcheck
 @bot_admin
-@user_admin
 @connection_status
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_INVITE_USERS)
 def invite(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat
-    user = update.effective_user
-    promoter = chat.get_member(user.id)
+    message = update.effective_message
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
 
-    if (
-        not (promoter.can_invite_users or promoter.status == "creator")
-        and not user.id in SUDO_USERS
-    ):
-        update.effective_message.reply_text("You lack the CAN_INVITE_USERS right!")
-        return
 
     if chat.username:
         update.effective_message.reply_text(f"https://t.me/{chat.username}")
@@ -331,8 +418,8 @@ def invite(update: Update, context: CallbackContext) -> str:
 
 
 from telethon.tl.types import ChannelParticipantCreator
-
-@telethn.on(events.NewMessage(pattern=r"(?i)^[/>!](admin|admins|staff|adminlist)($| |@odinrobot($| ))"))
+@register(pattern="(admin|admins|staff|adminlist)", groups_only=True, no_args=True)
+# @telethn.on(events.NewMessage(pattern=r"(?i)^[/>!](admin|admins|staff|adminlist)($| |@odinrobot($| ))"))
 async def adminlist(event):
     try:
         _ = event.chat.title

@@ -17,6 +17,8 @@ from tg_bot.modules.connection import connected
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 BLACKLIST_GROUP = -3
 
 @kigcmd(command=["blacklist", "blacklists", "blocklist", "blocklists"], pass_args=True, admin_ok=True)
@@ -95,13 +97,14 @@ def blacklist(update, context):
 
 @kigcmd(command=["addblacklist", "addblocklist"], pass_args=True)
 @spamcheck
-@user_admin
 @typing_action
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def add_blacklist(update, context):
     msg = update.effective_message
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     words = msg.text.split(None, 1)
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id)
     if conn:
@@ -187,13 +190,14 @@ def add_blacklist(update, context):
 
 @kigcmd(command=["unblacklist", "unblocklist"], pass_args=True)
 @spamcheck
-@user_admin
 @typing_action
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def unblacklist(update, context):
     msg = update.effective_message
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     words = msg.text.split(None, 1)
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id)
     if conn:
@@ -272,14 +276,16 @@ def unblacklist(update, context):
 
 @kigcmd(command=["blacklistmode", "blocklistmode"], pass_args=True)
 @spamcheck
-@loggable
-@user_admin
 @typing_action
+@loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def blacklist_mode(update, context):  # sourcery no-metrics
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     msg = update.effective_message
     args = context.args
+    
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id, need_admin=True)
     if conn:
@@ -464,7 +470,7 @@ def del_blacklist(update, context):  # sourcery no-metrics
                     return
                 elif getmode == 5:
                     message.delete()
-                    chat.kick_member(user.id)
+                    chat.ban_member(user.id)
                     bot.sendMessage(
                         chat.id,
                         f"Banned {user.first_name} for using Blacklisted word: {trigger}",
@@ -473,7 +479,7 @@ def del_blacklist(update, context):  # sourcery no-metrics
                 elif getmode == 6:
                     message.delete()
                     bantime = extract_time(message, value)
-                    chat.kick_member(user.id, until_date=bantime)
+                    chat.ban_member(user.id, until_date=bantime)
                     bot.sendMessage(
                         chat.id,
                         f"Banned {user.first_name} until '{value}' for using Blacklisted word: {trigger}!",

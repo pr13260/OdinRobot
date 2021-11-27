@@ -45,6 +45,7 @@ from telegram.ext import (
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 WARN_HANDLER_GROUP = 9
 CURRENT_WARNING_FILTER_STRING = "<b>Current warning filters in this chat:</b>\n"
@@ -103,7 +104,7 @@ def warn(
             )
 
         else:  # ban
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             reply = (
                 f"<code>❕</code><b>Ban Event</b>\n"
                 f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
@@ -143,7 +144,7 @@ def warn(
         reply = (
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}\n"
             f"Please take some of your precious time to read the rules!"
         )
         if reason:
@@ -195,7 +196,7 @@ def swarn(
             )
 
         else:  # ban
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             reply = (
                 f"<code>❕</code><b>Ban Event</b>\n"
                 f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
@@ -235,7 +236,7 @@ def swarn(
         reply = (
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}\n"
             f"Please take some of your precious time to read the rules!"
         )
         if reason:
@@ -294,7 +295,7 @@ def dwarn(
             )
 
         else:  # ban
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             reply = (
                 f"<code>❕</code><b>Ban Event</b>\n"
                 f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
@@ -334,7 +335,7 @@ def dwarn(
         reply = (
             f"<code>❕</code><b>Warn Event</b>\n"
             f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}\n"
             f"Please take some of your precious time to read the rules!"
         )
         if reason:
@@ -401,14 +402,15 @@ def button(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='dswarn', filters=Filters.chat_type.groups)
 @kigcmd(command='warn', filters=Filters.chat_type.groups)
 @spamcheck
-@user_mod
 @can_restrict
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def warn_user(update: Update, context: CallbackContext) -> str:
     args = context.args
     message: Optional[Message] = update.effective_message
     chat: Optional[Chat] = update.effective_chat
-    warner: Optional[User] = update.effective_user
+    u: Optional[User] = update.effective_user
+    warner = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
     if message.text.startswith('/s') or message.text.startswith('!s') or message.text.startswith('>s'):
@@ -505,14 +507,15 @@ def warn_user(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command=['restwarn', 'resetwarns'], filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @bot_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_RESTRICT_MEMBERS)
 def reset_warns(update: Update, context: CallbackContext) -> str:
     args = context.args
     message: Optional[Message] = update.effective_message
     chat: Optional[Chat] = update.effective_chat
-    user: Optional[User] = update.effective_user
+    u: Optional[User] = update.effective_user
+    user = res_user(u, message.message_id, chat)
 
     user_id = extract_user(message, args)
 
@@ -563,10 +566,12 @@ def warns(update: Update, context: CallbackContext):
 @kigcmd(command='addwarn', filters=Filters.chat_type.groups, run_async=False)
 @spamcheck
 # Dispatcher handler stop - do not async
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def add_warn_filter(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
     msg: Optional[Message] = update.effective_message
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
 
     args = msg.text.split(
         None, 1
@@ -596,10 +601,12 @@ def add_warn_filter(update: Update, context: CallbackContext):
 
 @kigcmd(command=['nowarn', 'stopwarn'], filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def remove_warn_filter(update: Update, context: CallbackContext):
     chat: Optional[Chat] = update.effective_chat
     msg: Optional[Message] = update.effective_message
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
 
     args = msg.text.split(
         None, 1
@@ -683,13 +690,14 @@ def reply_filter(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='warnlimit', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_warn_limit(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat: Optional[Chat] = update.effective_chat
-    user: Optional[User] = update.effective_user
+    u: Optional[User] = update.effective_user
     msg: Optional[Message] = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     if args:
         if args[0].isdigit():
@@ -714,12 +722,13 @@ def set_warn_limit(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='strongwarn', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_warn_strength(update: Update, context: CallbackContext):
     args = context.args
     chat: Optional[Chat] = update.effective_chat
-    user: Optional[User] = update.effective_user
+    u: Optional[User] = update.effective_user
     msg: Optional[Message] = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     if args:
         if args[0].lower() in ("on", "yes"):
@@ -791,44 +800,3 @@ def get_help(chat):
     return gs(chat, "warns_help")
 
 __mod_name__ = "Warnings"
-
-'''WARN_HANDLER = CommandHandler("warn", warn_user, filters=Filters.chat_type.groups)
-RESET_WARN_HANDLER = CommandHandler(
-    ["resetwarn", "resetwarns"], reset_warns, filters=Filters.chat_type.groups
-)
-CALLBACK_QUERY_HANDLER = CallbackQueryHandler(button, pattern=r"rm_warn")
-MYWARNS_HANDLER = DisableAbleCommandHandler(
-    "warns", warns, filters=Filters.chat_type.groups
-)
-ADD_WARN_HANDLER = CommandHandler(
-    "addwarn", add_warn_filter, filters=Filters.chat_type.groups
-)
-RM_WARN_HANDLER = CommandHandler(
-    ["nowarn", "stopwarn"], remove_warn_filter, filters=Filters.chat_type.groups
-)
-LIST_WARN_HANDLER = DisableAbleCommandHandler(
-    ["warnlist", "warnfilters"],
-    list_warn_filters,
-    filters=Filters.chat_type.groups,
-    admin_ok=True,
-)
-WARN_FILTER_HANDLER = MessageHandler(
-    CustomFilters.has_text & Filters.chat_type.groups, reply_filter
-)
-WARN_LIMIT_HANDLER = CommandHandler(
-    "warnlimit", set_warn_limit, filters=Filters.chat_type.groups
-)
-WARN_STRENGTH_HANDLER = CommandHandler(
-    "strongwarn", set_warn_strength, filters=Filters.chat_type.groups
-)
-
-dispatcher.add_handler(WARN_HANDLER)
-dispatcher.add_handler(CALLBACK_QUERY_HANDLER)
-dispatcher.add_handler(RESET_WARN_HANDLER)
-dispatcher.add_handler(MYWARNS_HANDLER)
-dispatcher.add_handler(ADD_WARN_HANDLER)
-dispatcher.add_handler(RM_WARN_HANDLER)
-dispatcher.add_handler(LIST_WARN_HANDLER)
-dispatcher.add_handler(WARN_LIMIT_HANDLER)
-dispatcher.add_handler(WARN_STRENGTH_HANDLER)
-dispatcher.add_handler(WARN_FILTER_HANDLER, WARN_HANDLER_GROUP)'''

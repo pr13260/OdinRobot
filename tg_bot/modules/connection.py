@@ -12,15 +12,17 @@ import tg_bot.modules.sql.connection_sql as sql
 from tg_bot import dispatcher, SUDO_USERS, DEV_USERS, spamcheck
 from tg_bot.modules.helper_funcs import chat_status
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
-#from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 user_admin = chat_status.user_admin
+
+
 @spamcheck
-@user_admin
 @typing_action
+@user_admin
 def allow_connections(update, context) -> str:
 
     chat = update.effective_chat
     args = context.args
+    # user = res_user(update.effective_user, update.effective_message.message_id, chat)
 
     if chat.type != chat.PRIVATE:
         if len(args) >= 1:
@@ -311,6 +313,7 @@ CONN_HELP = """
  • Enable and Disable commands in chat.
  • Export and Imports of chat backup.
  • More in future!"""
+
 @spamcheck
 def help_connect_chat(update, context):
 
@@ -321,6 +324,8 @@ def help_connect_chat(update, context):
         return
     else:
         send_message(update.effective_message, CONN_HELP, parse_mode="markdown")
+
+
 @spamcheck
 def connect_button(update, context):
 

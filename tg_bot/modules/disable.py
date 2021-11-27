@@ -6,7 +6,7 @@ from telegram.ext import CommandHandler, MessageHandler
 from telegram.utils.helpers import escape_markdown
 
 from tg_bot import dispatcher, spamcheck
-from tg_bot.modules.helper_funcs.handlers import CMD_STARTERS
+from tg_bot.modules.helper_funcs.handlers import CMD_STARTERS, SpamChecker
 from tg_bot.modules.helper_funcs.misc import is_module_loaded
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 from tg_bot.modules.connection import connected
@@ -51,6 +51,11 @@ if is_module_loaded(FILENAME):
                 return
             message = update.effective_message
 
+            try:
+                user_id = update.effective_user.id
+            except:
+                user_id = None
+
             if message.text and len(message.text) > 1:
                 fst_word = message.text.split(None, 1)[0]
                 if len(fst_word) > 1 and any(
@@ -64,6 +69,9 @@ if is_module_loaded(FILENAME):
                         command[0].lower() in self.command
                         and command[1].lower() == message.bot.username.lower()
                     ):
+                        return None
+
+                    if SpamChecker.check_user(user_id):
                         return None
 
                     filter_result = self.filters(update)
@@ -93,9 +101,21 @@ if is_module_loaded(FILENAME):
         def check_update(self, update):
             if isinstance(update, Update) and update.effective_message:
                 chat = update.effective_chat
-                return self.filters(update) and not sql.is_command_disabled(
-                    chat.id, self.friendly
-                )
+
+                try:
+                    user_id = update.effective_user.id
+                except:
+                    user_id = None
+
+                if self.filters(update):
+                    if SpamChecker.check_user(user_id):
+                        return None
+                    if sql.is_command_disabled(chat.id, self.friendly):
+                        return False
+                    return True
+                return False
+
+
     @spamcheck
     @user_admin
     @typing_action

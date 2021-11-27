@@ -1,6 +1,8 @@
 import telegram.ext as tg
 from telegram import Update
-from tg_bot import DEV_USERS, MOD_USERS, SUDO_USERS, WHITELIST_USERS, SUPPORT_USERS
+from telegram.ext.filters import Filters
+from telegram.ext.messagehandler import MessageHandler
+from tg_bot import DEV_USERS, MOD_USERS, OWNER_ID, SUDO_USERS, SYS_ADMIN, WHITELIST_USERS, SUPPORT_USERS
 from pyrate_limiter import (
     BucketFullException,
     Duration,
@@ -8,6 +10,7 @@ from pyrate_limiter import (
     Limiter,
     MemoryListBucket,
 )
+import tg_bot.modules.sql.blacklistusers_sql as sql
 
 try:
     from tg_bot import CUSTOM_CMD
@@ -44,8 +47,14 @@ class AntiSpam:
         """
         Return True if user is to be ignored else False
         """
+        # return bool(sql.is_user_blacklisted(user))
+
         if user in self.whitelist:
             return False
+
+        if sql.is_user_blacklisted(user):
+            return True
+
         try:
             self.limiter.try_acquire(user)
             return False
@@ -98,3 +107,25 @@ class CustomCommandHandler(tg.CommandHandler):
                     return args, filter_result
                 else:
                     return False
+
+
+
+class CustomMessageHandler(MessageHandler):
+    def __init__(self, pattern, callback, run_async=True, friendly="", **kwargs):
+        super().__init__(pattern, callback, run_async=run_async, **kwargs)
+        self.friendly = friendly or pattern
+    def check_update(self, update):
+        if isinstance(update, Update) and update.effective_message:
+
+            try:
+                user_id = update.effective_user.id
+            except:
+                user_id = None
+
+            if self.filters(update):
+                if SpamChecker.check_user(user_id):
+                    return None
+                return True
+            return False
+
+

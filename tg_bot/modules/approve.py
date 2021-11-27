@@ -11,16 +11,19 @@ from telegram.utils.helpers import mention_html
 from telegram.error import BadRequest
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 @kigcmd(command='approve', filters=Filters.chat_type.groups)
 @spamcheck
 @loggable
-@user_admin
-def approve(update, context):
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+def approve(update, context) -> str:
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
     args = context.args
-    user = update.effective_user
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
     user_id = extract_user(message, args)
     if not user_id:
         message.reply_text(
@@ -58,13 +61,14 @@ def approve(update, context):
 @kigcmd(command='unapprove', filters=Filters.chat_type.groups)
 @spamcheck
 @loggable
-@user_admin
-def disapprove(update, context):
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+def disapprove(update, context) -> str:
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
     args = context.args
-    user = update.effective_user
+    u = update.effective_user
+    user = res_user(u, message.message_id, chat)
     user_id = extract_user(message, args)
     if not user_id:
         message.reply_text(
@@ -176,20 +180,16 @@ def unapproveall_btn(update: Update, context: CallbackContext):
             for user_id in users:
                 sql.disapprove(chat.id, user_id)
 
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
 
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
     elif query.data == "unapproveall_cancel":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
             message.edit_text(
                 "Removing of all approved users has been cancelled.")
             return ""
-        if member.status == "administrator":
+        else:
             query.answer("Only owner of the chat can do this.")
-        if member.status == "member":
-            query.answer("You need to be admin to do this.")
 
 from tg_bot.modules.language import gs
 

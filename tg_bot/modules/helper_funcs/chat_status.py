@@ -11,7 +11,7 @@ from tg_bot import (
     MOD_USERS
 )
 from cachetools import TTLCache
-from telegram import Chat, ChatMember, ParseMode, Update
+from telegram import Chat, ChatMember, ParseMode, Update, message
 from telegram.ext import CallbackContext
 
 # stores admemes in memory for 10 min.
@@ -106,6 +106,13 @@ def is_bot_admin(chat: Chat, bot_id: int, bot_member: ChatMember = None) -> bool
 def can_delete(chat: Chat, bot_id: int) -> bool:
     return chat.get_member(bot_id).can_delete_messages
 
+def u_can_delete(chat: Chat, user_id: int) -> bool:
+    mem = chat.get_member(user_id)
+    return bool(mem.can_delete_messages or mem.status == "creator" or user_id in SUDO_USERS)
+
+def u_can_change_info(chat: Chat, user_id: int) -> bool:
+    mem = chat.get_member(user_id)
+    return bool(mem.can_change_info or mem.status == "creator" or user_id in SUDO_USERS)
 
 def is_user_ban_protected(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
     if (
@@ -269,11 +276,13 @@ def user_admin_no_reply(func):
         bot = context.bot
         user = update.effective_user
         chat = update.effective_chat
+        query = update.callback_query
 
-        if user and is_user_admin(chat, user.id):
-            return func(update, context, *args, **kwargs)
-        elif not user:
-            pass
+        if user:
+            if is_user_admin(chat, user.id):
+                return func(update, context, *args, **kwargs)
+            else:
+                query.answer("this is not for you")
         elif DEL_CMDS and " " not in update.effective_message.text:
             try:
                 update.effective_message.delete()
@@ -282,6 +291,35 @@ def user_admin_no_reply(func):
 
     return is_not_admin_no_reply
 
+def user_can_restrict_no_reply(func):
+    @wraps(func)
+    def u_can_restrict_noreply(
+        update: Update, context: CallbackContext, *args, **kwargs
+    ):
+        bot = context.bot
+        user = update.effective_user
+        chat = update.effective_chat
+        query = update.callback_query
+        member = chat.get_member(user.id)
+
+        if user:
+            if (
+                member.can_restrict_members
+                or member.status == "creator"
+                or user.id in SUDO_USERS
+            ):
+                return func(update, context, *args, **kwargs)
+            elif member.status == 'administrator':
+                query.answer("You're missing the `can_restrict_members` permission.")
+            else:
+                query.answer("You need to be admin with `can_restrict_users` permission to do this.")
+        elif DEL_CMDS and " " not in update.effective_message.text:
+            try:
+                update.effective_message.delete()
+            except:
+                pass
+
+    return u_can_restrict_noreply
 
 def user_not_admin(func):
     @wraps(func)
@@ -386,6 +424,32 @@ def can_promote(func):
 
     return promote_rights
 
+def can_promote_anon(func):
+    @wraps(func)
+    def promote_rights_anon(update: Update, context: CallbackContext, *args, **kwargs):
+        bot = context.bot
+        chat = update.effective_chat
+        update_chat_title = chat.title
+        message_chat_title = update.effective_message.chat.title
+
+        if update_chat_title == message_chat_title:
+            cant_promote = "I can't promote/demote people here!\nMake sure I'm admin and can appoint new admins."
+        else:
+            cant_promote = (
+                f"I can't promote/demote people in <b>{update_chat_title}</b>!\n"
+                f"Make sure I'm admin there and can appoint new admins."
+            )
+
+        if chat.get_member(bot.id).can_promote_members:
+            if chat.get_member(bot.id).is_anonymous:
+                return func(update, context, *args, **kwargs)
+            else:
+                update.effective_message.reply_text("I don't have the rights to add admins with anonymous permission!", parse_mode=ParseMode.HTML)
+        else:
+            update.effective_message.reply_text(cant_promote, parse_mode=ParseMode.HTML)
+
+    return promote_rights_anon
+
 
 def can_restrict(func):
     @wraps(func)
@@ -408,28 +472,6 @@ def can_restrict(func):
             )
 
     return restrict_rights
-
-
-def user_can_ban(func):
-    @wraps(func)
-    def user_is_banhammer(update: Update, context: CallbackContext, *args, **kwargs):
-        bot = context.bot
-        user = update.effective_user.id
-        member = update.effective_chat.get_member(user)
-
-        if (
-            not (member.can_restrict_members or member.status == "creator")
-            and not user in SUDO_USERS
-        ):
-            update.effective_message.reply_text(
-                "Sorry son, but you're not worthy to wield the banhammer."
-            )
-            return ""
-
-        return func(update, context, *args, **kwargs)
-
-    return user_is_banhammer
-
 
 def connection_status(func):
     @wraps(func)
@@ -456,6 +498,8 @@ def connection_status(func):
             return func(update, context, *args, **kwargs)
 
     return connected_status
+
+
 
 
 # Workaround for circular import with connection.py

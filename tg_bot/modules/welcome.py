@@ -45,7 +45,8 @@ from telegram.ext import (
     Filters,
 )
 from telegram.utils.helpers import escape_markdown, mention_html, mention_markdown
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 VALID_WELCOME_FORMATTERS = [
     "first",
@@ -187,7 +188,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
 
         if defense:
             bantime = int(time.time()) + 60
-            chat.kick_member(new_mem.id, until_date=bantime)
+            chat.ban_member(new_mem.id, until_date=bantime)
         
         if sw != None:
             sw_ban = sw.get_ban(new_mem.id)
@@ -286,7 +287,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
                         fullname = escape_markdown(f"{first_name} {new_mem.last_name}")
                     else:
                         fullname = escape_markdown(first_name)
-                    count = chat.get_members_count()
+                    count = chat.get_member_count()
                     mention = mention_markdown(new_mem.id, escape_markdown(first_name))
                     if new_mem.username:
                         username = "@" + escape_markdown(new_mem.username)
@@ -644,7 +645,7 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
                     fullname = escape_markdown(f"{first_name} {left_mem.last_name}")
                 else:
                     fullname = escape_markdown(first_name)
-                count = chat.get_members_count()
+                count = chat.get_member_count()
                 mention = mention_markdown(left_mem.id, first_name)
                 if left_mem.username:
                     username = "@" + escape_markdown(left_mem.username)
@@ -684,10 +685,13 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
 
 @kigcmd(command='welcome', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def welcome(update: Update, context: CallbackContext):
     args = context.args
     chat = update.effective_chat
+    u = update.effective_user
+    msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
     # if no args, show current replies.
     if not args or args[0].lower() == "noformat":
         noformat = True
@@ -747,10 +751,13 @@ def welcome(update: Update, context: CallbackContext):
 
 @kigcmd(command='goodbye', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def goodbye(update: Update, context: CallbackContext):
     args = context.args
     chat = update.effective_chat
+    u = update.effective_user
+    msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     if not args or args[0] == "noformat":
         noformat = True
@@ -798,12 +805,14 @@ def goodbye(update: Update, context: CallbackContext):
 
 @kigcmd(command='setwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def set_welcome(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     user = update.effective_user
+    u = update.effective_user
     msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     text, data_type, content, buttons = get_welcome_type(msg)
 
@@ -823,11 +832,13 @@ def set_welcome(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='resetwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def reset_welcome(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
+    msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     sql.set_custom_welcome(chat.id, None, sql.DEFAULT_WELCOME, sql.Types.TEXT)
     update.effective_message.reply_text(
@@ -843,12 +854,13 @@ def reset_welcome(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='setgoodbye', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def set_goodbye(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
     text, data_type, content, buttons = get_welcome_type(msg)
 
     if data_type is None:
@@ -866,11 +878,13 @@ def set_goodbye(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='resetgoodbye', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def reset_goodbye(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
+    msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     sql.set_custom_gdbye(chat.id, sql.DEFAULT_GOODBYE, sql.Types.TEXT)
     update.effective_message.reply_text(
@@ -886,13 +900,14 @@ def reset_goodbye(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='welcomemute', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def welcomemute(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     if len(args) >= 1:
         if args[0].lower() in ("off", "no"):
@@ -954,12 +969,14 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='cleanwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@user_admin
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def clean_welcome(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
+    msg = update.effective_message
+    user = res_user(u, msg.message_id, chat)
 
     if not args:
         clean_pref = sql.get_clean_pref(chat.id)
@@ -998,9 +1015,13 @@ def clean_welcome(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='cleanservice', filters=Filters.chat_type.groups)
 @spamcheck
 @user_admin
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def cleanservice(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
+    msg = update.effective_message
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
     if chat.type == chat.PRIVATE:
         curr = sql.clean_service(chat.id)
         if curr:
@@ -1029,6 +1050,7 @@ def cleanservice(update: Update, context: CallbackContext) -> str:
             "Usage is on/yes or off/no", parse_mode=ParseMode.MARKDOWN
         )
 
+@kigcallback(pattern=r"user_join_", run_async=True)
 def user_button(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
@@ -1091,6 +1113,8 @@ def user_button(update: Update, context: CallbackContext):
     else:
         query.answer(text="You're not allowed to do this!")
 
+
+@kigcallback(pattern=r"user_captchajoin_\([\d\-]+,\d+\)_\(\d{4}\)", run_async=True)
 def user_captcha_button(update: Update, context: CallbackContext):
     # sourcery no-metrics
     chat = update.effective_chat
@@ -1177,12 +1201,14 @@ def user_captcha_button(update: Update, context: CallbackContext):
 #from SayaAman_bot
 @kigcmd(command="lockgroup", pass_args=True)
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def setDefense(update: Update, context: CallbackContext):
     bot = context.bot
     args = context.args
     chat = update.effective_chat
     msg = update.effective_message
+    u = update.effective_user
+    user = res_user(u, msg.message_id, chat)
     if len(args) != 1:
         stat = sql.getDefenseStatus(chat.id)
         text = "Give me some arguments to choose a setting! on/off, yes/no!\n\n\
@@ -1285,25 +1311,67 @@ def __chat_settings__(chat_id, user_id):
 
 from tg_bot.modules.language import gs
 
+
+def wlc_m_help(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(
+        gs(update.effective_chat.id, "welcome_mutes"),
+        parse_mode=ParseMode.HTML,
+    )
+
+
+def wlc_fill_help(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(
+        gs(update.effective_chat.id, "welcome_help"),
+        parse_mode=ParseMode.HTML,
+    )
+
+
+
+@kigcallback(pattern=r"wlc_help_")
+def fmt_help(update: Update, context: CallbackContext):
+    query = update.callback_query
+    bot = context.bot
+    help_info = query.data.split("wlc_help_")[1]
+    if help_info == "m":
+        help_text = gs(update.effective_chat.id, "welcome_mutes")
+    elif help_info == "h":
+        help_text = gs(update.effective_chat.id, "welcome_help")#.format(escape_markdown(dispatcher.bot.username))) 
+    query.message.edit_text(
+        text=help_text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(text="Back", callback_data=f"help_module({__mod_name__.lower()})"),
+            InlineKeyboardButton(text='Support', url='https://t.me/TheBotsSupport')]]
+        ),
+    )
+    bot.answer_callback_query(query.id)
+
+
+
 def get_help(chat):
-    return gs(chat, "greetings_help")
+    return [gs(chat, "greetings_help"),
+    [
+        InlineKeyboardButton(text="Welcome Mutes", callback_data="wlc_help_m"),
+        InlineKeyboardButton(text="Welcome Formatting", callback_data="wlc_help_h")
+    ]
+]
 
 
-BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
-    user_button, pattern=r"user_join_", run_async=True
-)
-CAPTCHA_BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
-    user_captcha_button, pattern=r"user_captchajoin_\([\d\-]+,\d+\)_\(\d{4}\)", run_async=True
-)
+# BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
+#     user_button, pattern=r"user_join_", run_async=True
+# )
+# CAPTCHA_BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
+#     user_captcha_button, pattern=r"user_captchajoin_\([\d\-]+,\d+\)_\(\d{4}\)", run_async=True
+# )
 
-dispatcher.add_handler(BUTTON_VERIFY_HANDLER)
-dispatcher.add_handler(CAPTCHA_BUTTON_VERIFY_HANDLER)
+# dispatcher.add_handler(BUTTON_VERIFY_HANDLER)
+# dispatcher.add_handler(CAPTCHA_BUTTON_VERIFY_HANDLER)
 
 __mod_name__ = "Greetings"
-__command_list__ = []
-__handlers__ = [
-    BUTTON_VERIFY_HANDLER,
-    CAPTCHA_BUTTON_VERIFY_HANDLER
-]
+
+# __handlers__ = [
+#     BUTTON_VERIFY_HANDLER,
+#     CAPTCHA_BUTTON_VERIFY_HANDLER
+# ]
 
 

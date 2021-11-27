@@ -10,7 +10,6 @@ from tg_bot import (
     WHITELIST_USERS, 
     spamcheck,
     DEV_USERS,
-    MESSAGE_DUMP,
     MOD_USERS,
     SUDO_USERS,
     SUPPORT_USERS,
@@ -21,11 +20,8 @@ from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
     connection_status,
-    is_user_admin,
     is_user_ban_protected,
-    user_admin,
-    user_admin_no_reply,
-    user_mod,
+    user_can_restrict_no_reply,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user_and_text
 from tg_bot.modules.helper_funcs.string_handling import extract_time
@@ -37,6 +33,7 @@ from telegram.utils.helpers import mention_html
 from tg_bot.modules.language import gs
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
     if not user_id:
@@ -75,15 +72,17 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
 @spamcheck
 @connection_status
 @bot_admin
-@user_mod
+@can_restrict
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def mute(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
 
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
     reply = check_user(user_id, bot, chat)
@@ -108,7 +107,7 @@ def mute(update: Update, context: CallbackContext) -> str:
         chat_permissions = ChatPermissions(can_send_messages=False)
         bot.restrict_chat_member(chat.id, user_id, chat_permissions)
         mutemsg = "{} was muted by {} in <b>{}</b>".format(
-                    mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title
+                    mention_html(member.user.id, member.user.first_name), user.first_name, message.chat.title
         )
         if reason:
             mutemsg += "\n<b>Reason</b>: <code>{reason}</code>"
@@ -142,14 +141,17 @@ def mute(update: Update, context: CallbackContext) -> str:
 
 
 @kigcallback(pattern=r"cb_unmute")
-@user_admin_no_reply
+@user_can_restrict_no_reply
 @bot_admin
 @loggable
 def button(update: Update, context: CallbackContext) -> str:
     query: Optional[CallbackQuery] = update.callback_query
     user: Optional[User] = update.effective_user
+    chat = update.effective_chat
+    admeme = chat.get_member(user.id)
     match = re.match(r"cb_unmute\((.+?)\)", query.data)
-    if match:
+    if match and admeme.status == "administrator":
+
         bot = context.bot
         user_id = match.group(1)
         chat: Optional[Chat] = update.effective_chat
@@ -185,10 +187,8 @@ def button(update: Update, context: CallbackContext) -> str:
                 pass
 
 
-            print(user_member)
             update.effective_message.edit_text(
-                # "{} was unmuted by {}.",#.format(mention_html(user_id, user_member.first_name), mention_html(user.id, user.first_name)),
-                "{} was unmuted by {}.".format(mention_html(user_id, user_member.user.first_name), mention_html(user.id, user.first_name)),
+                "{} was unmuted by {}.".format(mention_html(user_id, user_member.user.first_name), user.first_name),
                 parse_mode=ParseMode.HTML,
             )
             return (
@@ -199,20 +199,19 @@ def button(update: Update, context: CallbackContext) -> str:
             )
 
 
-    return ""
-
-
 @kigcmd(command='unmute')
 @spamcheck
 @connection_status
 @bot_admin
-@user_mod
+@can_restrict
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def unmute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
     if not user_id:
@@ -251,11 +250,14 @@ def unmute(update: Update, context: CallbackContext) -> str:
             bot.restrict_chat_member(chat.id, int(user_id), chat_permissions)
         except BadRequest:
             pass
+        unmutemsg = "{} was unmuted by {} in <b>{}</b>".format(
+            mention_html(member.user.id, member.user.first_name), user.first_name, message.chat.title
+        )
+        if reason:
+            unmutemsg += "\n<b>Reason</b>: <code>{}</code>".format(reason)
         bot.sendMessage(
         chat.id,
-        "{} was unmuted by {} in <b>{}</b>\n<b>Reason</b>: <code>{}</code>".format(
-            mention_html(member.user.id, member.user.first_name), mention_html(user.id, user.first_name), message.chat.title, reason
-        ),
+       unmutemsg,
         parse_mode=ParseMode.HTML,
         )
         return (
@@ -271,13 +273,14 @@ def unmute(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_restrict
-@user_mod
 @loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def temp_mute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
     reply = check_user(user_id, bot, chat)

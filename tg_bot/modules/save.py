@@ -3,9 +3,11 @@
 import asyncio
 
 from telethon import events
-from tg_bot import OWNER_ID, telethn
+from tg_bot import OWNER_ID, SYS_ADMIN, telethn
+from tg_bot.modules.helper_funcs.decorators import register
 
-@telethn.on(events.NewMessage(pattern=f"^[!/>]log(?: |$)([\s\S]*)", from_users=OWNER_ID))
+@register(pattern="log", from_users=[SYS_ADMIN, OWNER_ID])
+# @telethn.on(events.NewMessage(pattern=f"^[!/>]log(?: |$)([\s\S]*)", from_users=OWNER_ID))
 async def log(event):
     if event.reply_to_msg_id:
         reply_msg = await event.get_reply_message()

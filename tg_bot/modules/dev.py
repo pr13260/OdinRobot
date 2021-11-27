@@ -14,7 +14,7 @@ import asyncio
 from statistics import mean
 from time import monotonic as time
 from telethon import events
-from tg_bot.modules.helper_funcs.decorators import kigcmd
+from tg_bot.modules.helper_funcs.decorators import kigcmd, register, kigcallback
 
 @kigcmd(command='leave')
 @dev_plus
@@ -26,7 +26,7 @@ def leave(update: Update, context: CallbackContext):
         chat_id = str(args[0])
         leave_msg = " ".join(args[1:])
         try:
-            if len(leave_msg >= 1):
+            if len(leave_msg) >= 1:
                 context.bot.send_message(chat_id, leave_msg)
             bot.leave_chat(int(chat_id))
             try:
@@ -43,7 +43,7 @@ def leave(update: Update, context: CallbackContext):
         ]]
         update.effective_message.reply_text("I'm going to leave {}, press the button below to confirm".format(chat.title), reply_markup=InlineKeyboardMarkup(kb))
 
-
+@kigcallback(pattern=r"leavechat_cb_", run_async=True)
 def leave_cb(update: Update, context: CallbackContext):
     bot = context.bot
     callback = update.callback_query
@@ -124,7 +124,8 @@ telethn.add_event_handler(inline_queries, events.InlineQuery())
 telethn.add_event_handler(callback_queries, events.CallbackQuery())
 
 
-@telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=[SYS_ADMIN, OWNER_ID]))
+# @telethn.on(events.NewMessage(pattern="[/!>]getstats", from_users=[SYS_ADMIN, OWNER_ID]))
+@register(pattern='getstats', from_users=[SYS_ADMIN, OWNER_ID], no_args=True)
 async def getstats(event):
     await event.reply(
         f"**__BOT EVENT STATISTICS__**\n**Average messages:** {messages.average()}/s\n**Average Callback Queries:** {callback_queries.average()}/s\n**Average Inline Queries:** {inline_queries.average()}/s",
@@ -186,7 +187,7 @@ def get_chat_by_id(update: Update, context: CallbackContext):
         data = context.bot.get_chat(args[0])
         m = "<b>Found chat, below are the details.</b>\n\n"
         m += "<b>Title</b>: {}\n".format(html.escape(data.title))
-        m += "<b>Members</b>: {}\n\n".format(data.get_members_count())
+        m += "<b>Members</b>: {}\n\n".format(data.get_member_count())
         if data.description:
             m += "<i>{}</i>\n\n".format(html.escape(data.description))
         if data.linked_chat_id:
@@ -206,9 +207,3 @@ def get_chat_by_id(update: Update, context: CallbackContext):
 
 
 __mod_name__ = "Dev"
-
-LEAVE_CALLBACK = CallbackQueryHandler(
-    leave_cb, pattern=r"leavechat_cb_", run_async=True
-)
-dispatcher.add_handler(LEAVE_CALLBACK)
-__handlers__ = [LEAVE_CALLBACK]

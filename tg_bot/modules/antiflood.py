@@ -9,9 +9,10 @@ from telegram import (
     Bot,
     User,
     ChatPermissions,
+    ParseMode,
 )
 
-from tg_bot import WHITELIST_USERS, dispatcher, spamcheck
+from tg_bot import SUDO_USERS, WHITELIST_USERS, dispatcher, spamcheck
 from tg_bot.modules.sql.approve_sql import is_approved
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -19,14 +20,13 @@ from tg_bot.modules.helper_funcs.chat_status import (
     connection_status,
     is_user_admin,
     user_admin,
-    user_admin_no_reply,
+    user_can_restrict_no_reply,
 )
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import antiflood_sql as sql
 from telegram.error import BadRequest
 from telegram.ext import (
     Filters,
-    MessageHandler,
     CallbackContext,
 )
 from telegram.utils.helpers import mention_html, escape_markdown
@@ -43,8 +43,11 @@ from tg_bot.modules.connection import connected
 from tg_bot.modules.helper_funcs.alternate import send_message
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 FLOOD_GROUP = -5
 
+@kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups & ~Filters.update.edited_message), run_async=True, group=FLOOD_GROUP)
 @connection_status
 @loggable
 def check_flood(update, context) -> str:
@@ -73,11 +76,11 @@ def check_flood(update, context) -> str:
     try:
         getmode, getvalue = sql.get_flood_setting(chat.id)
         if getmode == 1:
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             execstrings = "Banned"
             tag = "BANNED"
         elif getmode == 2:
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             chat.unban_member(user.id)
             execstrings = "Kicked"
             tag = "KICKED"
@@ -89,7 +92,7 @@ def check_flood(update, context) -> str:
             tag = "MUTED"
         elif getmode == 4:
             bantime = extract_time(msg, getvalue)
-            chat.kick_member(user.id, until_date=bantime)
+            chat.ban_member(user.id, until_date=bantime)
             execstrings = "Banned for {}".format(getvalue)
             tag = "TBAN"
         elif getmode == 5:
@@ -129,46 +132,63 @@ def check_flood(update, context) -> str:
         )
 
 
-@user_admin_no_reply
-@bot_admin
 @kigcallback(pattern=r"unmute_flooder")
-def flood_button(update: Update, context: CallbackContext):
+@user_can_restrict_no_reply
+@bot_admin
+@loggable
+def flood_button(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     query = update.callback_query
     user = update.effective_user
+    chat = update.effective_chat
+    admeme = chat.get_member(user.id)
     match = re.match(r"unmute_flooder\((.+?)\)", query.data)
-    if match:
-        user_id = match.group(1)
-        chat = update.effective_chat.id
-        try:
-            bot.restrict_chat_member(
-                chat,
-                int(user_id),
-                permissions=ChatPermissions(
-                    can_send_messages=True,
-                    can_send_media_messages=True,
-                    can_send_other_messages=True,
-                    can_add_web_page_previews=True,
-                ),
-            )
-            update.effective_message.edit_text(
-                f"Unmuted by {mention_html(user.id, user.first_name)}.",
-                parse_mode="HTML",
-            )
-        except:
-            pass
+
+    if match and admeme.status == "administrator":
+        if (
+            admeme.can_restrict_members
+            or admeme.status != "creator"
+            or user.id in SUDO_USERS
+        ):
+            user_id = match.group(1)
+            chat = update.effective_chat.id
+            try:
+                bot.restrict_chat_member(
+                    chat,
+                    int(user_id),
+                    permissions=ChatPermissions(
+                        can_send_messages=True,
+                        can_send_media_messages=True,
+                        can_send_other_messages=True,
+                        can_add_web_page_previews=True,
+                    ),
+                )
+                update.effective_message.edit_text(
+                    f"Unmuted by {mention_html(user.id, user.first_name)}.",
+                    parse_mode="HTML",
+                )
+                logmsg = (
+                        f"<b>{html.escape(chat.title)}:</b>\n"
+                        f"#UNMUTE_FLOODER\n"
+                        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+                        f"<b>User:</b> {mention_html(user_id, html.escape(user.first_name))}\n"
+                )
+                return logmsg
+            except:
+                pass
 
 @kigcmd(command='setflood', pass_args=True, filters=Filters.chat_type.groups)
 @spamcheck
 @connection_status
-@user_admin
 @can_restrict
 @loggable
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_flood(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
     args = context.args
+    u = update.effective_user  # type: Optional[User]
+    user = res_user(u, message.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id, need_admin=True)
     if conn:
@@ -255,9 +275,10 @@ def set_flood(update, context) -> str:  # sourcery no-metrics
         )
     return ""
 
+@kigcmd(command="flood", filters=Filters.chat_type.groups) #? add flood mode here and perms
 @connection_status
-@kigcmd(command="flood", filters=Filters.chat_type.groups)
 @spamcheck
+@user_admin
 def flood(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -278,6 +299,17 @@ def flood(update, context):
         chat_name = update.effective_message.chat.title
 
     limit = sql.get_flood_limit(chat_id)
+    getmode, getvalue = sql.get_flood_setting(chat.id)
+    if getmode == 1:
+        settypeflood = "ban"
+    elif getmode == 2:
+        settypeflood = "kick"
+    elif getmode == 3:
+        settypeflood = "mute"
+    elif getmode == 4:
+        settypeflood = "tban for {}".format(getvalue)
+    elif getmode == 5:
+        settypeflood = "tmute for {}".format(getvalue)
     if limit == 0:
         if conn:
             text = msg.reply_text(
@@ -285,27 +317,30 @@ def flood(update, context):
             )
         else:
             text = msg.reply_text("I'm not enforcing any flood control here!")
+
+
     elif conn:
         text = msg.reply_text(
-            "I'm currently restricting members after {} consecutive messages in {}.".format(
-                limit, chat_name
+            "I'm currently restricting members after {} consecutive messages in {}.\nThe current flood mode is:\n  {}".format(
+                limit, chat_name, settypeflood
             )
         )
     else:
         text = msg.reply_text(
-            "I'm currently restricting members after {} consecutive messages.".format(
-                limit
+            "I'm currently restricting members after {} consecutive messages.\nThe current flood mode is:\n  {}".format(
+                limit, settypeflood
             )
         )
 
-@kigcmd(command="setfloodmode", pass_args=True, filters=Filters.chat_type.groups)
+@kigcmd(command="setfloodmode", pass_args=True, filters=Filters.chat_type.groups) # ! make loggable
 @spamcheck
-@user_admin
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_flood_mode(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
     args = context.args
+    u = update.effective_user  # type: Optional[User]
+    user = res_user(u, msg.message_id, chat)
 
     conn = connected(context.bot, update, chat, user.id, need_admin=True)
     if conn:
@@ -424,15 +459,3 @@ def get_help(chat):
 __mod_name__ = "Anti-Flood"
 
 
-FLOOD_BAN_HANDLER = MessageHandler(
-    Filters.all & ~Filters.status_update & Filters.chat_type.groups,
-    check_flood,
-    run_async=True,
-)
-
-dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
-
-
-__handlers__ = [
-    (FLOOD_BAN_HANDLER, FLOOD_GROUP),
-]

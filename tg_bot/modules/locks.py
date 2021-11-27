@@ -1,6 +1,6 @@
 import html
 import ast
-from telegram import Message, Chat, ParseMode, MessageEntity
+from telegram import Message, Chat, ParseMode, MessageEntity, message
 from telegram import TelegramError, ChatPermissions
 from telegram.error import BadRequest
 from telegram.ext import Filters
@@ -23,6 +23,8 @@ from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.connection import connected
 
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
+
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 ad = AlphabetDetector()
 
@@ -150,13 +152,15 @@ def locktypes(update, context):
 
 @kigcmd(command='lock', pass_args=True)
 @spamcheck
-@user_mod
 @loggable
 @typing_action
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def lock(update, context) -> str:  # sourcery no-metrics
     args = context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
+    message = update.effective_message
+    user = res_user(u, message.message_id, chat)
 
     if (
         can_delete(chat, context.bot.id)
@@ -258,14 +262,15 @@ def lock(update, context) -> str:  # sourcery no-metrics
 
 @kigcmd(command='unlock', pass_args=True)
 @spamcheck
-@user_mod
 @loggable
 @typing_action
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
 def unlock(update, context) -> str:  # sourcery no-metrics
     args = context.args
     chat = update.effective_chat
-    user = update.effective_user
+    u = update.effective_user
     message = update.effective_message
+    user = res_user(u, message.message_id, chat)
     if is_user_mod(chat, message.from_user.id):
         if len(args) >= 1:
             ltype = args[0].lower()
@@ -437,7 +442,7 @@ def del_lockables(update, context):  # sourcery no-metrics
                             )
                             return
 
-                        chat.kick_member(new_mem.id)
+                        chat.ban_member(new_mem.id)
                         send_message(
                             update.effective_message,
                             "Only admins are allowed to add bots in this chat! Get outta here.",

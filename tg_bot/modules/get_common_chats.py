@@ -10,8 +10,9 @@ from telegram import Update
 from telegram.error import BadRequest, RetryAfter, Unauthorized
 from telegram.ext import CallbackContext, CommandHandler, Filters
 from telegram.ext.dispatcher import run_async
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
-
+@kigcmd(command="getchats", run_async=True)
 @dev_plus
 def get_user_common_chats(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -46,10 +47,3 @@ def get_user_common_chats(update: Update, context: CallbackContext):
         with open("common_chats.txt", "rb") as f:
             msg.reply_document(f)
         os.remove("common_chats.txt")
-
-
-COMMON_CHATS_HANDLER = CommandHandler(
-    "getchats", get_user_common_chats, run_async=True
-)
-
-dispatcher.add_handler(COMMON_CHATS_HANDLER)

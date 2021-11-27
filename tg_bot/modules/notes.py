@@ -28,6 +28,8 @@ from telegram.ext import (
 
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 
+from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+
 JOIN_LOGGER = None
 FILE_MATCHER = re.compile(r"^###file_id(!photo)?###:(.*?)(?:\s|$)")
 STICKER_MATCHER = re.compile(r"^###sticker(!photo)?###:")
@@ -237,7 +239,7 @@ def cmd_get(update: Update, context: CallbackContext):
 
 
 
-@kigmsg((Filters.regex(r"^#[^\s]+")), group=-14)
+@kigmsg((Filters.regex(r"^#[^\s]+")), group=-14, friendly='get')
 @spamcheck
 @connection_status
 def hash_get(update: Update, context: CallbackContext):
@@ -248,7 +250,7 @@ def hash_get(update: Update, context: CallbackContext):
 
 
 
-@kigmsg((Filters.regex(r"^[/!>]\d+$")), group=-16)
+@kigmsg((Filters.regex(r"^[/!>]\d+$")), group=-16, friendly='get')
 @spamcheck
 @connection_status
 def slash_get(update: Update, context: CallbackContext):
@@ -265,11 +267,17 @@ def slash_get(update: Update, context: CallbackContext):
 
 @kigcmd(command='save')
 @spamcheck
-@user_mod
 @connection_status
-def save(update: Update, context: CallbackContext):
+@loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+def save(update: Update, context: CallbackContext) -> str:
     chat_id = update.effective_chat.id
     msg = update.effective_message  # type: Optional[Message]
+    chat = update.effective_chat
+    u = update.effective_user
+    message = update.effective_message
+    user = res_user(u, message.message_id, chat)
+
     m = msg.text.split(' ', 1)
     if len(m) == 1:
         msg.reply_text("Provide something to save.")
@@ -285,6 +293,13 @@ def save(update: Update, context: CallbackContext):
 
     sql.add_note_to_db(
         chat_id, note_name, text, data_type, buttons=buttons, file=content
+    ) 
+
+    logmsg = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#SAVENOTE\n"
+        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+        f"<b>Note:</b> {note_name}"
     )
 
     msg.reply_text(
@@ -307,24 +322,41 @@ def save(update: Update, context: CallbackContext):
                 "like I usually would - do you mind forwarding it and "
                 "then saving that new message? Thanks!"
             )
-        return
+    return logmsg
 
 @kigcmd(command='clear')
 @spamcheck
-@user_mod
 @connection_status
-def clear(update: Update, context: CallbackContext):
+@loggable
+@u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+def clear(update: Update, context: CallbackContext) -> str:
     args = context.args
-    chat_id = update.effective_chat.id
+    chat = update.effective_chat
+    chat_id = chat.id
+    u = update.effective_user
+
+    message = update.effective_message
+
+    user = res_user(u, message.message_id, chat)
+
     if len(args) >= 1:
         notename = args[0].lower()
 
         if sql.rm_note(chat_id, notename):
             update.effective_message.reply_text("Successfully removed note.")
+            logmsg = (
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#CLEARNOTE\n"
+                    f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+                    f"<b>Note:</b> {notename}"
+            )
+            return logmsg
         else:
             update.effective_message.reply_text("That's not a note in my database!")
+            return ''
     else:
         update.effective_message.reply_text("Provide a notename.")
+        return ''
 
 
 @kigcmd(command='removeallnotes')
