@@ -64,7 +64,6 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 @loggable
 def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
-    bot = context.bot
     chat = update.effective_chat  # type: Optional[Chat]
     u = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -73,6 +72,25 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     # user = u
     log_message = ""
     reason = ""
+    bot = context.bot
+    log_message = ""
+    reason = ""
+    if message.reply_to_message and message.reply_to_message.sender_chat:
+        r = bot._request.post(bot.base_url + '/banChatSenderChat', {
+            'sender_chat_id': message.reply_to_message.sender_chat.id,
+            'chat_id': chat.id
+        },
+                              )
+        if r:
+            message.reply_text("Channel {} was banned successfully from {}".format(
+                html.escape(message.reply_to_message.sender_chat.title),
+                html.escape(chat.title)
+            ),
+                parse_mode="html"
+            )
+        else:
+            message.reply_text("Failed to ban channel")
+        return
 
     user_id, reason = extract_user_and_text(message, args)
 
@@ -497,11 +515,12 @@ def selfunban(context: CallbackContext, update: Update) -> str:
 
     return log
 
+
 from tg_bot.modules.language import gs
+
 
 def get_help(chat):
     return gs(chat, "bans_help")
-
 
 
 __mod_name__ = "Bans"
