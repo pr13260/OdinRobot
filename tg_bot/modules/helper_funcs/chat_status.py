@@ -121,8 +121,8 @@ def is_user_ban_protected(chat: Chat, user_id: int, member: ChatMember = None) -
         or user_id in DEV_USERS
         or user_id in WHITELIST_USERS
         or chat.all_members_are_administrators
-        or user_id in [777000, 1087968824]
-    ):  # Count telegram and Group Anonymous as admin
+        or user_id is 1087968824
+    ):  # Count Group Anonymous as admin
         return True
 
     if not member:

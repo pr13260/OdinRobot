@@ -77,11 +77,54 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     log_message = ""
     reason = ""
     if message.reply_to_message and message.reply_to_message.sender_chat:
+
+        if message.text.startswith(('/s','!s','>s')):
+            silent = True
+            if not can_delete(chat, context.bot.id):
+                message.reply_text("I dont't have permission to delete messages here!")
+                return ""
+        else:
+            silent = False
+        if message.text.startswith(('/d','!d','>d')):
+            delban = True
+            if not can_delete(chat, context.bot.id):
+                message.reply_text("I dont't have permission to delete messages here!")
+                return ""
+            if not u_can_delete(chat, user.id):
+                message.reply_text("You dont't have permission to delete messages here!")
+                return ""
+        else:
+            delban = False
+        if message.text.startswith(('/ds','!ds','>ds')):
+            delsilent = True
+            if not can_delete(chat, context.bot.id):
+                message.reply_text("I dont't have permission to delete messages here!")
+                return ""
+            if not u_can_delete(chat, user.id):
+                message.reply_text("You dont't have permission to delete messages here!")
+                return ""
+
         r = bot._request.post(bot.base_url + '/banChatSenderChat', {
             'sender_chat_id': message.reply_to_message.sender_chat.id,
             'chat_id': chat.id
         },
                               )
+        logmsg  = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#BANNED\n"
+        f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+        f"<b>Channel:</b> {message.reply_to_message.sender_chat.title}"
+        f"<b>Channel ID:</b> {message.reply_to_message.sender_chat.id}"
+        )
+        if silent:
+            if delsilent and message.reply_to_message:
+                message.reply_to_message.delete() 
+            message.delete()
+            return logmsg
+        if delban:
+            if message.reply_to_message:
+                message.reply_to_message.delete()
+        context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         if r:
             message.reply_text("Channel {} was banned successfully from {}".format(
                 html.escape(message.reply_to_message.sender_chat.title),
@@ -89,9 +132,10 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
             ),
                 parse_mode="html"
             )
+            return logmsg
         else:
             message.reply_text("Failed to ban channel")
-        return
+        return ""
 
     user_id, reason = extract_user_and_text(message, args)
 
@@ -162,7 +206,6 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
         if delban:
             if message.reply_to_message:
                 message.reply_to_message.delete()
-            return log
         context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         if reason:
             context.bot.sendMessage(
@@ -416,6 +459,8 @@ def unban(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     log_message = ""
     bot, args = context.bot, context.args
+    user = res_user(u, message.message_id, chat)
+
     if message.reply_to_message and message.reply_to_message.sender_chat:
         r = bot._request.post(bot.base_url + '/unbanChatSenderChat', {
             'sender_chat_id': message.reply_to_message.sender_chat.id,
@@ -429,10 +474,18 @@ def unban(update: Update, context: CallbackContext) -> str:
             ),
                 parse_mode="html"
             )
+            logmsg  = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"#UNBANNED\n"
+        f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
+        f"<b>Channel:</b> {message.reply_to_message.sender_chat.title}"
+        f"<b>Channel ID:</b> {message.reply_to_message.sender_chat.id}"
+        )
+            return logmsg
         else:
-            message.reply_text("Failed to unban channel")
-        return
-    user = res_user(u, message.message_id, chat)
+            message.reply_text("Failed to ban channel")
+        return ""
+    
     user_id, reason = extract_user_and_text(message, args)
     if not user_id:
         message.reply_text("I doubt that's a user.")
