@@ -31,8 +31,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 @connection_status
 @bot_admin
 @can_promote
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def fullpromote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -117,8 +117,8 @@ def fullpromote(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_promote
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def promote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -200,8 +200,8 @@ def promote(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_promote
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def demote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -291,8 +291,8 @@ def refresh_admin(update, context):
 @connection_status
 @bot_admin
 @can_promote
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def set_title(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -379,8 +379,8 @@ def set_title(update: Update, context: CallbackContext) -> str:
 @spamcheck
 @bot_admin
 @connection_status
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_INVITE_USERS)
+@loggable
 def invite(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat

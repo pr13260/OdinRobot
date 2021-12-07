@@ -1,7 +1,7 @@
 import html
 
 
-from telegram import Update
+from telegram import Update, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 from telegram.ext.filters import Filters
@@ -33,8 +33,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 @spamcheck
 @bot_admin
 @can_pin
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_PIN_MESSAGES)
+@loggable
 def pin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -67,7 +67,7 @@ def pin(update: Update, context: CallbackContext) -> str:
             else:
                 pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], pinn)
 
-            dispatcher.bot.sendMessage(chat.id, "I have pinned [this message]({})".format(pinmsg), parse_mode="markdown", disable_web_page_preview=True)
+            dispatcher.bot.sendMessage(chat.id, "I have pinned [this message]({})".format(pinmsg), parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 dispatcher.bot.sendMessage(chat.id, f"I couldn't pin the message from some reason.")
@@ -101,7 +101,7 @@ def unpin(update: Update, context: CallbackContext) -> str:
         print("not rp")
         try:
             bot.unpinChatMessage(chat.id)
-            dispatcher.bot.sendMessage(chat.id, "Unpinned the last pinned message successfully!", parse_mode="markdown")
+            dispatcher.bot.sendMessage(chat.id, "Unpinned the last pinned message successfully!", parse_mode=ParseMode.MARKDOWN)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 dispatcher.bot.sendMessage(chat.id, f"I couldn't unpin the message from some reason.")
@@ -127,7 +127,7 @@ def unpin(update: Update, context: CallbackContext) -> str:
             else:
                 pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], unpinthis)
 
-            dispatcher.bot.sendMessage(chat.id, "I have unpinned [this message]({})".format(pinmsg), parse_mode="markdown")
+            dispatcher.bot.sendMessage(chat.id, "I have unpinned [this message]({})".format(pinmsg), parse_mode=ParseMode.MARKDOWN)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 dispatcher.bot.sendMessage(chat.id, f"I couldn't unpin the message from some reason.")
@@ -262,13 +262,13 @@ def permapin(update, context):
         pass
     if str(data_type) in ('Types.BUTTON_TEXT', 'Types.TEXT'):
         try:
-            sendingmsg = context.bot.send_message(chat_id, text, parse_mode="markdown",
+            sendingmsg = context.bot.send_message(chat_id, text, parse_mode=ParseMode.MARKDOWN,
                                  disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
         except BadRequest:
-            context.bot.send_message(chat_id, "Incorrect markdown text!\nIf you don't know what markdown is, please send `/markdownhelp` in PM.", parse_mode="markdown")
+            context.bot.send_message(chat_id, "Incorrect markdown text!\nIf you don't know what markdown is, please send `/markdownhelp` in PM.", parse_mode=ParseMode.MARKDOWN)
             return
     else:
-        sendingmsg = ENUM_FUNC_MAP[str(data_type)](chat_id, content, caption=text, parse_mode="markdown", disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
+        sendingmsg = ENUM_FUNC_MAP[str(data_type)](chat_id, content, caption=text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(tombol))
     if sendingmsg is None:
         context.bot.send_message(chat_id, "Specify what to pin!")
         
@@ -282,8 +282,8 @@ def permapin(update, context):
 @kigcmd(command="cleanlinked", pass_args=True, filters=Filters.chat_type.groups, run_async=True)
 @spamcheck
 @can_pin
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PIN_MESSAGES)
+@loggable
 def permanent_pin_set(update, context) -> str:
     u = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
@@ -306,7 +306,7 @@ def permanent_pin_set(update, context) -> str:
                     old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
                 text_maker += "\nTo disable cleanlinked send: `/cleanlinked off`"
                 text_maker += "\n\n[The permanent pinned message is here]({})".format(old_pin)
-            dispatcher.bot.send_message(chat_id, text_maker, parse_mode="markdown")
+            dispatcher.bot.send_message(chat_id, text_maker, parse_mode=ParseMode.MARKDOWN)
             return ""
         prev_message = args[0]
         if prev_message == "off":
@@ -342,7 +342,7 @@ def permanent_pin_set(update, context) -> str:
                     old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
                 text_maker += "\nTo disable cleanlinked send: `/cleanlinked off`"
                 text_maker += "\n\n[The permanent pinned message is here]({})".format(old_pin)
-            dispatcher.bot.send_message(chat_id, text_maker, parse_mode="markdown")
+            dispatcher.bot.send_message(chat_id, text_maker, parse_mode=ParseMode.MARKDOWN)
             return ""
 
     is_group = chat.type != "private" and chat.type != "channel"
@@ -376,7 +376,7 @@ def permanent_pin(update, context):
             else:
                 old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
                 print(old_pin)
-            dispatcher.bot.send_message(chat.id, "*Cleanlinked error:*\nI can't pin messages here!\nMake sure I'm an admin and can pin messages.\n\nClean linked has been disabled, [The old permanent pinned message is here]({})".format(old_pin), parse_mode="markdown")
+            dispatcher.bot.send_message(chat.id, "*Cleanlinked error:*\nI can't pin messages here!\nMake sure I'm an admin and can pin messages.\n\nClean linked has been disabled, [The old permanent pinned message is here]({})".format(old_pin), parse_mode=ParseMode.MARKDOWN)
             return
 
         if to_del:

@@ -277,8 +277,8 @@ def unblacklist(update, context):
 @kigcmd(command=["blacklistmode", "blocklistmode"], pass_args=True)
 @spamcheck
 @typing_action
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def blacklist_mode(update, context):  # sourcery no-metrics
     chat = update.effective_chat
     u = update.effective_user

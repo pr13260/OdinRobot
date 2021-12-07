@@ -181,8 +181,8 @@ def flood_button(update: Update, context: CallbackContext) -> str:
 @spamcheck
 @connection_status
 @can_restrict
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def set_flood(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]

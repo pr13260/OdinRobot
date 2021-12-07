@@ -1,7 +1,7 @@
 from enum import Enum
 import functools
 
-from telegram import Update
+from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
@@ -48,7 +48,7 @@ def user_admin(ustat: UserClass, permission: AdminPerms):
                 if getattr(mem, permission.value) is True or mem.status == "creator" or user_id in ustat.value:
                     return func(update, context, *args, **kwargs)
                 else:
-                    return message.reply_text(f"You lack the permission: `{permission.name}`")
+                    return message.reply_text(f"You lack the permission: `{permission.name}`!", parse_mode=ParseMode.MARKDOWN)
 
         return awrapper
     return wrapper
@@ -76,7 +76,7 @@ def anon_callback_handler1(upd: Update, _: CallbackContext):
                 anon_users.update({(chat_id, cb[0][0].effective_message.message_id): callback.from_user.id})
             return cb[1](cb[0][0], cb[0][1])
     else:
-        callback.answer("This isn't for ya")
+        callback.answer(f"You lack the permission: {perm}!")
 
 def resolve_user(user, message_id, chat):
     if user.id == 1087968824:

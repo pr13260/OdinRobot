@@ -15,8 +15,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 
 @kigcmd(command='approve', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def approve(update, context) -> str:
     message = update.effective_message
     chat_title = message.chat.title
@@ -60,8 +60,8 @@ def approve(update, context) -> str:
 
 @kigcmd(command='unapprove', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def disapprove(update, context) -> str:
     message = update.effective_message
     chat_title = message.chat.title

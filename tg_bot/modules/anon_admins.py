@@ -27,8 +27,8 @@ from ..modules.helper_funcs.anonymous import resolve_user, user_admin as u_admin
 @connection_status
 @bot_admin
 @can_promote_anon
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def promoteanon(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -125,8 +125,8 @@ def promoteanon(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_promote_anon
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_PROMOTE_MEMBERS)
+@loggable
 def demoteanon(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args

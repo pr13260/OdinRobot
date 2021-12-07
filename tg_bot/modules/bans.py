@@ -14,7 +14,7 @@ from tg_bot import (
     OWNER_ID,
     WHITELIST_USERS,
     spamcheck,
-    log
+    dispatcher,
 )
 
 from tg_bot.modules.helper_funcs.chat_status import (
@@ -61,8 +61,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 @connection_status
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot = context.bot
     chat = update.effective_chat  # type: Optional[Chat]
@@ -186,8 +186,8 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
 @spamcheck
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def temp_ban(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     u = update.effective_user
@@ -286,8 +286,8 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def kick(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     u = update.effective_user
@@ -388,8 +388,8 @@ def kickme(update: Update, context: CallbackContext) -> str:
 @spamcheck
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def unban(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     u = update.effective_user

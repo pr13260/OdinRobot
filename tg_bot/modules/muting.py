@@ -73,8 +73,8 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
 @connection_status
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def mute(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -204,8 +204,8 @@ def button(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def unmute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args
     chat = update.effective_chat
@@ -273,8 +273,8 @@ def unmute(update: Update, context: CallbackContext) -> str:
 @connection_status
 @bot_admin
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def temp_mute(update: Update, context: CallbackContext) -> str:
     bot, args = context.bot, context.args
     chat = update.effective_chat

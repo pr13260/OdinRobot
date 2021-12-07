@@ -4,8 +4,8 @@ from time import sleep
 import tg_bot.modules.sql.users_sql as sql
 from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher, SYS_ADMIN, spamcheck
 from tg_bot.modules.helper_funcs.chat_status import dev_plus, sudo_plus
-from tg_bot.modules.sql.users_sql import get_all_users
-from telegram import TelegramError, Update
+from tg_bot.modules.sql.users_sql import get_all_users, update_user
+from telegram import TelegramError, Update, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Filters
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
@@ -68,7 +68,7 @@ def broadcast(update: Update, context: CallbackContext):
                     context.bot.sendMessage(
                         int(chat.chat_id),
                         to_send[1],
-                        parse_mode="MARKDOWN",
+                        parse_mode=ParseMode.MARKDOWN,
                         disable_web_page_preview=True,
                     )
                     sleep(0.1)
@@ -80,7 +80,7 @@ def broadcast(update: Update, context: CallbackContext):
                     context.bot.sendMessage(
                         int(user.user_id),
                         to_send[1],
-                        parse_mode="MARKDOWN",
+                        parse_mode=ParseMode.MARKDOWN,
                         disable_web_page_preview=True,
                     )
                     sleep(0.1)
@@ -95,10 +95,10 @@ def log_user(update: Update, context: CallbackContext):
     chat = update.effective_chat
     msg = update.effective_message
 
-    sql.update_user(msg.from_user.id, msg.from_user.username, chat.id, chat.title)
+    update_user(msg.from_user.id, msg.from_user.username, chat.id, chat.title)
 
     if msg.reply_to_message:
-        sql.update_user(
+        update_user(
             msg.reply_to_message.from_user.id,
             msg.reply_to_message.from_user.username,
             chat.id,
@@ -106,7 +106,14 @@ def log_user(update: Update, context: CallbackContext):
         )
 
     if msg.forward_from:
-        sql.update_user(msg.forward_from.id, msg.forward_from.username)
+        update_user(msg.forward_from.id, msg.forward_from.username)
+    
+    if msg.entities:
+        for x in msg.entities:
+            try:
+                update_user(x.user.id, x.user.username)
+            except AttributeError:
+                pass
 
 @kigcmd(command='chatlist')
 @spamcheck

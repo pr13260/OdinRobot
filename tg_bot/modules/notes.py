@@ -268,8 +268,8 @@ def slash_get(update: Update, context: CallbackContext):
 @kigcmd(command='save')
 @spamcheck
 @connection_status
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def save(update: Update, context: CallbackContext) -> str:
     chat_id = update.effective_chat.id
     msg = update.effective_message  # type: Optional[Message]
@@ -327,8 +327,8 @@ def save(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='clear')
 @spamcheck
 @connection_status
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def clear(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat

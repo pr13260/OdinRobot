@@ -403,8 +403,8 @@ def button(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='warn', filters=Filters.chat_type.groups)
 @spamcheck
 @can_restrict
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def warn_user(update: Update, context: CallbackContext) -> str:
     args = context.args
     message: Optional[Message] = update.effective_message
@@ -508,8 +508,8 @@ def warn_user(update: Update, context: CallbackContext) -> str:
 @kigcmd(command=['restwarn', 'resetwarns'], filters=Filters.chat_type.groups)
 @spamcheck
 @bot_admin
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_RESTRICT_MEMBERS)
+@loggable
 def reset_warns(update: Update, context: CallbackContext) -> str:
     args = context.args
     message: Optional[Message] = update.effective_message
@@ -690,8 +690,8 @@ def reply_filter(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='warnlimit', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def set_warn_limit(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat: Optional[Chat] = update.effective_chat

@@ -18,8 +18,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 
 @kigcmd(command="announce", pass_args=True)
 @spamcheck
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def announcestat(update: Update, context: CallbackContext) -> str:
     args = context.args
     if len(args) > 0:
@@ -63,3 +63,8 @@ def announcestat(update: Update, context: CallbackContext) -> str:
             "When False, admin actions in your group will not be announced.".format(sql.does_chat_log(update.effective_chat.id))
         )
         return ''
+
+
+def __migrate__(old_chat_id, new_chat_id):
+    sql.migrate_chat(old_chat_id, new_chat_id)
+

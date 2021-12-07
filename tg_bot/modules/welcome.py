@@ -805,8 +805,8 @@ def goodbye(update: Update, context: CallbackContext):
 
 @kigcmd(command='setwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def set_welcome(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     user = update.effective_user
@@ -832,8 +832,8 @@ def set_welcome(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='resetwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def reset_welcome(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     u = update.effective_user
@@ -854,8 +854,8 @@ def reset_welcome(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='setgoodbye', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def set_goodbye(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     u = update.effective_user
@@ -878,8 +878,8 @@ def set_goodbye(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='resetgoodbye', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def reset_goodbye(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     u = update.effective_user
@@ -900,8 +900,8 @@ def reset_goodbye(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='welcomemute', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def welcomemute(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat
@@ -969,8 +969,8 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
 
 @kigcmd(command='cleanwelcome', filters=Filters.chat_type.groups)
 @spamcheck
-@loggable
 @u_admin(UserClass.MOD, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def clean_welcome(update: Update, context: CallbackContext) -> str:
     args = context.args
     chat = update.effective_chat

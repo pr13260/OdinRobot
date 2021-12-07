@@ -101,8 +101,8 @@ def list_handlers(update, context):
 @kigcmd(command='filter', run_async=False)
 @spamcheck
 @typing_action
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def filters(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat
     u = update.effective_user
@@ -236,8 +236,8 @@ def filters(update, context) -> str:  # sourcery no-metrics
 @kigcmd(command='stop', run_async=False)
 @spamcheck
 @typing_action
-@loggable
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
+@loggable
 def stop_filter(update, context) -> str:
     chat = update.effective_chat
     u = update.effective_user

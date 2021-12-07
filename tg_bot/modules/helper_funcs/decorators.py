@@ -1,11 +1,13 @@
+from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
+from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 from tg_bot.modules.disable import DisableAbleCommandHandler, DisableAbleMessageHandler
 from telegram.ext import CallbackQueryHandler, InlineQueryHandler
 from telegram.ext.filters import BaseFilter
-from tg_bot import dispatcher as d, log, telethn
+from tg_bot import dispatcher as d, log, telethn, OWNER_ID
 from typing import Optional, Union, List
 from tg_bot.modules.helper_funcs.handlers import CustomCommandHandler as CommandHandler, CustomMessageHandler as MessageHandler, SpamChecker
 from telethon import events
-
+import traceback, html, requests
 class KigyoTelegramHandler:
     def __init__(self, d):
         self._dispatcher = d
@@ -135,8 +137,51 @@ def register(**args):
                 raise events.StopPropagation
             except KeyboardInterrupt:
                 pass
-            else:
-                pass
+            except BaseException:
+                e = html.escape(f"{check.error}")
+
+                tb_list = traceback.format_exception(
+                    None, check.error, check.error.__traceback__
+                )
+                tb = "".join(tb_list)
+                pretty_message = (
+                    "An exception was raised while handling an update\n"
+                    "User: {}\n"
+                    "Chat: {} {}\n"
+                    "Callback data: {}\n"
+                    "Message: {}\n\n"
+                    "Full Traceback: {}"
+                ).format(
+                    check.from_id or "None",
+                    check.chat.title or "",
+                    check.chat_id or "",
+                    check.callback_query or "None",
+                    check.text.text or "No message",
+                    tb,
+                )
+
+                key = requests.post(
+                    "https://nekobin.com/api/documents", json={"content": pretty_message}
+                ).json()
+                if not key.get("result", {}).get("key"):
+                    with open("error.txt", "w+") as f:
+                        f.write(pretty_message)
+                    check.client.send_media(
+                        OWNER_ID,
+                        open("error.txt", "rb"),
+                        caption=f"#{check.error.identifier}\n<b>Your sugar mommy got an error for you, you cute guy:</b>\n<code>{e}</code>",
+                        parse_mode="html",
+                    )
+                    return
+                key = key.get("result").get("key")
+                url = f"https://nekobin.com/{key}.py"
+                check.client.send_message(
+                    OWNER_ID,
+                    text=f"#{check.error.identifier}\n<b>Your sugar mommy got an error for you, you cute guy:</b>\n<code>{e}</code>",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Nekobin", url=url)]]),
+                    parse_mode="html",
+                )
+                # log.error(pretty_message)
 
         if not disable_edited:
             telethn.add_event_handler(wrapper, events.MessageEdited(**args))
