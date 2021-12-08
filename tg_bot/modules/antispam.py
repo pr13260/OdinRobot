@@ -497,7 +497,7 @@ def enforce_gban(update: Update, context: CallbackContext):
             chat = update.effective_chat
             msg = update.effective_message
 
-            if user and not is_user_admin(chat, user.id):
+            if user and not is_user_admin(update, user.id):
                 check_and_ban(update, user.id)
                 welcome_fed(update, chat, user.id)
                 return
@@ -510,7 +510,7 @@ def enforce_gban(update: Update, context: CallbackContext):
 
             if msg.reply_to_message:
                 user = msg.reply_to_message.from_user
-                if user and not is_user_admin(chat, user.id):
+                if user and not is_user_admin(update, user.id):
                     check_and_ban(update, user.id, should_message=False)
                     welcome_fed(update, chat, user.id)
     except Forbidden as e:

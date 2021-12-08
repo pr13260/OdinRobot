@@ -271,7 +271,7 @@ def unlock(update, context) -> str:  # sourcery no-metrics
     u = update.effective_user
     message = update.effective_message
     user = res_user(u, message.message_id, chat)
-    if is_user_mod(chat, message.from_user.id):
+    if is_user_mod(update, message.from_user.id):
         if len(args) >= 1:
             ltype = args[0].lower()
             if ltype in LOCK_TYPES:

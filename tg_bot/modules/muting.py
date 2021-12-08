@@ -35,13 +35,13 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
 from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
-def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
+
+def check_user(user_id: int, bot: Bot, update: Update) -> Optional[str]:
     if not user_id:
         return "You don't seem to be referring to a user or the ID specified is incorrect.."
 
-
     try:
-        member = chat.get_member(user_id)
+        member = update.effective_chat.get_member(user_id)
     except BadRequest as excp:
         if excp.message == 'User not found':
             return "I can't seem to find this user"
@@ -50,7 +50,7 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
     if user_id == bot.id:
         return "I'm not gonna MUTE myself, How high are you?"
 
-    if is_user_ban_protected(chat, user_id, member) and user_id not in DEV_USERS:
+    if is_user_ban_protected(update, user_id, member) and user_id not in DEV_USERS:
         if user_id == OWNER_ID:
             return "I'd never ban my owner."
         elif user_id in DEV_USERS:
@@ -67,6 +67,7 @@ def check_user(user_id: int, bot: Bot, chat: Chat) -> Optional[str]:
             return "Can't. Find someone else to mute but not this one."
 
     return None
+
 
 @kigcmd(command='mute')
 @spamcheck
@@ -85,7 +86,7 @@ def mute(update: Update, context: CallbackContext) -> str:
     user = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
-    reply = check_user(user_id, bot, chat)
+    reply = check_user(user_id, bot, update)
 
     if reply:
         message.reply_text(reply)
@@ -233,7 +234,7 @@ def unmute(update: Update, context: CallbackContext) -> str:
             and member.can_send_media_messages
             and member.can_send_other_messages
             and member.can_add_web_page_previews
-        ):
+    ):
         message.reply_text("This user already has the right to speak.")
     else:
         chat_permissions = ChatPermissions(
@@ -268,6 +269,7 @@ def unmute(update: Update, context: CallbackContext) -> str:
         )
     return ""
 
+
 @kigcmd(command=['tmute', 'tempmute'])
 @spamcheck
 @connection_status
@@ -283,7 +285,7 @@ def temp_mute(update: Update, context: CallbackContext) -> str:
     user = res_user(u, message.message_id, chat)
 
     user_id, reason = extract_user_and_text(message, args)
-    reply = check_user(user_id, bot, chat)
+    reply = check_user(user_id, bot, update)
 
     if reply:
         message.reply_text(reply)
@@ -347,7 +349,9 @@ def temp_mute(update: Update, context: CallbackContext) -> str:
 
     return ""
 
+
 def get_help(chat):
     return gs(chat, "muting_help")
+
 
 __mod_name__ = "Muting"

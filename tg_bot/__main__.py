@@ -4,7 +4,6 @@ Dank-del
 2020-12-29
 '''
 
-
 import importlib
 import re
 from typing import Optional
@@ -111,7 +110,6 @@ def send_help(chat_id, text, keyboard=None):
     )
 
 
-
 @kigcmd(command='text')
 def test(update: Update, context: CallbackContext):
     '''#TODO
@@ -125,9 +123,10 @@ def test(update: Update, context: CallbackContext):
     update.effective_message.reply_text("*text*")
     print(update.effective_message)
 
+
 @kigcallback(pattern=r'start_back')
 @kigcmd(command='start', pass_args=True)
-def start(update: Update, context: CallbackContext):    # sourcery no-metrics
+def start(update: Update, context: CallbackContext):  # sourcery no-metrics
     '''#TODO
 
     Params:
@@ -218,7 +217,7 @@ def start(update: Update, context: CallbackContext):    # sourcery no-metrics
                 match = re.match("stngs_(.*)", args[0].lower())
                 chat = dispatcher.bot.getChat(match.group(1))
 
-                if is_user_admin(chat, update.effective_user.id):
+                if is_user_admin(update, update.effective_user.id):
                     send_settings(match.group(1), update.effective_user.id, False)
                 else:
                     send_settings(match.group(1), update.effective_user.id, True)
@@ -277,9 +276,9 @@ def start(update: Update, context: CallbackContext):    # sourcery no-metrics
         update.effective_message.reply_text(f"Hey, I'm {bot_firstname}.", parse_mode=ParseMode.MARKDOWN)
     
     if hasattr(update, 'callback_query'):
-        query = update.callback_query 
+        query = update.callback_query
         if hasattr(query, 'id'):
-           context.bot.answer_callback_query(query.id)
+            context.bot.answer_callback_query(query.id)
 
 
 # for test purposes
@@ -312,6 +311,7 @@ def error_callback(update, context):
         pass
         # handle all other telegram related errors
 
+
 @kigcallback(pattern=r'help_')
 def help_button(update, context):
     '''#TODO
@@ -340,10 +340,10 @@ def help_button(update, context):
                 help_text = help_list
                 help_buttons = []
             text = (
-                "Here is the help for the *{}* module:\n".format(
-                    HELPABLE[module].__mod_name__
-                )
-                + help_text
+                    "Here is the help for the *{}* module:\n".format(
+                        HELPABLE[module].__mod_name__
+                    )
+                    + help_text
             )
             help_buttons.append(
                 [
@@ -410,6 +410,7 @@ def help_button(update, context):
 
     except BadRequest:
         pass
+
 
 @kigcmd(command='help')
 def get_help(update, context):
@@ -537,6 +538,7 @@ def send_settings(chat_id, user_id, user=False):
             parse_mode=ParseMode.MARKDOWN,
         )
 
+
 @kigcallback(pattern=r"stngs_")
 def settings_button(update: Update, context: CallbackContext):
     '''#TODO
@@ -609,7 +611,7 @@ def settings_button(update: Update, context: CallbackContext):
             chat = bot.get_chat(chat_id)
             query.message.reply_text(
                 text="Hi there! There are quite a few settings for {} - go ahead and pick what "
-                "you're interested in.".format(escape_markdown(chat.title)),
+                     "you're interested in.".format(escape_markdown(chat.title)),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(
                     paginate_modules(0, CHAT_SETTINGS, "stngs", chat=chat_id)
@@ -626,6 +628,7 @@ def settings_button(update: Update, context: CallbackContext):
             "Message can't be deleted",
         ]:
             log.exception('Exception in settings buttons. %s', str(query.data))
+
 
 @kigcmd(command='settings')
 def get_settings(update: Update, context: CallbackContext):
@@ -644,7 +647,7 @@ def get_settings(update: Update, context: CallbackContext):
     if chat.type == chat.PRIVATE:
         send_settings(chat.id, user.id, True)
 
-    elif is_user_admin(chat, user.id):
+    elif is_user_admin(update, user.id):
         text = "Click here to get this chat's settings, as well as yours."
         msg.reply_text(
             text,
@@ -664,6 +667,7 @@ def get_settings(update: Update, context: CallbackContext):
     else:
         text = "Click here to check your settings."
 
+
 @kigcmd(command='donate')
 def donate(update: Update, context: CallbackContext):
     '''#TODO
@@ -679,6 +683,7 @@ def donate(update: Update, context: CallbackContext):
 def support(update: Update, context: CallbackContext):
     supporttext = "Join the support chat\n@TheBotsSupport\n\nGet the latest news\n@LukeBots"
     update.effective_message.reply_text(supporttext)
+
 
 
 @kigmsg((Filters.status_update.migrate))
@@ -736,6 +741,7 @@ def main():
     else:
         telethn.run_until_disconnected()
     updater.idle()
+
 
 if __name__ == "__main__":
     log.info(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))

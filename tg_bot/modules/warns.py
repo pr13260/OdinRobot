@@ -81,8 +81,9 @@ def warn_immune(message, chat, uid, warner):
 
 # Not async
 def warn(
-    user: User, chat: Chat, reason: str, message: Message, warner: User = None
-) -> str:  # sourcery no-metrics
+    user: User, update: Update, reason: str, message: Message, warner: User = None
+) -> Optional[str]:  # sourcery no-metrics
+    chat = update.effective_chat
     if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
         return
 
@@ -440,14 +441,14 @@ def warn_user(update: Update, context: CallbackContext) -> str:
             ):
                 return swarn(
                     message.reply_to_message.from_user,
-                    chat,
+                    update,
                     reason,
                     message,
                     dels,
                     warner,
                 )
             else:
-                return swarn(chat.get_member(user_id).user, chat, reason, message, dels, warner)
+                return swarn(chat.get_member(user_id).user, update, reason, message, dels, warner)
         else:
             message.reply_text("That looks like an invalid User ID to me.")
     if delsilent:
@@ -459,14 +460,14 @@ def warn_user(update: Update, context: CallbackContext) -> str:
             ):
                 return swarn(
                     message.reply_to_message.from_user,
-                    chat,
+                    update,
                     reason,
                     message,
                     dels,
                     warner,
                 )
             else:
-                return swarn(chat.get_member(user_id).user, chat, reason, message, dels, warner)
+                return swarn(chat.get_member(user_id).user, update, reason, message, dels, warner)
         else:
             message.reply_text("That looks like an invalid User ID to me.")
     elif delban:
@@ -477,13 +478,13 @@ def warn_user(update: Update, context: CallbackContext) -> str:
             ):
                 return dwarn(
                     message.reply_to_message.from_user,
-                    chat,
+                    update,
                     reason,
                     message,
                     warner,
                 )
             else:
-                return dwarn(chat.get_member(user_id).user, chat, reason, message, warner)
+                return dwarn(chat.get_member(user_id).user, update, reason, message, warner)
         else:
             message.reply_text("That looks like an invalid User ID to me.")
     else:
@@ -662,7 +663,7 @@ def list_warn_filters(update: Update, context: CallbackContext):
 
 @kigmsg((CustomFilters.has_text & Filters.chat_type.groups), group=WARNS_GROUP)
 @loggable
-def reply_filter(update: Update, context: CallbackContext) -> str:
+def reply_filter(update: Update, context: CallbackContext) -> Optional[str]:
     chat: Optional[Chat] = update.effective_chat
     message: Optional[Message] = update.effective_message
     user: Optional[User] = update.effective_user
@@ -685,7 +686,7 @@ def reply_filter(update: Update, context: CallbackContext) -> str:
         if re.search(pattern, to_match, flags=re.IGNORECASE):
             user: Optional[User] = update.effective_user
             warn_filter = sql.get_warn_filter(chat.id, keyword)
-            return warn(user, chat, warn_filter.reply, message)
+            return warn(user, update, warn_filter.reply, message)
     return ""
 
 @kigcmd(command='warnlimit', filters=Filters.chat_type.groups)
@@ -796,7 +797,9 @@ def __chat_settings__(chat_id, user_id):
 
 from tg_bot.modules.language import gs
 
+
 def get_help(chat):
     return gs(chat, "warns_help")
+
 
 __mod_name__ = "Warnings"

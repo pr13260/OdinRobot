@@ -425,7 +425,7 @@ def kickme(update: Update, context: CallbackContext) -> str:
     user_id = update.effective_message.from_user.id
     user = update.effective_message.from_user
     chat = update.effective_chat
-    if is_user_admin(update.effective_chat, user_id):
+    if is_user_admin(update, user_id):
         update.effective_message.reply_text("Haha you're stuck with us here.")
         return
 
@@ -546,7 +546,7 @@ def unban(update: Update, context: CallbackContext) -> str:
 @bot_admin
 @can_restrict
 @gloggable
-def selfunban(context: CallbackContext, update: Update) -> str:
+def selfunban(context: CallbackContext, update: Update) -> Optional[str]:
     message = update.effective_message
     user = update.effective_user
     bot, args = context.bot, context.args
