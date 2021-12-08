@@ -155,7 +155,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
         message.reply_text(ban_myself)
         return log_message
 
-    if is_user_ban_protected(chat, user_id, member) and user.id not in DEV_USERS:
+    if is_user_ban_protected(update, user_id, member) and user.id not in DEV_USERS:
         cannot_ban(user_id, message)
         return log_message
 
@@ -276,7 +276,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
         message.reply_text(ban_myself)
         return log_message
 
-    if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
+    if is_user_ban_protected(update, user_id, member) and user not in DEV_USERS:
         cannot_ban(user_id, message)
         return log_message
 
@@ -375,7 +375,7 @@ def kick(update: Update, context: CallbackContext) -> str:
         message.reply_text("Yeahhh I'm not gonna do that.")
         return log_message
 
-    if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
+    if is_user_ban_protected(update, user_id, member) and user not in DEV_USERS:
         cannot_ban(user_id, message)
         return log_message
 

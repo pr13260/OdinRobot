@@ -51,9 +51,9 @@ WARN_HANDLER_GROUP = 9
 CURRENT_WARNING_FILTER_STRING = "<b>Current warning filters in this chat:</b>\n"
 WARNS_GROUP = 2
 
-def warn_immune(message, chat, uid, warner):
+def warn_immune(message, update, uid, warner):
 
-    if is_user_admin(chat, uid):
+    if is_user_admin(update, uid):
         if uid is OWNER_ID:
             message.reply_text("This is my CREATOR, how dare you!")
             return True
@@ -84,7 +84,7 @@ def warn(
     user: User, update: Update, reason: str, message: Message, warner: User = None
 ) -> Optional[str]:  # sourcery no-metrics
     chat = update.effective_chat
-    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
+    if warn_immune(message=message, update=update, uid=user.id, warner=warner):
         return
 
     if warner:
@@ -174,10 +174,11 @@ def warn(
 
 # Not async
 def swarn(
-    user: User, chat: Chat, reason: str, message: Message, dels, warner: User = None,
+    user: User, update: Update, reason: str, message: Message, dels, warner: User = None,
 ) -> str:  # sourcery no-metrics
-    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
+    if warn_immune(message=message, update=update, uid=user.id, warner=warner):
         return
+    chat = update.effective_chat
 
     if warner:
         warner_tag = mention_html(warner.id, warner.first_name)
@@ -273,11 +274,11 @@ def swarn(
 
 # Not async
 def dwarn(
-    user: User, chat: Chat, reason: str, message: Message, warner: User = None
+    user: User, update: Update, reason: str, message: Message, warner: User = None
 ) -> str:  # sourcery no-metrics
-    if warn_immune(message=message, chat=chat, uid=user.id, warner=warner):
+    if warn_immune(message=message, update=update, uid=user.id, warner=warner):
         return
-
+    chat = update.effective_chat
     if warner:
         warner_tag = mention_html(warner.id, warner.first_name)
     else:
@@ -495,13 +496,13 @@ def warn_user(update: Update, context: CallbackContext) -> str:
             ):
                 return warn(
                     message.reply_to_message.from_user,
-                    chat,
+                    update,
                     reason,
                     message.reply_to_message,
                     warner,
                 )
             else:
-                return warn(chat.get_member(user_id).user, chat, reason, message, warner)
+                return warn(chat.get_member(user_id).user, update, reason, message, warner)
         else:
             message.reply_text("That looks like an invalid User ID to me.")
     return ""

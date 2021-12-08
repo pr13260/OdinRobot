@@ -71,6 +71,8 @@ def anon_callback_handler1(upd: Update, _: CallbackContext):
         return
     if mem.status not in [ChatStatus.ADMIN.value, ChatStatus.CREATOR.value]:   
         callback.answer("You're aren't admin.")
+        dispatcher.bot.delete_message(chat_id, anon_callback_messages.pop((chat_id, message_id), None))
+        dispatcher.bot.send_message(chat_id, f"You lack the permission: `{perm}`!", parse_mode=ParseMode.MARKDOWN)
     elif getattr(mem, perm) is True or mem.status == "creator" or mem.user.id in DEV_USERS:
         cb = anon_callbacks.pop((chat_id, message_id), None)
         if cb:

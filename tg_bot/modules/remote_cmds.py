@@ -140,7 +140,7 @@ def rban(update: Update, context: CallbackContext):
         else:
             raise
 
-    if is_user_ban_protected(chat, user_id, member):
+    if is_user_ban_protected(update, user_id, member):
         message.reply_text("I really wish I could ban admins...")
         return
 
@@ -308,7 +308,7 @@ def rkick(update: Update, context: CallbackContext):
         else:
             raise
 
-    if is_user_ban_protected(chat, user_id, member):
+    if is_user_ban_protected(update, user_id, member):
         message.reply_text("I really wish I could punch admins...")
         return
 
@@ -391,7 +391,7 @@ def rmute(update: Update, context: CallbackContext):
         else:
             raise
 
-    if is_user_ban_protected(chat, user_id, member):
+    if is_user_ban_protected(update, user_id, member):
         message.reply_text("I really wish I could mute admins...")
         return
 

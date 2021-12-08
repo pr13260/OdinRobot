@@ -50,7 +50,8 @@ FLOOD_GROUP = -5
 @kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups & ~Filters.update.edited_message), run_async=True, group=FLOOD_GROUP)
 @connection_status
 @loggable
-def check_flood(update, context) -> str:
+def check_flood(update, context) -> Optional[str]:
+    global execstrings
     user = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
@@ -336,6 +337,7 @@ def flood(update, context):
 @spamcheck
 @u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def set_flood_mode(update, context):  # sourcery no-metrics
+    global settypeflood
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
     args = context.args

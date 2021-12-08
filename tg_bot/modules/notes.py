@@ -123,10 +123,10 @@ def get(update, context, notename, show_none=True, no_format=False):
                 else:
                     text = valid_format
                 if "{admin}" in text:
-                    if is_user_admin(chat, user):
+                    if is_user_admin(update, user):
                         return
                 if "{user}" in text:
-                    if not is_user_admin(chat, user):
+                    if not is_user_admin(update, user):
                         return
                 text = text.format(
                     first=escape_markdown(message.from_user.first_name),

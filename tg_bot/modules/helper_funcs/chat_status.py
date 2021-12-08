@@ -67,14 +67,16 @@ def is_user_admin(update: Update, user_id: int, member: ChatMember = None) -> bo
                 return True
             return False
 
-def is_user_mod(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
+def is_user_mod(update: Update, user_id: int, member: ChatMember = None) -> bool:
+    chat = update.effective_chat
+    msg = update.effective_message
     if (
         chat.type == "private"
         or user_id in MOD_USERS
         or user_id in SUDO_USERS
         or user_id in DEV_USERS
         or chat.all_members_are_administrators
-        or user_id in [777000, 1087968824]
+        or (msg.sender_chat is not None and msg.sender_chat.type != "channel")
     ):  # Count telegram and Group Anonymous as admin
         return True
 
@@ -255,7 +257,7 @@ def user_mod(func):
         user = update.effective_user
         chat = update.effective_chat
 
-        if user and is_user_mod(chat, user.id):
+        if user and is_user_mod(update, user.id):
             return func(update, context, *args, **kwargs)
         elif not user:
             pass

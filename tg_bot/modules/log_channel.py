@@ -6,8 +6,8 @@ from telegram.ext import CallbackContext
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 from tg_bot.modules.helper_funcs.misc import is_module_loaded
 from tg_bot.modules.language import gs
-
-from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
+from telegram.error import Unauthorized
+# from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
 
 def get_help(chat):
     return gs(chat, "log_help")
@@ -42,7 +42,7 @@ if is_module_loaded(FILENAME):
                             cid = str(chat.id).replace("-100", '')
                             result += f'\n<b>Link:</b> <a href="https://t.me/c/{cid}/{message.message_id}">click here</a>'
                 except AttributeError:
-                    result += f'\n<b>Link:</b> No link for manual actions.'
+                    result += '\n<b>Link:</b> No link for manual actions.'
                 log_chat = sql.get_chat_log_channel(chat.id)
                 if log_chat:
                     send_log(context, log_chat, chat.id, result)
@@ -105,6 +105,12 @@ if is_module_loaded(FILENAME):
                     result
                     + "\n\nFormatting has been disabled due to an unexpected error.",
                 )
+        except Unauthorized as excp:
+            if excp.message == "bot is not a member of the channel chat":
+                bot.send_message(
+                    orig_chat_id, "I don't have access to the log channel - unsetting."
+                )
+                sql.stop_chat_logging(orig_chat_id)
 
     @kigcmd(command='logchannel')
     @user_admin

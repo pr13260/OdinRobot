@@ -391,6 +391,14 @@ def reply_filter(update, context):  # sourcery no-metrics
                 else:
                     filtext = ""
 
+                if "{admin}" in filt.reply_text:
+                    if is_user_admin(update, user):
+                        return
+
+                if "{user}" in filt.reply_text:
+                    if not is_user_admin(update, user):
+                        return
+
                 if filt.file_type in (sql.Types.BUTTON_TEXT, sql.Types.TEXT):
                     try:
                         context.bot.send_message(

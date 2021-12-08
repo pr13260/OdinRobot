@@ -77,6 +77,35 @@ def report(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     user = update.effective_user
 
+    keyboard2 = [
+        [
+            InlineKeyboardButton(
+                "⚠ Kick",
+                callback_data=f"reported_{chat.id}=kick={reported_user.id}",
+            ),
+            InlineKeyboardButton(
+                "⛔️ Ban",
+                callback_data=f"reported_{chat.id}=banned={reported_user.id}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "❎ Delete Message",
+                callback_data=f"reported_{chat.id}=delete={reported_user.id}={message.reply_to_message.message_id}",
+            ),
+            InlineKeyboardButton(
+                "❌ Close Panel",
+                callback_data=f"reported_{chat.id}=close={reported_user.id}",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                    "📝 Read the rules", url="t.me/{}?start={}".format(bot.username, chat.id)
+                )
+        ],
+    ]
+    reply_markup2 = InlineKeyboardMarkup(keyboard2)
+
     if message.sender_chat:
         admin_list = bot.getChatAdministrators(chat.id)
         reported = "Reported to admins."
@@ -87,7 +116,7 @@ def report(update: Update, context: CallbackContext) -> str:
                 reported += f"<a href=\"tg://user?id={admin.user.id}\">\u2063</a>"
             except BadRequest:
                 log.exception("Exception while reporting user")
-        message.reply_text(reported, parse_mode=ParseMode.HTML)
+        message.reply_text(reported, reply_markup=keyboard2, parse_mode=ParseMode.HTML)
 
     if chat and message.reply_to_message and sql.chat_should_report(chat.id):
         reported_user = message.reply_to_message.from_user
@@ -220,27 +249,7 @@ def report(update: Update, context: CallbackContext) -> str:
         # except:
         #     pass
 
-        keyboard2 = [
-            [
-                InlineKeyboardButton(
-                    "⚠ Kick",
-                    callback_data=f"reported_{chat.id}=kick={reported_user.id}={reported_user.first_name}",
-                ),
-                InlineKeyboardButton(
-                    "⛔️ Ban",
-                    callback_data=f"reported_{chat.id}=banned={reported_user.id}={reported_user.first_name}",
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "❎ Delete Message",
-                    callback_data=f"reported_{chat.id}=delete={reported_user.id}={message.reply_to_message.message_id}",
-                )
-            ],
-        ]
-        reply_markup2 = InlineKeyboardMarkup(keyboard2)
-
-        reportmsg = f"{mention_html(user.id, user.first_name)} reported the message to the admins."
+        reportmsg = f"{mention_html(reported_user.id, reported_user.first_name)} was reported to the admins."
         reportmsg += tmsg
         message.reply_to_message.reply_text(
             reportmsg,

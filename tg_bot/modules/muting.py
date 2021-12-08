@@ -111,7 +111,7 @@ def mute(update: Update, context: CallbackContext) -> str:
                     mention_html(member.user.id, member.user.first_name), user.first_name, message.chat.title
         )
         if reason:
-            mutemsg += "\n<b>Reason</b>: <code>{reason}</code>"
+            mutemsg += f"\n<b>Reason</b>: <code>{reason}</code>"
 
 
         keyboard = InlineKeyboardMarkup(
