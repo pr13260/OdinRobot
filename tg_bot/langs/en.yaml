@@ -351,6 +351,7 @@ log_help: |
       • `/logchannel`*:* get log channel info
       • `/setlog`*:* set the log channel.
       • `/unsetlog`*:* unset the log channel.
+      • `/announce`*:* toggle setting to announce admin actions in chatroom.
 
       Setting the log channel is done by:
       • adding the bot to the desired channel (as an admin!)
@@ -635,3 +636,13 @@ welcome_help: |
   remove it.
   You can even set images/gifs/videos/voice messages as the welcome message by 
   replying to the desired media, and calling <code>/setwelcome</code>.
+
+sticker_blacklist_help: |
+       **Only admin:**
+         • `/addblsticker <sticker link>**`:** Add the sticker trigger to the black list. Can be added via reply sticker
+         • `/unblsticker <sticker link>**`:** Remove triggers from blacklist. The same newline logic applies here, so you can delete multiple triggers at once
+         • `/rmblsticker <sticker link>**`:** Same as above
+         • `/blstickermode <delete/ban/tban/mute/tmute>**`:** sets up a default action on what to do if users use blacklisted stickers
+       Note:
+         • `<sticker link>` can be `https://t.me/addstickers/<sticker>` or just `<sticker>` or reply to the sticker message
+
