@@ -10,6 +10,7 @@ from telegram.ext import (
     CallbackContext,
     Filters,
 )
+import tg_bot.modules.sql.log_channel_sql as logsql
 from telegram.utils.helpers import mention_html
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, resolve_user as res_user, UserClass
@@ -71,6 +72,7 @@ def report_setting(update: Update, context: CallbackContext):
 @spamcheck
 def report(update: Update, context: CallbackContext) -> str:
     # sourcery no-metrics
+    global reply_markup
     bot = context.bot
     # args = context.args
     message = update.effective_message
@@ -207,7 +209,7 @@ def report(update: Update, context: CallbackContext) -> str:
                             message.reply_to_message.forward(admin.user.id)
 
                             if (
-                                len(message.text.split()) > 1
+                                    len(message.text.split()) > 1
                             ):  # If user is giving a reason, send his message too
                                 message.forward(admin.user.id)
                     if not chat.username:
@@ -219,7 +221,7 @@ def report(update: Update, context: CallbackContext) -> str:
                             message.reply_to_message.forward(admin.user.id)
 
                             if (
-                                len(message.text.split()) > 1
+                                    len(message.text.split()) > 1
                             ):  # If user is giving a reason, send his message too
                                 message.forward(admin.user.id)
 
@@ -235,14 +237,14 @@ def report(update: Update, context: CallbackContext) -> str:
                             message.reply_to_message.forward(admin.user.id)
 
                             if (
-                                len(message.text.split()) > 1
+                                    len(message.text.split()) > 1
                             ):  # If user is giving a reason, send his message too
                                 message.forward(admin.user.id)
 
                 except Unauthorized:
                     pass
                 except BadRequest as excp:  # TODO: cleanup exceptions
-                    log.exception("Exception while reporting user")
+                    log.exception("Exception while reporting user\n{}".format(excp))
 
         # try:
         #     update.effective_message.reply_sticker("CAACAgUAAx0CRSKHWwABAXGoYB2UJauytkH4RJWSStz9DTlxQg0AAlcHAAKAUF41_sNx9Y1z2DQeBA")
@@ -256,6 +258,8 @@ def report(update: Update, context: CallbackContext) -> str:
             parse_mode=ParseMode.HTML,
             #reply_markup=reply_markup2
         )
+        if not logsql.get_chat_setting(chat.id).log_report:
+            return ""
         return msg
     return ""
 
@@ -369,6 +373,7 @@ def buttons(update: Update, context: CallbackContext):
 
 
 from tg_bot.modules.language import gs
+
 
 def get_help(chat):
     return gs(chat, "reports_help")
