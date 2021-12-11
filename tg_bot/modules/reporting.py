@@ -78,36 +78,12 @@ def report(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
-
-    keyboard2 = [
-        [
-            InlineKeyboardButton(
-                "⚠ Kick",
-                callback_data=f"reported_{chat.id}=kick={reported_user.id}",
-            ),
-            InlineKeyboardButton(
-                "⛔️ Ban",
-                callback_data=f"reported_{chat.id}=banned={reported_user.id}",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                "❎ Delete Message",
-                callback_data=f"reported_{chat.id}=delete={reported_user.id}={message.reply_to_message.message_id}",
-            ),
-            InlineKeyboardButton(
-                "❌ Close Panel",
-                callback_data=f"reported_{chat.id}=close={reported_user.id}",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                    "📝 Read the rules", url="t.me/{}?start={}".format(bot.username, chat.id)
-                )
-        ],
-    ]
-    reply_markup2 = InlineKeyboardMarkup(keyboard2)
-
+    
+    log_setting = logsql.get_chat_setting(chat.id)
+    if not log_setting:
+        logsql.set_chat_setting(logsql.LogChannelSettings(chat.id, True, True, True, True, True))
+        log_setting = logsql.get_chat_setting(chat.id)
+        
     if message.sender_chat:
         admin_list = bot.getChatAdministrators(chat.id)
         reported = "Reported to admins."
@@ -258,7 +234,7 @@ def report(update: Update, context: CallbackContext) -> str:
             parse_mode=ParseMode.HTML,
             #reply_markup=reply_markup2
         )
-        if not logsql.get_chat_setting(chat.id).log_report:
+        if not log_setting.log_report:
             return ""
         return msg
     return ""
