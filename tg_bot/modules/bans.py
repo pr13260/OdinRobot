@@ -104,10 +104,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
                 message.reply_text("You dont't have permission to delete messages here!")
                 return ""
 
-        r = bot._request.post(bot.base_url + '/banChatSenderChat', {
-            'sender_chat_id': message.reply_to_message.sender_chat.id,
-            'chat_id': chat.id
-        },
+        r = bot.ban_chat_sender_chat(chat_id=chat.id, sender_chat_id=message.reply_to_message.sender_chat.id)
                               )
         logmsg  = (
         f"<b>{html.escape(chat.title)}:</b>\n"
@@ -462,11 +459,7 @@ def unban(update: Update, context: CallbackContext) -> str:
     user = res_user(u, message.message_id, chat)
 
     if message.reply_to_message and message.reply_to_message.sender_chat:
-        r = bot._request.post(bot.base_url + '/unbanChatSenderChat', {
-            'sender_chat_id': message.reply_to_message.sender_chat.id,
-            'chat_id': chat.id
-        },
-                              )
+        r = bot.unban_chat_sender_chat(chat_id=chat.id, sender_chat_id=message.reply_to_message.sender_chat.id)
         if r:
             message.reply_text("Channel {} was unbanned successfully from {}".format(
                 html.escape(message.reply_to_message.sender_chat.title),
