@@ -12,7 +12,7 @@ from tg_bot.modules.connection import connected
 from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.alternate import send_message
 from tg_bot.modules.helper_funcs.anonymous import AdminPerms
-from tg_bot.modules.helper_funcs.anonymous import user_admin
+from tg_bot.modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, UserClass, resolve_user
 from tg_bot.modules.helper_funcs.chat_status import user_not_admin
 from tg_bot.modules.helper_funcs.misc import split_message
 from tg_bot.modules.helper_funcs.string_handling import extract_time
@@ -22,13 +22,14 @@ from tg_bot.modules.sql.approve_sql import is_approved
 from tg_bot.modules.warns import warn
 
 
-@user_admin(AdminPerms.CAN_RESTRICT_MEMBERS)
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def blackliststicker(update: Update, context: CallbackContext):
     global text
     msg = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
     bot, args = context.bot, context.args
+    user = resolve_user(u, msg.message_id, chat)
     conn = connected(bot, update, chat, user.id, need_admin=False)
     if conn:
         chat_id = conn
@@ -68,12 +69,13 @@ def blackliststicker(update: Update, context: CallbackContext):
     send_message(update.effective_message, text, parse_mode=ParseMode.HTML)
 
 
-@user_admin(AdminPerms.CAN_RESTRICT_MEMBERS)
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def add_blackliststicker(update: Update, context: CallbackContext):
     bot = context.bot
     msg = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
+    user = resolve_user(u, msg.message_id, chat)
     words = msg.text.split(None, 1)
     bot = context.bot
     conn = connected(bot, update, chat, user.id)
@@ -159,12 +161,13 @@ def add_blackliststicker(update: Update, context: CallbackContext):
         )
 
 
-@user_admin(AdminPerms.CAN_RESTRICT_MEMBERS)
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def unblackliststicker(update: Update, context: CallbackContext):
     bot = context.bot
     msg = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
+    user = resolve_user(u, msg.message_id, chat)
     words = msg.text.split(None, 1)
     bot = context.bot
     conn = connected(bot, update, chat, user.id)
@@ -256,12 +259,13 @@ def unblackliststicker(update: Update, context: CallbackContext):
 
 
 @loggable
-@user_admin(AdminPerms.CAN_RESTRICT_MEMBERS)
+@u_admin(UserClass.MOD, AdminPerms.CAN_RESTRICT_MEMBERS)
 def blacklist_mode(update: Update, context: CallbackContext):
     global settypeblacklist
     chat = update.effective_chat  # type: Optional[Chat]
-    user = update.effective_user  # type: Optional[User]
+    u = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
+    user = resolve_user(u, msg.message_id, chat)
     bot, args = context.bot, context.args
     conn = connected(bot, update, chat, user.id, need_admin=True)
     if conn:

@@ -152,7 +152,7 @@ def register(**args):
             except KeyboardInterrupt:
                 pass
             except BaseException:
-                e = html.escape(f"{check.error}")
+                e = html.escape(f"{check.text}")
 
                 tb_list = traceback.format_exception(
                     None, check.error, check.error.__traceback__

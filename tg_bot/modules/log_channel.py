@@ -243,7 +243,7 @@ else:
 
 
 @kigcmd("logsettings")
-@u_admin(UserClass.SUDO, AdminPerms.CAN_CHANGE_INFO)
+@u_admin(UserClass.ADMIN, AdminPerms.CAN_CHANGE_INFO)
 def log_settings(update: Update, _: CallbackContext):
     chat = update.effective_chat
     chat_set = sql.get_chat_setting(chat_id=chat.id)

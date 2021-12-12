@@ -54,21 +54,32 @@ admin_help: |
 
    *Admins only:*
    • `/invitelink`*:* gets invitelink
+
    • `/promote`*:* promotes the user replied to
    • `/fullpromote`*:* promotes the user replied to with full permissions
    • `/demote`*:* demotes the user replied to
    • `/admincache`*:* refreshes the admins cache (useless as it is always updated)
+   • `/setanon <user_id/mention>`*:* Will make the user anonymous (if no user is given then will set the sender to anonymous)
+   • `/unsetanon <user_id/mention>`*:* Will make the user non anonymous (if no user is given then will set the sender to non anonymous)
    • `/title <title here>`*:* sets a custom title for an admin that the bot promoted
+
    • `/zombies`*:* removes the deleted accounts from the group
+   
    • `/import`*:* reply to a group butler backup file to import as much as possible, making the transfer super simple! Note \
        that files/photos can't be imported due to telegram restrictions.
    • `/export`*:* Export group data, which will be exported are: rules, notes (documents, images, music, video, audio, voice, text, text buttons)
-   • `/announce <on/off/yes/no/true/false>`*:* Will toggle our admin actions announcements.
-
-   announce is a module that keeps u updated with admin cations in your group weather its done manually or by other bots. Turn it on to get announcements on every admin action in your group. Note that no matter if this is on or off everythong will be logged to the log channel.
-
-   • `/setanon <user_id/mention>`*:* Will make the user anonymous (if no user is given then will set the sender to anonymous)
-   • `/unsetanon <user_id/mention>`*:* Will make the user non anonymous (if no user is given then will set the sender to non anonymous)
+   
+   • `/setgpic`*:* sets the replied image/document as the group picture
+   • `/delgpic`*:* deletes the group picture 
+   • `/setgtitle`*:* sets the group title
+   • `/setgdesc`*:* sets the group description
+   • `/setgsticker`*:* sets the group sticker pack
+   • `/setgstickers`*:* sets the group sticker pack
+   
+   *Group owner only!*
+   *Lockdown:* 
+   • `/lockgroup (on/off)` : check and toggle the current lockgroup status
+   By enabling *lockgroup* the bot will kick every user on joining the group.
 
 afk_help: |
    - /afk <reason>: mark yourself as AFK(away from keyboard).
@@ -351,7 +362,11 @@ log_help: |
       • `/logchannel`*:* get log channel info
       • `/setlog`*:* set the log channel.
       • `/unsetlog`*:* unset the log channel.
-      • `/announce`*:* toggle setting to announce admin actions in chatroom.
+
+      • `/logsettings`*:* specify what to log to the log channel.
+
+      • `/announce <on/off/yes/no/true/false>`*:* toggle setting to announce admin actions in chatroom.
+      announce is a module that keeps u updated with admin cations in your group weather its done manually or by other bots. Turn it on to get announcements on every admin action in your group. Note that no matter if this is on or off everythong will be logged to the log channel.
 
       Setting the log channel is done by:
       • adding the bot to the desired channel (as an admin!)
@@ -399,8 +414,6 @@ misc_help: |
       • /getid : get IDs of chat, user and chat message.
       • /tts : converts the sent text or replied to message to audio.
       • /weather <loaction>: Gets the weather of the location
-      • /youtube : Gets media from youtube in video or audio format
-      • /yt: Same as /youtube
       • /runs: reply a random string from an array of replies.
       • /pat: pat a person, cool thing to have for cute ones :3
       • /slap: slap a user, or get slapped if not a reply.
@@ -414,8 +427,10 @@ misc_help: |
       • /stickerid: reply to a sticker to get its ID.
       • /getsticker: reply to a sticker to get the raw PNG image.
       • /steal: reply to a sticker or image to add it to your pack.
+      • /whois : get info about a user from @Intellivoid's SpamProtection API
 
-#      • /spbinfo : get info about a user from @Intellivoid's SpamProtection API
+      # • /youtube : Gets media from youtube in video or audio format
+      # • /yt: Same as /youtube
 #      ───────────────────────────────
 #      *Last.FM*
 #      Share what you're what listening to with the help of this module!
@@ -575,15 +590,15 @@ android_help: |
        • `/checkfw <model> <csc>` - Samsung only - shows the latest firmware info for the given device, taken from samsung servers
        • `/getfw <model> <csc>` - Samsung only - gets firmware download links from samfrew, sammobile and sfirmwares for the given device
 
-lockgroup_help: |
-       *Available commands:*
-       *Group owner only!*
-       *Lockdown:* 
-       • `/lockgroup (on/off)` : check and toggle the current lockgroup status
+# lockgroup_help: |
+#        *Available commands:*
+#        *Group owner only!*
+#        *Lockdown:* 
+#        • `/lockgroup (on/off)` : check and toggle the current lockgroup status
 
-       Ever had your group raided by spammers or bots?
-       By enabling *lockgroup* the bot will kick every user on joining the group.
-       When the raid is done you can toggle back lockgroup and everything will be back to normal.
+#        Ever had your group raided by spammers or bots?
+#        By enabling *lockgroup* the bot will kick every user on joining the group.
+#        When the raid is done you can toggle back lockgroup and everything will be back to normal.
 
 
 

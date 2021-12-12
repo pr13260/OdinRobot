@@ -105,7 +105,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
                 return ""
 
         r = bot.ban_chat_sender_chat(chat_id=chat.id, sender_chat_id=message.reply_to_message.sender_chat.id)
-                              )
+
         logmsg  = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#BANNED\n"
