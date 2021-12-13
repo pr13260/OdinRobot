@@ -28,7 +28,7 @@ def set_antichannel(update: Update, context: CallbackContext):
     message.reply_html("Antichannel setting is currently {} in {}".format(antichannel_status(chat.id), html.escape(chat.title)))
 
 
-@kigmsg(Filters.chat_type.groups)
+@kigmsg(Filters.chat_type.groups, group=-3)
 def eliminate_channel(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
