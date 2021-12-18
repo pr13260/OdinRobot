@@ -294,6 +294,7 @@ antispam_help: |
      *Admins only:*
       • `/antispam <on/off/yes/no>`*:* Will toggle our antispam tech or return your current settings.
       • `/gbanstat <on/off/yes/no>`*:* Will toggle our antispam tech or return your current settings.
+      • `/sibylban`*:* Will toggle sibyl system antispam tech.
 
      Anti-Spam, used by bot devs to ban spammers across all groups. This helps protect
      you and your groups by removing spam flooders as quickly as possible.
