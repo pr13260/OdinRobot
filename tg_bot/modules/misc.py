@@ -1,4 +1,5 @@
 import html
+from typing import Union
 from tg_bot.antispam import GLOBAL_USER_DATA, Owner
 import time
 import git
@@ -65,6 +66,10 @@ This will create two buttons on a single line, instead of one button per line.
 
 Keep in mind that your message <b>MUST</b> contain some text other than just a button!
 """
+
+def mention_html_chat(chat_id: Union[int, str], name: str) -> str:
+    return f'<a href="tg://t.me/{chat_id}">{html.escape(name)}</a>'
+
 @kigcmd(command='id', pass_args=True)
 @spamcheck
 def get_id(update: Update, context: CallbackContext):
@@ -156,7 +161,7 @@ def fullinfo(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     text = (
         f"<b>User Info:</b>\n"
-        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name)}"
+        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name) if user.first_name else mention_html_chat(user.id, user.title)}"
     )
     if user.last_name:
         text += f"\nㅤ<b>Last Name:</b> {html.escape(user.last_name)}"
@@ -354,7 +359,7 @@ def whois(update: Update, context: CallbackContext):  # sourcery no-metrics
 
         text = (
             f"<b>User Info:</b>\n"
-            f"First Name: {mention_html(user.id, user.first_name)}"
+            f"First Name: {mention_html(user.id, user.first_name) if user.first_name else mention_html_chat(user.id, user.title)}"
         )
 
         if user.last_name:
@@ -398,7 +403,7 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     text = (
         f"<b>User Info:</b>\n"
-        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name)}"
+        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name) if user.first_name else mention_html_chat(user.id, user.title)}"
     )
     if user.last_name:
         text += f"\nㅤ<b>Last Name:</b> {html.escape(user.last_name)}"
@@ -611,7 +616,7 @@ def infopfp(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     text = (
         f"<b>User Info:</b>\n"
-        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name)}"
+        f"ㅤ<b>First Name:</b> {mention_html(user.id, user.first_name) if user.first_name else mention_html_chat(user.id, user.title)}"
     )
     if user.last_name:
         text += f"\nㅤ<b>Last Name:</b> {html.escape(user.last_name)}"
