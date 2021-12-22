@@ -608,18 +608,18 @@ pins_help: |
    • `/pin`*:* silently pins the message replied to - add `'loud'` or `'notify'` to give notifs to users.
    • `/unpin`*:* unpins the currently pinned message
    • `/permapin`*:* pins a message though the bot permanently, this message can include buttons, markdown, etc 
-   • `/cleanlinked <on/off/true/false>`*:* automatically delete the messages sent by the linked channel 
 
    *Creator only:*
    • `/unpinall`*:* unpins all pinned messages in a chat.
 
-   if you want to use these functions make sure to pin adn unpin the messages with the bot and not manually
+   if you want to use these functions make sure to pin and unpin the messages with the bot and not manually
 
     *Anti channel*
     Tired of telegram's stupidity? well here you go
     *Available commands:*
     • /antichannel <on/off>: Bans and deletes anyone who tries to talk as channel and forces em to talk as themselves
-    • /antilinkedchan <on/off: Automatically delete linked channel posts from chatroom
+    • /cleanlinked <on/off>: Automatically delete linked channel posts from chatroom
+    • /antichannelpin <on/off>: Automatically unpins linked channel posts from chatroom
 
 
 

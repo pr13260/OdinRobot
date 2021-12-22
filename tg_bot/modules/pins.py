@@ -235,11 +235,6 @@ ENUM_FUNC_MAP = {
 	'Types.VIDEO': dispatcher.bot.send_video
 }
 
-import tg_bot.modules.sql.admin_sql as sql
-
-
-
-
 @kigcmd(command="permapin", filters=Filters.chat_type.groups, run_async=True)
 @spamcheck
 @can_pin
@@ -276,119 +271,6 @@ def permapin(update, context):
         context.bot.pinChatMessage(chat_id, sendingmsg.message_id)
     except BadRequest:
         context.bot.send_message(chat_id, "I don't have access to message pins!")
-
-
-
-@kigcmd(command="cleanlinked", pass_args=True, filters=Filters.chat_type.groups, run_async=True)
-@spamcheck
-@can_pin
-@u_admin(UserClass.ADMIN, AdminPerms.CAN_PIN_MESSAGES)
-@loggable
-def permanent_pin_set(update, context) -> str:
-    u = update.effective_user  # type: Optional[User]
-    chat = update.effective_chat  # type: Optional[Chat]
-    args = context.args
-    msg = update.effective_message  # type: Optional[Message]
-    user = res_user(u, msg.message_id, chat)
-
-    conn = connected(context.bot, update, chat, user.id, need_admin=True)
-    if conn:
-        chat = dispatcher.bot.getChat(conn)
-        chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
-        if not args:
-            get_permapin = sql.get_permapin(chat_id)
-            text_maker = "Cleanlinked is currently set to: `{}`".format(bool(int(get_permapin)))
-            if get_permapin:
-                if chat.username:
-                    old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
-                else:
-                    old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
-                text_maker += "\nTo disable cleanlinked send: `/cleanlinked off`"
-                text_maker += "\n\n[The permanent pinned message is here]({})".format(old_pin)
-            dispatcher.bot.send_message(chat_id, text_maker, parse_mode=ParseMode.MARKDOWN)
-            return ""
-        prev_message = args[0]
-        if prev_message == "off":
-            sql.set_permapin(chat_id, 0)
-            dispatcher.bot.send_message(chat_id, "Cleanlinked has been disabled!")
-            return
-        if "/" in prev_message:
-            prev_message = prev_message.split("/")[-1]
-    else:
-        if update.effective_message.chat.type == "private":
-            dispatcher.bot.send_message(chat_id, "This command is meant to use in group not in PM")
-            return ""
-        chat = update.effective_chat
-        chat_id = update.effective_chat.id
-        chat_name = update.effective_message.chat.title
-        if update.effective_message.reply_to_message:
-            prev_message = update.effective_message.reply_to_message.message_id
-        elif len(args) >= 1 and args[0] in ["off", "false"]:
-            sql.set_permapin(chat.id, 0)
-            dispatcher.bot.send_message(chat_id, "Cleanlinked has been disabled!")
-            return
-        elif len(args) >= 1 and args[0] in ["on", "true"]:
-            sql.set_permapin(chat.id, 1)
-            dispatcher.bot.send_message(chat_id, "Cleanlinked has been enabled!")
-            return
-        else:
-            get_permapin = sql.get_permapin(chat_id)
-            text_maker = "Cleanlinked is currently set to: `{}`".format(bool(int(get_permapin)))
-            if get_permapin:
-                if chat.username:
-                    old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
-                else:
-                    old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
-                text_maker += "\nTo disable cleanlinked send: `/cleanlinked off`"
-                text_maker += "\n\n[The permanent pinned message is here]({})".format(old_pin)
-            dispatcher.bot.send_message(chat_id, text_maker, parse_mode=ParseMode.MARKDOWN)
-            return ""
-
-    is_group = chat.type != "private" and chat.type != "channel"
-
-    if prev_message and is_group:
-        sql.set_permapin(chat.id, prev_message)
-        dispatcher.bot.send_message(chat_id, "Cleanlinked successfully set!")
-        return "<b>{}:</b>" \
-               "\n#PERMANENT_PIN" \
-               "\n<b>Admin:</b> {}".format(html.escape(chat.title), mention_html(user.id, user.first_name))
-
-    return ""
-
-
-
-@kigmsg(Filters.status_update.pinned_message | Filters.user(777000), run_async=True)
-def permanent_pin(update, context):
-    user = update.effective_user  # type: Optional[User]
-    chat = update.effective_chat  # type: Optional[Chat]
-    message = update.effective_message
-    args = context.args
-
-    get_permapin = sql.get_permapin(chat.id)
-    if get_permapin and user.id != context.bot.id:
-        try:
-            to_del = context.bot.pinChatMessage(chat.id, get_permapin, disable_notification=True)
-        except BadRequest:
-            sql.set_permapin(chat.id, 0)
-            if chat.username:
-                old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
-            else:
-                old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
-                print(old_pin)
-            dispatcher.bot.send_message(chat.id, "*Cleanlinked error:*\nI can't pin messages here!\nMake sure I'm an admin and can pin messages.\n\nClean linked has been disabled, [The old permanent pinned message is here]({})".format(old_pin), parse_mode=ParseMode.MARKDOWN)
-            return
-
-        if to_del:
-            try:
-                print(message.message_id)
-                context.bot.deleteMessage(chat.id, message.message_id)
-            except BadRequest:
-                dispatcher.bot.send_message(chat.id, "Cleanlinked error: cannot delete pinned msg")
-                print("Cleanlinked error: cannot delete pin msg")
-    
-
-
 
 
 def get_help(chat):
