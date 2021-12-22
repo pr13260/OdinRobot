@@ -615,6 +615,12 @@ pins_help: |
 
    if you want to use these functions make sure to pin adn unpin the messages with the bot and not manually
 
+    *Anti channel*
+    Tired of telegram's stupidity? well here you go
+    *Available commands:*
+    • /antichannel <on/off>: Bans and deletes anyone who tries to talk as channel and forces em to talk as themselves
+    • /antilinkedchan <on/off: Automatically delete linked channel posts from chatroom
+
 
 
 welcome_mutes: |
