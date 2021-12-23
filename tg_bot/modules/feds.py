@@ -2314,7 +2314,10 @@ def welcome_fed(update, chat, user_id):
         msgg ="This user is banned in current federation! I will remove him.\n"
         if fbanreason != "No reason given.":
             msgg += "**Reason:** " + str(fbanreason)
-        update.effective_message.reply_text(msgg)
+        try:
+            update.effective_message.reply_text(msgg)
+        except BadRequest:
+            dispatcher.bot.send_message(chat.id, msgg)
         update.effective_chat.ban_member(user_id)
         return True
     else:
