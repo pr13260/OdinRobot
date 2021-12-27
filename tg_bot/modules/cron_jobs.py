@@ -102,7 +102,7 @@ def term(cmd, info):
 
 
 from tg_bot import updater as u
-# run the backup daliy at 1:00
+# run the backup daily at 1:00
 twhen = datetime.datetime.strptime('01:00', '%H:%M').time()
 j = u.job_queue
 cronjob = j.run_daily(callback=backup_db, name="database backups", time=twhen)
