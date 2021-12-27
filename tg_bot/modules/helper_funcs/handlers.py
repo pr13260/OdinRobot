@@ -55,11 +55,11 @@ class AntiSpam:
         if sql.is_user_blacklisted(user):
             return True
 
-        try:
+        '''try:
             self.limiter.try_acquire(user)
             return False
         except BucketFullException:
-            return True
+            return True'''
 
 
 SpamChecker = AntiSpam()
