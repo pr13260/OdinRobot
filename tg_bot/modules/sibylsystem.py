@@ -1,12 +1,12 @@
 from configparser import ConfigParser
-import os, logging, threading
+import os, threading
 from telegram.error import BadRequest
 from telegram.ext.commandhandler import CommandHandler
 from telegram.ext.filters import Filters
 from telegram.ext.messagehandler import MessageHandler
 
 from ..modules.helper_funcs.chat_status import user_admin
-from ..import dispatcher
+from ..import dispatcher, log as logging
 from telegram.ext import CallbackContext
 from telegram import Update
 from sqlalchemy import Column, String, Boolean
@@ -88,7 +88,7 @@ if sk:
     except ImportError as e:
         logging.warning('Not loading Sibyl System plugin due to {}'.format(e))
     try:
-        client = PsychoPass(sk)
+        client = PsychoPass(sk, show_license=False)
         logging.info("Connection to Sibyl System was successful...")
     except BaseException as e:
         logging.warning("Not loading Sibyl System plugin due to {}".format(e))
