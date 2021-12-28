@@ -374,8 +374,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                     check = ad.detect_alphabet(u"{}".format(message.caption))
                     if "ARABIC" in check:
                         try:
-                            replyyy = "This action is restricted to admins only!"
-                            message.reply_text(replyyy)
+                            # replyyy = "This action is restricted to admins only!"
+                            # message.reply_text(replyyy)
                             message.delete()
                         except BadRequest as excp:
                             if excp.message != "Message to delete not found":
@@ -385,8 +385,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                     check = ad.detect_alphabet(u"{}".format(message.text))
                     if "ARABIC" in check:
                         try:
-                            replyyy = "This action is restricted to admins only!"
-                            message.reply_text(replyyy)
+                            # replyyy = "This action is restricted to admins only!"
+                            # message.reply_text(replyyy)
                             message.delete()
                         except BadRequest as excp:
                             if excp.message != "Message to delete not found":
@@ -401,8 +401,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                 and message.reply_markup.inline_keyboard
             ):
                 try:
-                    replyyy = "This action is restricted to admins only!"
-                    message.reply_text(replyyy)
+                    # replyyy = "This action is restricted to admins only!"
+                    # message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
@@ -417,8 +417,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                 and message.via_bot
             ):
                 try:
-                    replyyy = "This action is restricted to admins only!"
-                    message.reply_text(replyyy)
+                    # replyyy = "This action is restricted to admins only!"
+                    # message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
@@ -450,8 +450,8 @@ def del_lockables(update, context):  # sourcery no-metrics
                         break
             else:
                 try:
-                    replyyy = "This action is restricted to admins only!"
-                    message.reply_text(replyyy)
+                    # replyyy = "This action is restricted to admins only!"
+                    # message.reply_text(replyyy)
                     message.delete()
                 except BadRequest as excp:
                     if excp.message != "Message to delete not found":
