@@ -82,8 +82,7 @@ def restart(update: Update, context: CallbackContext):
         "Starting a new instance and shutting down this one"
     )
 
-    os.system("restart.bat")
-    os.execv("start.bat", sys.argv)
+    os.execv(sys.executable, ['python3', '-m', 'tg_bot', '2>&1', '|', 'tee', 'logs.txt'])
 
 
 class Store:
