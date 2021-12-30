@@ -16,10 +16,10 @@ def set_antichannel(update: Update, context: CallbackContext):
     user = resolve_user(u, message.message_id, chat)
     if len(args) > 0:
         s = args[0].lower()
-        if s in ["yes", "on"]:
+        if s in ["yes", "on", "true"]:
             enable_antichannel(chat.id)
             message.reply_html("Enabled antichannel in {}".format(html.escape(chat.title)))
-        elif s in ["off", "no"]:
+        elif s in ["off", "no", "false"]:
             disable_antichannel(chat.id)
             message.reply_html("Disabled antichannel in {}".format(html.escape(chat.title)))
         else:
@@ -29,14 +29,13 @@ def set_antichannel(update: Update, context: CallbackContext):
         "Antichannel setting is currently {} in {}".format(antichannel_status(chat.id), html.escape(chat.title)))
 
 
-@kigmsg(Filters.chat_type.groups, group=110)
+@kigmsg(Filters.chat_type.groups & Filters.sender_chat.channel & ~Filters.is_automatic_forward, group=110)
 def eliminate_channel(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
     bot = context.bot
     if not antichannel_status(chat.id):
         return
-    if message.sender_chat and message.sender_chat.type == "channel" and not message.is_automatic_forward:
-        message.delete()
-        sender_chat = message.sender_chat
-        bot.ban_chat_sender_chat(sender_chat_id=sender_chat.id, chat_id=chat.id)
+    message.delete()
+    sender_chat = message.sender_chat
+    bot.ban_chat_sender_chat(sender_chat_id=sender_chat.id, chat_id=chat.id)

@@ -161,7 +161,7 @@ def get(update, context, notename, show_none=True, no_format=False):
                 text = ""
 
             keyb = []
-            parseMode = ParseMode.MARKDOWN
+            parseMode = ParseMode.MARKDOWN_V2
             buttons = sql.get_buttons(note_chat_id, notename)
             if no_format:
                 parseMode = None
@@ -288,9 +288,6 @@ def save(update: Update, context: CallbackContext) -> str:
         msg.reply_text("Dude, there's no note")
         return
 
-    if text is None and buttons is not None:
-        text = "Click the button below!"
-
     sql.add_note_to_db(
         chat_id, note_name, text, data_type, buttons=buttons, file=content
     ) 
@@ -303,25 +300,17 @@ def save(update: Update, context: CallbackContext) -> str:
     )
 
     msg.reply_text(
-        f"Yas! Added `{note_name}`.\nGet it with /get `{note_name}`, or `#{note_name}`",
+        f"Added Note `{note_name}`!",
         parse_mode=ParseMode.MARKDOWN,
     )
 
-    if msg.reply_to_message and msg.reply_to_message.from_user.is_bot:
-        if text:
-            msg.reply_text(
-                "Seems like you're trying to save a message from a bot. Unfortunately, "
-                "bots can't forward bot messages, so I can't save the exact message. "
-                "\nI'll save all the text I can, but if you want more, you'll have to "
-                "forward the message yourself, and then save it."
-            )
-        else:
-            msg.reply_text(
-                "Bots are kinda handicapped by telegram, making it hard for bots to "
-                "interact with other bots, so I can't save this message "
-                "like I usually would - do you mind forwarding it and "
-                "then saving that new message? Thanks!"
-            )
+    if msg.reply_to_message and msg.reply_to_message.from_user.is_bot and not msg.text:
+        msg.reply_text(
+            "Bots are kinda handicapped by telegram, making it hard for bots to "
+            "interact with other bots, so I can't save this message "
+            "like I usually would - do you mind forwarding it and "
+            "then saving that new message? Thanks!"
+        )
     return logmsg
 
 @kigcmd(command='clear')

@@ -148,41 +148,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                 ),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "support_chat_link_btn"),
-                                url=f"https://t.me/TheBotsSupport",
-                            ),
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "add_bot_to_group_btn"),
-                                url="t.me/{}?startgroup=true".format(
-                                    context.bot.username
-                                ),
-                            ),
-                            InlineKeyboardButton(
-                                text="Try inline",
-                                switch_inline_query_current_chat=""
-                            ),
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "src_btn"),
-                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
-                            ),
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "reommended_fed_btn"),
-                                url="t.me/OdinFed"
-                            ),
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                text="Help",
-                                callback_data="help_back",
-                                ),
-                        ]
-                        
-                    ]
+                    start_buttons(context, chat)
                 ),
             )
 
@@ -235,40 +201,7 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                 ),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "support_chat_link_btn"),
-                                url=f"https://t.me/TheBotsSupport",
-                            ),
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "add_bot_to_group_btn"),
-                                url="t.me/{}?startgroup=true".format(
-                                    context.bot.username
-                                ),
-                            ),
-                            InlineKeyboardButton(
-                                text="Try inline",
-                                switch_inline_query_current_chat=""
-                            ),
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "src_btn"),
-                                url="https://github.com/OdinRobot/{}".format(escape_markdown(dispatcher.bot.username)),
-                            ),
-                            InlineKeyboardButton(
-                                text=gs(chat.id, "reommended_fed_btn"),
-                                url="t.me/OdinFed"
-                            ),
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                text="Help",
-                                callback_data="help_back",
-                                ),
-                        ]
-                    ]
+                    start_buttons(context, chat)
                 ),
             )
 
@@ -279,6 +212,29 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
         query = update.callback_query
         if hasattr(query, 'id'):
             context.bot.answer_callback_query(query.id)
+
+def start_buttons(context, chat):
+    return [
+        [
+            InlineKeyboardButton(
+                text=gs(chat.id, "support_chat_link_btn"),
+                url='https://t.me/TheBotsSupport',
+            ),
+            InlineKeyboardButton(
+                text=gs(chat.id, "add_bot_to_group_btn"),
+                url="t.me/{}?startgroup=true".format(context.bot.username),
+            ),
+            InlineKeyboardButton(
+                text="Try inline", switch_inline_query_current_chat=""
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Help",
+                callback_data="help_back",
+            ),
+        ],
+    ]
 
 
 # for test purposes

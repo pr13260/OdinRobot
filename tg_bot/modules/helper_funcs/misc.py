@@ -5,7 +5,7 @@ from telegram.message import Message
 from tg_bot import NO_LOAD
 from telegram import MAX_MESSAGE_LENGTH, Bot, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, InlineQueryResultArticle, InputTextMessageContent
 from telegram.error import TelegramError
-from tg_bot.modules.helper_funcs.string_handling import button_markdown_parser
+from tg_bot.modules.helper_funcs.string_handling import button_markdown_parser, reply_button_parser
 from tg_bot.modules.helper_funcs.msg_types import Types
 
 
@@ -190,8 +190,8 @@ def get_message_type(msg: Message):
         entities = msg.reply_to_message.parse_entities()
         msgtext = msg.reply_to_message.text or msg.reply_to_message.caption
         if len(args) >= 1 and msg.reply_to_message.text:  # not caption, text
-            text, buttons = button_markdown_parser(msgtext,
-                                                   entities=entities)
+            text, buttons = reply_button_parser(msgtext,
+                                                   entities=entities, replymarkup=msg.reply_to_message.reply_markup)
             if buttons:
                 data_type = Types.BUTTON_TEXT
             else:

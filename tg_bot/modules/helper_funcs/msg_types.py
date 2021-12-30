@@ -1,6 +1,6 @@
 from enum import IntEnum, unique
 
-from tg_bot.modules.helper_funcs.string_handling import button_markdown_parser
+from tg_bot.modules.helper_funcs.string_handling import button_markdown_parser, reply_button_parser
 from telegram import Message
 
 
@@ -35,12 +35,13 @@ def get_note_type(msg: Message):  # sourcery no-metrics
             entities=msg.parse_entities() or msg.parse_caption_entities(),
             offset=offset,
         )
+        if not text: text = f"Click the button below to view '{note_name}'"
         data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
     elif msg.reply_to_message:
         entities = msg.reply_to_message.parse_entities()
         msgtext = msg.reply_to_message.text or msg.reply_to_message.caption
         if len(args) >= 2 and msg.reply_to_message.text:  # not caption, text
-            text, buttons = button_markdown_parser(msgtext, entities=entities)
+            text, buttons = reply_button_parser(msgtext, entities=entities, replymarkup=msg.reply_to_message.reply_markup)
             data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
         elif msg.reply_to_message.sticker:
             content = msg.reply_to_message.sticker.file_id

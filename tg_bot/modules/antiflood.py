@@ -13,6 +13,7 @@ from telegram import (
 )
 
 from tg_bot import SUDO_USERS, WHITELIST_USERS, dispatcher, spamcheck
+from tg_bot.modules.misc import mention_html_chat
 from tg_bot.modules.sql.approve_sql import is_approved
 from tg_bot.modules.helper_funcs.chat_status import (
     bot_admin,
@@ -47,7 +48,8 @@ from ..modules.helper_funcs.anonymous import user_admin as u_admin, AdminPerms, 
 
 FLOOD_GROUP = -5
 
-@kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups & ~Filters.update.edited_message), run_async=True, group=FLOOD_GROUP)
+# @kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups & ~Filters.update.edited_message & ~Filters.sender_chat), run_async=True, group=FLOOD_GROUP)
+@kigmsg((Filters.all & Filters.chat_type.groups & ~Filters.status_update & ~Filters.update.edited_message & ~Filters.user(136817688)), run_async=True, group=FLOOD_GROUP)
 @connection_status
 @loggable
 def check_flood(update, context) -> Optional[str]:
@@ -116,6 +118,51 @@ def check_flood(update, context) -> Optional[str]:
             "\n<b>User:</b> {}"
             "\nFlooded the group.".format(
                 tag, html.escape(chat.title), mention_html(user.id, user.first_name)
+            )
+        )
+
+    except BadRequest:
+        msg.reply_text(
+            "I can't restrict people here, give me permissions first! Until then, I'll disable anti-flood."
+        )
+        sql.set_flood(chat.id, 0)
+        return (
+            "<b>{}:</b>"
+            "\n#INFO"
+            "\nDon't have enough permission to restrict users so automatically disabled anti-flood".format(
+                chat.title
+            )
+        )
+
+@kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups & ~Filters.update.edited_message & Filters.user(136817688)), run_async=True, group=-6)
+@connection_status
+@loggable
+def check_flooda(update, context) -> Optional[str]:
+    global execstrings
+    msg = update.effective_message  # type: Optional[Message]
+    user = msg.sender_chat  # type: Optional[User]
+    chat = update.effective_chat  # type: Optional[Chat]
+    if not user:  # only for channels
+        return ""
+
+    should_ban = sql.update_flood(chat.id, user.id)
+    if not should_ban:
+        return ""
+
+    try:
+        chat.ban_sender_chat(user.id)
+        execstrings = "Banned Channel"
+        tag = "BANNED"
+        send_message(
+            update.effective_message, "*Anti Flood Triggered!\n{}!".format(execstrings)
+        )
+
+        return (
+            "<b>{}:</b>"
+            "\n#{}"
+            "\n<b>User:</b> {}"
+            "\nFlooded the group.".format(
+                tag, html.escape(chat.title), mention_html_chat(user.id, user.title)
             )
         )
 

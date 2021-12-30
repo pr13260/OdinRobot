@@ -38,15 +38,12 @@ def error_callback(update: Update, context: CallbackContext):
 
     if update.effective_chat.type != "channel" and KInit.DEBUG:
         try:
-            if str(context.error).find(str(ConnectionResetError)) != "-1":
-                pass
-            else:
+            if str(context.error).find(str(ConnectionResetError)) == "-1":
                 context.bot.send_message(update.effective_chat.id, 
                 f"<b>Sorry I ran into an error!</b>\n<b>Error</b>: <code>{e}</code>\n<i>This incident has been logged and reported.</i>",
                 parse_mode="html")
         except BaseException as e:
             log.exception(e)
-
     if context.error in errors:
         return
     tb_list = traceback.format_exception(

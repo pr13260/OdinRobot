@@ -7,6 +7,7 @@ import markdown2
 import emoji
 
 from telegram import MessageEntity
+from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 from telegram.utils.helpers import escape_markdown
 
 # NOTE: the url \ escape may cause double escapes
@@ -89,7 +90,7 @@ def markdown_parser(
         end = ent.offset + offset + ent.length - 1  # end of entity
 
         # we only care about code, url, text links
-        if ent.type in ("code", "url", "text_link"):
+        if ent.type in ("code", "url", "text_link", "bold", "italic", "underline", "strikethrough", "spoiler"):
             # count emoji to switch counter
             count = _calc_emoji_offset(txt[:start])
             start -= count
@@ -112,6 +113,26 @@ def markdown_parser(
             # code handling
             elif ent.type == "code":
                 res += _selective_escape(txt[prev:start]) + "`" + ent_text + "`"
+
+            # bold handling
+            elif ent.type == "bold":
+                res += _selective_escape(txt[prev:start]) + "*" + ent_text + "*"
+
+            # italic handling
+            elif ent.type == "italic":
+                res += _selective_escape(txt[prev:start]) + "_" + ent_text + "_"
+
+            # underline handling
+            elif ent.type == "underline":
+                res += _selective_escape(txt[prev:start]) + "__" + ent_text + "__"
+
+            # strikethrough handling
+            elif ent.type == "strikethrough":
+                res += _selective_escape(txt[prev:start]) + "~" + ent_text + "~"
+
+            # spoiler handling
+            elif ent.type == "spoiler":
+                res += _selective_escape(txt[prev:start]) + "||" + ent_text + "||"
 
             # handle markdown/html links
             elif ent.type == "text_link":
@@ -156,11 +177,21 @@ def button_markdown_parser(
         else:
             note_data += markdown_note[prev:to_check]
             prev = match.start(1) - 1
-    else:
-        note_data += markdown_note[prev:]
+    note_data += markdown_note[prev:]
 
     return note_data, buttons
 
+def reply_button_parser(
+    txt: str, entities: Dict[MessageEntity, str] = None, offset: int = 0, replymarkup: InlineKeyboardMarkup = None) -> (str, List):
+    note_data = markdown_parser(txt, entities, offset)
+    buttons = []
+    if replymarkup:
+        for btn in replymarkup.inline_keyboard:
+            buttons.append((btn[0].text, btn[0].url, False))
+            if len(btn) >= 2:
+                for a in btn[1:]:
+                    buttons.append((a.text, a.url, True))
+    return note_data, buttons
 
 def escape_invalid_curly_brackets(text: str, valids: List[str]) -> str:
     new_text = ""
