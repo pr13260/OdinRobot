@@ -192,7 +192,11 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
     if user_id:
         user = bot.get_chat(user_id)
     elif not message.reply_to_message and not args:
-        user = message.sender_chat or message.from_user
+        user = (
+            message.sender_chat
+            if message.sender_chat is not None
+            else message.from_user
+        )
     elif not message.reply_to_message and (
         not args
         or (
@@ -209,10 +213,10 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     temp = message.reply_text("<code>Checking Info...</code>", parse_mode=ParseMode.HTML)
 
-    if isinstance(user, User):
-        text = get_user_info(user, chat)
-    else:
+    if hasattr(user, 'type') and user.type != "private":
         text = get_chat_info(user)
+    else:
+        text = get_user_info(user, chat)
 
     temp.edit_text(
         text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
