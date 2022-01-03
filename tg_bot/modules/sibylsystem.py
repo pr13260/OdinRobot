@@ -119,7 +119,7 @@ def sibyl_ban(update: Update, context: CallbackContext):
             return
         if data.banned:
             try:
-                bot.kick_chat_member(chat_id=chat.id, user_id=user.id)
+                bot.ban_chat_member(chat_id=chat.id, user_id=user.id)
             except BadRequest:
                 return
             except BaseException as e:
