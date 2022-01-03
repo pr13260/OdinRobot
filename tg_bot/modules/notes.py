@@ -63,6 +63,7 @@ def get(update, context, notename, show_none=True, no_format=False):
     note = sql.get_note(note_chat_id, notename)
     message = update.effective_message  # type: Optional[Message]
     user = update.effective_user
+    preview = True
 
     if note:
         if MessageHandlerChecker.check_user(update.effective_user.id):
@@ -112,9 +113,11 @@ def get(update, context, notename, show_none=True, no_format=False):
                 "mention",
                 "user",
                 "admin",
+                "preview",
             ]
-            valid_format = escape_invalid_curly_brackets(
-                note.value, VALID_NOTE_FORMATTERS,
+            valid_format = escape_invalid_curly_brackets( # replace the curly brackets with their non escaped version because we will format them
+                note.value.replace("\\{first\\}", '{first}').replace("\\{last\\}", '{last}').replace("\\{fullname\\}", '{fullname}').replace("\\{username\\}", '{username}').replace("\\{id\\}", '{id}').replace("\\{chatname\\}", '{chatname}').replace("\\{mention\\}", '{mention}').replace("\\{user\\}", '{user}').replace("\\{admin\\}", '{admin}').replace("\\{preview\\}", '{preview}')
+                , VALID_NOTE_FORMATTERS,
             )
             if valid_format:
                 if not no_format and "%%%" in valid_format:
@@ -122,12 +125,12 @@ def get(update, context, notename, show_none=True, no_format=False):
                     text = random.choice(split) if all(split) else valid_format
                 else:
                     text = valid_format
-                if "{admin}" in text:
-                    if is_user_admin(update, user):
-                        return
-                if "{user}" in text:
-                    if not is_user_admin(update, user):
-                        return
+                if "{admin}" in text and is_user_admin(update, user):
+                    return
+                if "{user}" in text and not is_user_admin(update, user):
+                    return
+                if "{preview}" in text:
+                    preview = False
                 text = text.format(
                     first=escape_markdown(message.from_user.first_name),
                     last=escape_markdown(
@@ -156,6 +159,7 @@ def get(update, context, notename, show_none=True, no_format=False):
                     id=message.from_user.id,
                     user="",
                     admin="",
+                    preview="",
                 )
             else:
                 text = ""
@@ -165,6 +169,7 @@ def get(update, context, notename, show_none=True, no_format=False):
             buttons = sql.get_buttons(note_chat_id, notename)
             if no_format:
                 parseMode = None
+                text = text.replace("\*", "*").replace("\[", "[").replace("\]", "]").replace("\(", "(").replace("\)", ")").replace("\+", "+").replace("\|", "|").replace("\{", "{").replace("\}", "}").replace("\.", ".").replace("\-", "-").replace("\'", "'").replace("\_", "_").replace("\~", "~").replace("\`", "`").replace("\>", ">").replace("\#", "#").replace("\-", "-").replace("\=", "=").replace("\!", "!").replace("\\\\", "\\")
                 text += revert_buttons(buttons)
             else:
                 keyb = build_keyboard(buttons)
@@ -179,6 +184,7 @@ def get(update, context, notename, show_none=True, no_format=False):
                         reply_to_message_id=reply_id,
                         parse_mode=parseMode,
                         reply_markup=keyboard,
+                        disable_web_page_preview=bool(preview)
                     )
                 elif ENUM_FUNC_MAP[note.msgtype] == dispatcher.bot.send_sticker:
                     ENUM_FUNC_MAP[note.msgtype](
@@ -213,8 +219,7 @@ def get(update, context, notename, show_none=True, no_format=False):
                     sql.rm_note(chat_id, notename)
                 else:
                     message.reply_text(
-                        "This note could not be sent, as it is incorrectly formatted. Ask in "
-                        f"@TheBotsSupport if you can't figure out why!"
+                        "This note could not be sent, as it is incorrectly formatted. Ask in @TheBotsSupport if you can't figure out why!"
                     )
                     log.exception(
                         "Could not parse message #%s in chat %s", notename, str(note_chat_id)

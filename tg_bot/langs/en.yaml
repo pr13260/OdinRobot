@@ -267,6 +267,8 @@ md_help: |
       - <code>_italic words_</code>: Underscores are used for italic fonts. Shows as: <i>italic words</i>.
       - <code>*bold words*</code>: Asterisks are used for bold fonts. Shows as: <b>bold words</b>.
       - <code>~strikethrough~</code>: Tildes are used for strikethrough. Shows as: <strike>strikethrough</strike>.
+      - <code>__underline__</code>: Double underscores are used for underline. Shows as: <u>underline</u>.
+      - <code>||spoiler||</code>: Double vertical lines are used for spoilers. Shows as: <tg-spoiler>spoiler</tg-spoiler>.
       - <code>[hyperlink](example.com)</code>: This is the formatting used for hyperlinks. Shows as: <a href="https://example.com/">hyperlink</a>.
       - <code>[My Button](buttonurl://example.com)</code>: This is the formatting used for creating buttons. This example will create a button named "My button" which opens <code>example.com</code> when clicked.
       If you would like to send buttons on the same row, use the <code>:same</code> formatting.
@@ -289,6 +291,7 @@ filling_help: |
       - <code>{chatname}</code>: The chat's name.
       - <code>{admin}</code>: Note-Filter can only be used by chat admins (not for non-admins)
       - <code>{user}</code>: Note-Filter can only be used by chat users (not for admins)
+      - <code>{preview}</code>: show webpage preview for links in notes (defaults to false)
 
 antispam_help: |
      *Admins only:*
@@ -380,7 +383,10 @@ markdown_help_text: |
 
       - <code>_italic_</code>: wrapping text with '_' will produce italic text
       - <code>*bold*</code>: wrapping text with '*' will produce bold text
+      - <code>~strikethrough~</code>: Tildes are used for strikethrough. Shows as: <strike>strikethrough</strike>.
       - <code>`code`</code>: wrapping text with '`' will produce monospaced text, also known as 'code'
+      - <code>__underline__</code>: Double underscores are used for underline. Shows as: <u>underline</u>.
+      - <code>||spoiler||</code>: Double vertical lines are used for spoilers. Shows as: <tg-spoiler>spoiler</tg-spoiler>.
       - <code>[sometext](someURL)</code>: this will create a link - the message will just show <code>sometext</code>,
       and tapping on it will open the page at <code>someURL</code>.
       EG: <code>[test](example.com)</code>
@@ -394,8 +400,6 @@ markdown_help_text: |
       <code>[one](buttonurl://example.com)
       [two](buttonurl://google.com:same)</code>
       This will create two buttons on a single line, instead of one button per line.
-
-      Keep in mind that your message <b>MUST</b> contain some text other than just a button!
 
 misc_help: |
       • /id: get the current group id. If used by replying to a message, gets that user's id.
