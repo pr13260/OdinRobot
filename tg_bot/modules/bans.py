@@ -82,7 +82,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
         if message.text.startswith(('/s','!s','>s')):
             silent = True
             if not can_delete(chat, context.bot.id):
-                message.reply_text("I dont't have permission to delete messages here!")
+                message.reply_text("I don't have permission to delete messages here!")
                 return ""
         else:
             silent = False
