@@ -1,13 +1,15 @@
-'''#TODO
+"""#TODO
 
 Dank-del
 2020-12-29
-'''
+"""
 
 import importlib
 import re
-from typing import Optional
+import threading
 from sys import argv
+from typing import Optional
+
 from telegram import Update, ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import (TelegramError, Unauthorized, BadRequest,
                             TimedOut, ChatMigrated, NetworkError)
@@ -17,6 +19,7 @@ from telegram.ext import (
 )
 from telegram.ext.dispatcher import DispatcherHandlerStop
 from telegram.utils.helpers import escape_markdown
+
 from tg_bot import (
     KInit,
     dispatcher,
@@ -32,13 +35,13 @@ from tg_bot import (
     SUPPORT_GROUP,
     KigyoINIT
 )
-
 # needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
 from tg_bot.modules import ALL_MODULES
  
 from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
+from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.language import gs
 
 from tg_bot.modules.helper_funcs.admin_status import (
@@ -96,13 +99,13 @@ for module_name in ALL_MODULES:
 
 # do not async
 def send_help(chat_id, text, keyboard=None):
-    '''#TODO
+    """#TODO
 
     Params:
         chat_id  -
         text     -
         keyboard -
-    '''
+    """
 
     if not keyboard:
         kb = paginate_modules(0, HELPABLE, "help")
@@ -115,13 +118,13 @@ def send_help(chat_id, text, keyboard=None):
 
 
 @kigcmd(command='text')
-def test(update: Update, context: CallbackContext):
-    '''#TODO
+def test(update: Update, _: CallbackContext):
+    """#TODO
 
     Params:
         update: Update           -
         context: CallbackContext -
-    '''
+    """
     # pprint(ast.literal_eval(str(update)))
     # update.effective_message.reply_text("Hola tester! _I_ *have* `markdown`", parse_mode=ParseMode.MARKDOWN)
     update.effective_message.reply_text("*text*")
@@ -131,12 +134,12 @@ def test(update: Update, context: CallbackContext):
 @kigcallback(pattern=r'start_back')
 @kigcmd(command='start', pass_args=True)
 def start(update: Update, context: CallbackContext):  # sourcery no-metrics
-    '''#TODO
+    """#TODO
 
     Params:
         update: Update           -
         context: CallbackContext -
-    '''
+    """
     chat = update.effective_chat
     args = context.args
 
@@ -242,13 +245,13 @@ def start_buttons(context, chat):
 
 
 # for test purposes
-def error_callback(update, context):
-    '''#TODO
+def error_callback(_, context: CallbackContext):
+    """#TODO
 
     Params:
         update  -
         context -
-    '''
+    """
 
     try:
         raise context.error
@@ -273,13 +276,13 @@ def error_callback(update, context):
 
 
 @kigcallback(pattern=r'help_')
-def help_button(update, context):
-    '''#TODO
+def help_button(update: Update, context: CallbackContext):
+    """#TODO
 
     Params:
         update  -
         context -
-    '''
+    """
 
     query = update.callback_query
     mod_match = re.match(r"help_module\((.+?)\)", query.data)
@@ -374,7 +377,7 @@ def help_button(update, context):
 
 
 @kigcmd(command='help')
-def get_help(update, context):
+def get_help(update: Update, context: CallbackContext):
     '''#TODO
 
     Params:
@@ -452,7 +455,7 @@ def get_help(update, context):
         send_help(chat.id, (gs(chat.id, "pm_help_text")))
 
 
-def send_settings(chat_id, user_id, user=False):
+def send_settings(chat_id: int, user_id: int, user=False):
     '''#TODO
 
     Params:
@@ -632,13 +635,13 @@ def get_settings(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='donate')
-def donate(update: Update, context: CallbackContext):
-    '''#TODO
+def donate(update: Update, _: CallbackContext):
+    """#TODO
 
     Params:
         update: Update           -
         context: CallbackContext -
-    '''
+    """
 
     update.effective_message.reply_text("I'm free for everyone to use!")
 
@@ -649,14 +652,14 @@ def support(update: Update, context: CallbackContext):
 
 
 
-@kigmsg((Filters.status_update.migrate))
-def migrate_chats(update: Update, context: CallbackContext):
-    '''#TODO
+@kigmsg(Filters.status_update.migrate)
+def migrate_chats(update: Update, _: CallbackContext):
+    """#TODO
 
     Params:
         update: Update           -
         context: CallbackContext -
-    '''
+    """
 
     msg = update.effective_message  # type: Optional[Message]
     if msg.migrate_to_chat_id:
@@ -709,4 +712,4 @@ def main():
 if __name__ == "__main__":
     log.info(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
-    main()
+    threading.Thread(target=main).start()
