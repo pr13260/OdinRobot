@@ -207,14 +207,14 @@ def raidtime(update: Update, context: CallbackContext) -> Optional[str]:
     chat = update.effective_chat
     user = res_user(u, msg.message_id, chat)
     if not args:
-        msg.reply_text(f"Raid actoin time is currently set to {get_readable_time(time)}\nWhen toggled, the members that join will be temp banned for {get_readable_time(time)}", parse_mode=ParseMode.HTML)
+        msg.reply_text(f"Raid action time is currently set to {get_readable_time(time)}\nWhen toggled, the members that join will be temp banned for {get_readable_time(time)}", parse_mode=ParseMode.HTML)
         return
     args_time = args[0].lower()
     time = get_time(args_time)
     if time:
         readable_time = get_readable_time(time)
         if time >= 300 and time < 86400:
-            text = f"Raid actoin time is currently set to {get_readable_time(time)}\nWhen toggled, the members that join will be temp banned for {readable_time}"
+            text = f"Raid action time is currently set to {get_readable_time(time)}\nWhen toggled, the members that join will be temp banned for {readable_time}"
             msg.reply_text(text, parse_mode=ParseMode.HTML)
             sql.setDefenseStatus(chat.id, what, t, time)
             logmsg = (
