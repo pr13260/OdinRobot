@@ -2385,7 +2385,7 @@ __mod_name__ = "Federations"
 from tg_bot.modules.language import gs
 
 
-@fumikacmd(command="fedownerhelp", pass_args=True)
+@kigcmd(command="fedownerhelp", pass_args=True)
 def fed_owner_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_OWNER_HELP"),
@@ -2393,7 +2393,7 @@ def fed_owner_help(update: Update, context: CallbackContext):
     )
 
 
-@fumikacmd(command="fedadminhelp", pass_args=True)
+@kigcmd(command="fedadminhelp", pass_args=True)
 def fed_admin_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_ADMIN_HELP"),
@@ -2401,7 +2401,7 @@ def fed_admin_help(update: Update, context: CallbackContext):
     )
 
 
-@fumikacmd(command="feduserhelp", pass_args=True)
+@kigcmd(command="feduserhelp", pass_args=True)
 def fed_user_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_USER_HELP"),
