@@ -1,5 +1,3 @@
-from io import BytesIO
-from typing import Optional
 import uuid
 import re
 import json
@@ -7,6 +5,8 @@ import time
 import csv
 import os
 import ast
+from io import BytesIO
+from typing import Optional
 from telegram.ext import CallbackContext
 from telegram.error import BadRequest, TelegramError, Unauthorized
 from telegram import (
@@ -21,6 +21,7 @@ from telegram import (
 )
 from telegram.utils.helpers import mention_html, mention_markdown
 
+import tg_bot.modules.sql.feds_sql as sql
 from tg_bot import (
     dispatcher,
     OWNER_ID,
@@ -31,6 +32,7 @@ from tg_bot import (
     log,
     spamcheck,
 )
+from tg_bot.modules.sql.users_sql import get_user_com_chats
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
 from tg_bot.modules.helper_funcs.extraction import (
     extract_user,
@@ -38,16 +40,12 @@ from tg_bot.modules.helper_funcs.extraction import (
     extract_user_fban,
 )
 from tg_bot.modules.helper_funcs.string_handling import markdown_parser
-
-import tg_bot.modules.sql.feds_sql as sql
-
 from tg_bot.modules.helper_funcs.alternate import (
     send_message,
     typing_action,
     send_action,
 )
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
-from tg_bot.modules.sql.users_sql import get_user_com_chats
 
 # Hello bot owner, I spent many hours of my life for feds, Please don't remove this if you still respect MrYacha and peaktogoo and AyraHikari too
 # Federation by MrYacha 2018-2019
@@ -1208,6 +1206,7 @@ def unfban(update, context):
 
 @spamcheck
 @typing_action
+@kigcmd(command='setfrules', pass_args=True)
 def set_frules(update, context):
 
     chat = update.effective_chat  # type: Optional[Chat]
@@ -2385,6 +2384,8 @@ __mod_name__ = "Federations"
 
 from tg_bot.modules.language import gs
 
+
+@kigcmd(command="fedownerhelp", pass_args=True)
 def fed_owner_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_OWNER_HELP"),
@@ -2392,6 +2393,7 @@ def fed_owner_help(update: Update, context: CallbackContext):
     )
 
 
+@kigcmd(command="fedadminhelp", pass_args=True)
 def fed_admin_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_ADMIN_HELP"),
@@ -2399,7 +2401,7 @@ def fed_admin_help(update: Update, context: CallbackContext):
     )
 
 
-
+@kigcmd(command="feduserhelp", pass_args=True)
 def fed_user_help(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         gs(update.effective_chat.id, "FED_USER_HELP"),
@@ -2432,10 +2434,10 @@ def fed_help(update: Update, context: CallbackContext):
 def get_help(chat):
     return [gs(chat, "feds_help"),
     [
-        InlineKeyboardButton(text="Fedadmins", callback_data="fed_help_admin"),
-        InlineKeyboardButton(text="Fedowners", callback_data="fed_help_owner")
+        InlineKeyboardButton(text="Feds Admins", callback_data="fed_help_admin"),
+        InlineKeyboardButton(text="Feds Owners", callback_data="fed_help_owner")
     ],
     [
-        InlineKeyboardButton(text="Users", callback_data="fed_help_user")
+        InlineKeyboardButton(text="Users Commands", callback_data="fed_help_user")
     ],
 ]
