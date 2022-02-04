@@ -1,10 +1,9 @@
 import re, random
 from html import escape
-import html
 from typing import Optional
 
 import telegram
-from telegram import ParseMode, InlineKeyboardMarkup, Message, InlineKeyboardButton
+from telegram import Chat, ParseMode, InlineKeyboardMarkup, Message, InlineKeyboardButton
 from telegram.error import BadRequest
 from telegram.ext import (
     DispatcherHandlerStop,
@@ -208,7 +207,7 @@ def filters(update, context) -> None:  # sourcery no-metrics
         if (msg.reply_to_message.text or msg.reply_to_message.caption) and not text:
             send_message(
                 update.effective_message,
-                "There is no note message - You can't JUST have buttons, you need a message to go with it!",
+                "There is no filter message - You can't JUST have buttons, you need a message to go with it!",
             )
             return
 
@@ -365,7 +364,7 @@ def reply_filter(update, context):  # sourcery no-metrics
                                 return
 
                     valid_format = escape_invalid_curly_brackets(
-                        text, VALID_WELCOME_FORMATTERS
+                        markdown_to_html(filt.reply_text), VALID_WELCOME_FORMATTERS
                     )
                     if valid_format:
                         filtext = valid_format.format(
@@ -424,7 +423,7 @@ def reply_filter(update, context):  # sourcery no-metrics
                     try:
                         context.bot.send_message(
                             chat.id,
-                            markdown_to_html(filtext),
+                            filtext,
                             reply_to_message_id=message.message_id,
                             parse_mode=parse_mode,
                             disable_web_page_preview=True,
@@ -436,8 +435,8 @@ def reply_filter(update, context):  # sourcery no-metrics
                             try:
                                 context.bot.send_message(
                                     chat.id,
-                                    markdown_to_html(filtext),
-                                    parse_mode=parse_mode,
+                                    filtext,
+                                    parse_mode=ParseMode.HTML,
                                     disable_web_page_preview=True,
                                     reply_markup=keyboard,
                                 )
@@ -468,7 +467,7 @@ def reply_filter(update, context):  # sourcery no-metrics
                     ENUM_FUNC_MAP[filt.file_type](
                         chat.id,
                         filt.file_id,
-                        caption=markdown_to_html(filtext),
+                        caption=filtext,
                         reply_to_message_id=message.message_id,
                         parse_mode=parse_mode,
                         reply_markup=keyboard,
@@ -554,6 +553,7 @@ def reply_filter(update, context):  # sourcery no-metrics
                     log.exception("Error in filters: " + excp.message)
             break
 
+
 @kigcmd(command="removeallfilters", filters=Filters.chat_type.groups)
 @spamcheck
 def rmall_filters(update, context):
@@ -580,6 +580,7 @@ def rmall_filters(update, context):
             reply_markup=buttons,
             parse_mode=ParseMode.MARKDOWN,
         )
+
 
 @kigcallback(pattern=r"filters_.*")
 @loggable
@@ -668,7 +669,7 @@ def __migrate__(old_chat_id, new_chat_id):
     sql.migrate_chat(old_chat_id, new_chat_id)
 
 
-def __chat_settings__(chat_id, user_id):
+def __chat_settings__(chat_id, _):
     cust_filters = sql.get_chat_triggers(chat_id)
     return "There are `{}` custom filters here.".format(len(cust_filters))
 
