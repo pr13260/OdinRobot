@@ -304,20 +304,20 @@ class CleanServiceSetting(BASE):
         return "<Chat used clean service ({})>".format(self.chat_id)
 
 
-class DefenseMode(BASE):
-    __tablename__ = "defense_mode"
+class RaidMode(BASE):
+    __tablename__ = "raid_mode"
     chat_id = Column(String(14), primary_key=True)
     status = Column(Boolean, default=False)
     time = Column(Integer, default=21600)
     acttime = Column(Integer, default=3600)
-    permanent = Column(Boolean, default=False)
+    # permanent = Column(Boolean, default=False)
 
-    def __init__(self, chat_id, status, time, acttime, permanent):
+    def __init__(self, chat_id, status, time, acttime):
         self.chat_id = str(chat_id)
         self.status = status
         self.time = time
         self.acttime = acttime
-        self.permanent = permanent
+        # self.permanent = permanent
 
 Welcome.__table__.create(checkfirst=True)
 WelcomeButtons.__table__.create(checkfirst=True)
@@ -325,7 +325,7 @@ GoodbyeButtons.__table__.create(checkfirst=True)
 WelcomeMute.__table__.create(checkfirst=True)
 WelcomeMuteUsers.__table__.create(checkfirst=True)
 CleanServiceSetting.__table__.create(checkfirst=True)
-DefenseMode.__table__.create(checkfirst=True)
+RaidMode.__table__.create(checkfirst=True)
 
 INSERTION_LOCK = threading.RLock()
 WELC_BTN_LOCK = threading.RLock()
@@ -333,7 +333,7 @@ LEAVE_BTN_LOCK = threading.RLock()
 WM_LOCK = threading.RLock()
 CS_LOCK = threading.RLock()
 
-DEFENSE_LOCK = threading.RLock()
+RAID_LOCK = threading.RLock()
 
 def welcome_mutes(chat_id):
     try:
@@ -628,44 +628,40 @@ def migrate_chat(old_chat_id, new_chat_id):
         SESSION.commit()
 
 
-def getDefenseStatus(chat_id):
+def getRaidStatus(chat_id):
     try:
-        stat = SESSION.query(DefenseMode).get(str(chat_id))
-        if stat:
+        if stat := SESSION.query(RaidMode).get(str(chat_id)):
             return stat.status, stat.time, stat.acttime
         return False, 21600, 3600 #default
     finally:
         SESSION.close()
 
 
-def setDefenseStatus(chat_id, status, time=21600, acttime=3600):
-    with DEFENSE_LOCK:
-        prevObj = SESSION.query(DefenseMode).get(str(chat_id))
-        perma = False
-        if prevObj:
-            perma = prevObj.permanent
+def setRaidStatus(chat_id, status, time=21600, acttime=3600):
+    with RAID_LOCK:
+        if prevObj := SESSION.query(RaidMode).get(str(chat_id)):
             SESSION.delete(prevObj)
-        newObj = DefenseMode(str(chat_id), status, time, acttime, perma or False)
+        newObj = RaidMode(str(chat_id), status, time, acttime)
         SESSION.add(newObj)
         SESSION.commit()
 
-def toggleDefenseStatus(chat_id):
+def toggleRaidStatus(chat_id):
     newObj = True
-    with DEFENSE_LOCK:
-        prevObj = SESSION.query(DefenseMode).get(str(chat_id))
+    with RAID_LOCK:
+        prevObj = SESSION.query(RaidMode).get(str(chat_id))
         if prevObj:
             newObj = not prevObj.status
-        stat = DefenseMode(str(chat_id), newObj, prevObj.time or 21600, prevObj.acttime or 3600, prevObj.permanent or False)
+        stat = RaidMode(str(chat_id), newObj, prevObj.time or 21600, prevObj.acttime or 3600)
         SESSION.add(stat)
         SESSION.commit()
         return newObj
 
 def _ResetRaidOnRestart():
-    with DEFENSE_LOCK:
-        raid = SESSION.query(DefenseMode).all()
+    with RAID_LOCK:
+        raid = SESSION.query(RaidMode).all()
         for r in raid:
             r.status = False
         SESSION.commit()
 
-# it uses a cron job to turn off so if the bot restarts then it will stay on
+# it uses a cron job to turn off so if the bot restarts and there is a pending raid disable job then raid will stay on
 _ResetRaidOnRestart()
