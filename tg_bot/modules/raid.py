@@ -68,7 +68,7 @@ def setRaid(update: Update, context: CallbackContext) -> Optional[str]:
     elif args[0] == "off":
         if stat:
             sql.setRaidStatus(chat.id, False, time, acttime)
-            j.scheduler.remove_job(RUNNING_RAIDS[chat.id])
+            j.scheduler.remove_job(RUNNING_RAIDS.pop(int(chat.id)))
             text = "Raid mode has been <code>Disabled</code>, members that join will no longer be kicked."
             msg.reply_text(text, parse_mode=ParseMode.HTML)
             return (
@@ -85,7 +85,7 @@ def setRaid(update: Update, context: CallbackContext) -> Optional[str]:
                 text = f"Raid mode is currently <code>Disabled</code>\nWould you like to <code>Enable</code> raid for {readable_time}?"
                 keyboard = [[
                     InlineKeyboardButton("Enable Raid",callback_data="enable_raid={}={}".format(chat.id, time)), 
-                    InlineKeyboardButton("Cancel",callback_data="cancel_raid=0"), 
+                    InlineKeyboardButton("Cancel Action",callback_data="cancel_raid=0"), 
                     ]]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 msg.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
@@ -110,6 +110,11 @@ def enable_raid_cb(update: Update, ctx: CallbackContext) -> Optional[str]:
     sql.setRaidStatus(chat_id, True, time, acttime)
     update.effective_message.edit_text(f"Raid mode has been <code>Enabled</code> for {readable_time}.", parse_mode=ParseMode.HTML)
     log.info("enabled raid mode in {} for {}".format(chat_id, readable_time))
+    try:
+        oldRaid = RUNNING_RAIDS.pop(int(chat_id))
+        j.scheduler.remove_job(oldRaid) # check if there was an old job
+    except KeyError:
+        pass
     def disable_raid(_):
         sql.setRaidStatus(chat_id, False, t, acttime)
         log.info("disbled raid mode in {}".format(chat_id))
@@ -135,7 +140,7 @@ def disable_raid_cb(update: Update, _: CallbackContext) -> Optional[str]:
     time = args[1]
     _, _, acttime = sql.getRaidStatus(chat_id)
     sql.setRaidStatus(chat_id, False, time, acttime)
-    j.scheduler.remove_job(RUNNING_RAIDS[int(chat_id)])
+    j.scheduler.remove_job(RUNNING_RAIDS.pop(int(chat_id)))
     update.effective_message.edit_text(
         'Raid mode has been <code>Disabled</code>, joinig members will no longer be kicked.',
         parse_mode=ParseMode.HTML,
