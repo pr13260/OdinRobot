@@ -14,6 +14,7 @@ from tg_bot import (
     SUDO_USERS,
     SUPPORT_USERS,
     OWNER_ID,
+    SYS_ADMIN,
     WHITELIST_USERS,
     spamcheck,
     dispatcher,
@@ -534,6 +535,7 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:
 
     return log
 
+WHITELISTED_USERS = [OWNER_ID, SYS_ADMIN] + DEV_USERS + SUDO_USERS + WHITELIST_USERS
 
 @kigcmd(command='selfunban', pass_args=True)
 @connection_status
@@ -544,7 +546,7 @@ def selfunban(update: Update, context: CallbackContext) -> Optional[str]:
     message = update.effective_message
     user = update.effective_user
     bot, args = context.bot, context.args
-    if user.id not in SUDO_USERS or user.id not in WHITELIST_USERS:
+    if user.id not in WHITELISTED_USERS:
         return
 
     try:
