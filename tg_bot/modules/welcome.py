@@ -711,7 +711,7 @@ def welcome(update: Update, context: CallbackContext):
     user = res_user(u, msg.message_id, chat)
     # if no args, show current replies.
     if not args or args[0].lower() == "noformat":
-        noformat = True
+        noformat = bool(args and args[0].lower() == "noformat")
         pref, welcome_m, cust_content, welcome_type = sql.get_welc_pref(chat.id)
         update.effective_message.reply_text(
             f"This chat has it's welcome setting set to: `{pref}`.\n"
@@ -777,7 +777,7 @@ def goodbye(update: Update, context: CallbackContext):
     user = res_user(u, msg.message_id, chat)
 
     if not args or args[0] == "noformat":
-        noformat = True
+        noformat = bool(args and args[0].lower() == "noformat")
         pref, goodbye_m, goodbye_type = sql.get_gdbye_pref(chat.id)
         update.effective_message.reply_text(
             f"This chat has it's goodbye setting set to: `{pref}`.\n"
