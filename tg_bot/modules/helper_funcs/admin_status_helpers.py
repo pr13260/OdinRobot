@@ -1,13 +1,14 @@
 # admin status module by Luke (@itsLuuke - t.me/itsLuuke)
 # written for OdinRobot
 # copyright 2022
+# this module contains various helper functions/classes to help with the admin status module
 
 from enum import Enum
 from cachetools import TTLCache
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Message
 
-from tg_bot import DEV_USERS, MOD_USERS, SUDO_USERS, SUPPORT_USERS, WHITELIST_USERS
+from tg_bot import OWNER_ID, SYS_ADMIN, DEV_USERS, MOD_USERS, SUDO_USERS, SUPPORT_USERS, WHITELIST_USERS
 
 # stores admin in memory for 10 min.
 ADMINS_CACHE = TTLCache(maxsize = 512, ttl = 60 * 10)
@@ -24,16 +25,6 @@ WHITELIST_USERS = WHITELIST_USERS + SUDO_USERS
 SUPPORT_USERS = SUPPORT_USERS + SUDO_USERS
 
 MOD_USERS = MOD_USERS + SUDO_USERS
-#
-# DEV_USERS = []
-#
-# SUDO_USERS = []
-#
-# WHITELIST_USERS = []
-#
-# SUPPORT_USERS = []
-#
-# MOD_USERS = []
 
 
 class AdminPerms(Enum):
@@ -56,6 +47,16 @@ class ChatStatus(Enum):
 	ADMIN = "administrator"
 
 
+class SuperUsers(Enum):
+	Owner = [OWNER_ID]
+	SysAdmin = [OWNER_ID, SYS_ADMIN]
+	Devs = DEV_USERS
+	Sudos = SUDO_USERS
+	Supports = SUPPORT_USERS
+	Whitelist = WHITELIST_USERS
+	Mods = MOD_USERS
+
+
 def anon_reply_markup(cb_id: str) -> InlineKeyboardMarkup:
 	return InlineKeyboardMarkup(
 		[
@@ -73,6 +74,9 @@ anon_reply_text = "Seems like you're anonymous, click the button below to prove 
 
 
 def edit_anon_msg(msg: Message, text: str):
+	"""
+	edit anon check message and remove the button
+	"""
 	msg.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=None)
 
 

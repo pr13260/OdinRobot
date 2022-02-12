@@ -7,23 +7,24 @@ from typing import Optional
 from threading import RLock
 
 from telegram import Chat, Update, ChatMember, ParseMode
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext as Ctx
 
 from tg_bot import dispatcher
 
-from ..helper_funcs.decorators import kigcallback
+from ..helper_funcs.decorators import kigcallback as kigCb
 
 from .admin_status_helpers import (
-	ADMINS_CACHE,
-	BOT_ADMIN_CACHE,
+	ADMINS_CACHE as A_CACHE,
+	BOT_ADMIN_CACHE as B_CACHE,
 	SUDO_USERS,
 	MOD_USERS,
 	AdminPerms,
 	UserClass,
-	anon_reply_markup,
-	anon_reply_text,
-	anon_callbacks,
-	edit_anon_msg as eam
+	anon_reply_markup as arm,
+	anon_reply_text as art,
+	anon_callbacks as a_cb,
+	edit_anon_msg as eam,
+	SuperUsers
 )
 
 
@@ -33,42 +34,44 @@ def bot_is_admin(chat: Chat, perm: Optional[AdminPerms] = None) -> bool:
 		return True
 
 	try:  # try to get from cache
-		bot_member = BOT_ADMIN_CACHE[chat.id]
+		bot_member = B_CACHE[chat.id]
 	except KeyError:  # if not in cache, get from API and save to cache
 		bot_member = dispatcher.bot.getChatMember(chat.id, bot_id)
-		BOT_ADMIN_CACHE[chat.id] = bot_member
+		B_CACHE[chat.id] = bot_member
 
 	if perm:
 		return getattr(bot_member, perm.value)
 
 	return bot_member.status == "administrator"  # bot can't be owner
 
+
 # decorator, can be used as
 # @bot_perm_check() with no perm to check for admin-ship only
 # or as @bot_perm_check(AdminPerms.value) to check for a specific permission
-def bot_admin_check(permission: Optional[AdminPerms] = None):
+def bot_admin_check(permission: AdminPerms = None):
 	def wrapper(func):
 		@wraps(func)
-		def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
+		def wrapped(update: Update, context: Ctx, *args, **kwargs):
 			nonlocal permission
 			chat = update.effective_chat
 			if chat.type == "private" or chat.all_members_are_administrators:
 				return func(update, context, *args, **kwargs)
 			bot_id = dispatcher.bot.id
+
 			try:  # try to get from cache
-				bot_member = BOT_ADMIN_CACHE[chat.id]
+				bot_member = B_CACHE[chat.id]
 			except KeyError:  # if not in cache, get from API and save to cache
 				bot_member = dispatcher.bot.getChatMember(chat.id, bot_id)
-				BOT_ADMIN_CACHE[chat.id] = bot_member
+				B_CACHE[chat.id] = bot_member
+
 			if permission:  # if a perm is required, check for it
 				if getattr(bot_member, permission.value):
-					update.effective_message.reply_text("I have enough permissions to do that!")
-					return func(update, context, *args, **kwargs)
+					func(update, context, *args, **kwargs)
 				return update.effective_message.reply_text(
 						f"I can't perform this action due to missing the following permission: `{permission.name}`\n\
 						Make sure i am an admin and {permission.name.replace('is_', 'am ').replace('_', ' ')}!")
+
 			if bot_member.status == "administrator":  # if no perm is required, check for admin-ship only
-				update.effective_message.reply_text("I am admin here!")
 				return func(update, context, *args, **kwargs)
 			else:  # not admin
 				return update.effective_message.reply_text("I can't perform this action because I'm not admin!")
@@ -109,13 +112,13 @@ RLOCK = RLock()
 def get_mem_from_cache(user_id: int, chat_id: int) -> ChatMember:
 	with RLOCK:
 		try:
-			for i in ADMINS_CACHE[chat_id]:
+			for i in A_CACHE[chat_id]:
 				if i.user.id == user_id:
 					return i
 
 		except KeyError:
 			admins = dispatcher.bot.getChatAdministrators(chat_id)
-			ADMINS_CACHE[chat_id] = admins
+			A_CACHE[chat_id] = admins
 			for i in admins:
 				if i.user.id == user_id:
 					return i
@@ -124,10 +127,10 @@ def get_mem_from_cache(user_id: int, chat_id: int) -> ChatMember:
 # decorator, can be used as @bot_admin_check() to check user is admin
 # or @bot_admin_check(AdminPerms.value) to check for a specific permission
 # ustat can be used in both cases to allow moderators to use the command
-def user_admin_check(permission: AdminPerms = None, ustat: UserClass = UserClass.ADMIN):
+def user_admin_check(permission: AdminPerms = None, ustat: UserClass = UserClass.ADMIN):  # TODO: noreply var for callbacks
 	def wrapper(func):
 		@wraps(func)
-		def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
+		def wrapped(update: Update, context: Ctx, *args, **kwargs):
 			nonlocal permission
 			if update.effective_chat.type == 'private':
 				return func(update, context, *args, **kwargs)
@@ -135,30 +138,30 @@ def user_admin_check(permission: AdminPerms = None, ustat: UserClass = UserClass
 
 			if update.effective_message.sender_chat:  # anonymous sender
 				# callback contains chat_id, message_id, and the required perm
-				callback_id = f'perm/{message.chat.id}/{message.message_id}/{permission.value if permission else "None"}'
+				callback_id = f'AnonCB/{message.chat.id}/{message.message_id}/{permission.value if permission else "None"}'
 				# store the function to be called in a (chat_id, message_id) tuple
 				# stored data will be (update, context), func, callback message_id
-				anon_callbacks[(message.chat.id, message.message_id)] = (
+				a_cb[(message.chat.id, message.message_id)] = (
 					(update, context),
-					func,
-					message.reply_text(
-							text=anon_reply_text,
-							reply_markup=anon_reply_markup(callback_id)).message_id
+					func)
+				message.reply_text(
+					text = art,
+					reply_markup = arm(callback_id)
 				)
 
 			# not anon so just check for admin/perm
 			else:
 				user_id = message.from_user.id
 				if user_is_admin(
-							update,
-							user_id,
-							allow_moderators=ustat == UserClass.MOD,  # allow moderators only if ustat is MOD_USERS
-							perm=permission):
+						update,
+						user_id,
+						allow_moderators = ustat == UserClass.MOD,  # allow moderators only if ustat is MOD_USERS
+						perm = permission):
 					return func(update, context, *args, **kwargs)
 
 				return message.reply_text(
 						f"You lack the following permission for this command:\n`{permission.value}`!",
-						parse_mode=ParseMode.MARKDOWN
+						parse_mode = ParseMode.MARKDOWN
 				)
 
 		return wrapped
@@ -166,48 +169,59 @@ def user_admin_check(permission: AdminPerms = None, ustat: UserClass = UserClass
 	return wrapper
 
 
-@kigcallback(pattern="perm")
-def perm_callback_check(upd: Update, _: CallbackContext):
+# TODO
+def user_not_admin(noreply: bool = False):
+	noreply
+
+
+@kigCb(pattern = "AnonCB")
+def perm_callback_check(upd: Update, _: Ctx):
 	callback = upd.callback_query
-	perm = callback.data.split('/')[3]
 	chat_id = int(callback.data.split('/')[1])
 	message_id = int(callback.data.split('/')[2])
+	perm = callback.data.split('/')[3]
 	user_id = callback.from_user.id
 	msg = upd.effective_message
 
-	mem = user_is_admin(upd, user_id, perm=perm if perm != 'None' else None)
+	mem = user_is_admin(upd, user_id, perm = perm if perm != 'None' else None)
 
-	if perm == 'None':  # just check for admin
+	if not mem:  # not admin or doesn't have the required perm
+		eam(msg,
+			"You need to be an admin to perform this action!"
+			if not perm == 'None'
+			else f"You lack the permission: `{perm}`!")
+		return
 
-		if not mem:
-			eam(msg, "You need to be an admin to perform this action!")
-			return
+	try:
+		cb = a_cb.pop((chat_id, message_id), None)
+	except KeyError:
+		eam(msg, "This message is no longer valid.")
+		return
 
-		elif cb := anon_callbacks.pop((chat_id, message_id), None):
-			message_id = cb[2]
-			if message_id is not None:
-				dispatcher.bot.delete_message(chat_id, message_id)
+	msg.delete()
 
-				# update the `Update` attributes by the correct values, so they can be used properly
-				setattr(cb[0][0], "_effective_user", upd.effective_user)
-				setattr(cb[0][0], "_effective_message", upd.effective_message)
+	# update the `Update` attributes by the correct values, so they can be used properly
+	setattr(cb[0][0], "_effective_user", upd.effective_user)
+	setattr(cb[0][0], "_effective_message", upd.effective_message)
 
-			return cb[1](cb[0][0], cb[0][1])
-		else:
-			eam(msg, "This message is no longer valid.")
+	return cb[1](cb[0][0], cb[0][1])  # return func(update, context)
 
-	elif mem:
-		if cb := anon_callbacks.pop((chat_id, message_id), None):
-			message_id = cb[2]
-			if message_id is not None:
-				dispatcher.bot.delete_message(chat_id, message_id)
 
-				# update the `Update` attributes by the correct values, so they can be used properly
-				setattr(cb[0][0], "_effective_user", upd.effective_user)
-				setattr(cb[0][0], "_effective_message", upd.effective_message)
-
-			return cb[1](cb[0][0], cb[0][1])
-		else:
-			eam(msg, "This message is no longer valid.")
-	else:
-		eam(msg, f"You lack the permission: `{perm}`!")
+# decorator, can be used as @restricted_cmd() to restrict the command usage to the bot owner
+# or @restricted_cmd(SuperUsers.value) to allow certain superusers to use the command
+# silent bool is weather to reply that the command can't be used ir just return
+def restricted_cmd(
+		restricted_to: SuperUsers = SuperUsers.Owner,
+		silent: bool = True
+):  # maybe add another bool to delete it
+	def wrapper(func):
+		@wraps(func)
+		def wrapped(update: Update, _: Ctx):
+			if update.effective_message.from_user.id not in restricted_to.value:
+				if not silent:
+					update.effective_message.reply_text(
+							f"This command is restricted to the bot {restricted_to.name}, you can't use it!"
+					)
+				return
+		return wrapped
+	return wrapper
