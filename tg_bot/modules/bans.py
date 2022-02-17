@@ -53,10 +53,8 @@ from .helper_funcs.admin_status import (
     user_is_admin,
 )
 
-@kigcmd(command=('dban'), pass_args=True)
-@kigcmd(command=('dsban'), pass_args=True)
-@kigcmd(command=('sban'), pass_args=True)
-@kigcmd(command=('ban'), pass_args=True)
+
+@kigcmd(command=['ban', 'dban', 'sban', 'dsban'], pass_args=True)
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
@@ -68,12 +66,9 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     message = update.effective_message  # type: Optional[Message]
     args = context.args
 
-    # user = u
-    log_message = ""
-    reason = ""
+
     bot = context.bot
     log_message = ""
-    reason = ""
     if message.reply_to_message and message.reply_to_message.sender_chat:
 
         if message.text.startswith(('/s','!s','>s')):
@@ -83,23 +78,23 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
                 return ""
         else:
             silent = False
-        if message.text.startswith(('/d','!d','>d')):
+        if message.text.startswith(('/d', '!d', '>d')):
             delban = True
             if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
-                message.reply_text("I dont't have permission to delete messages here!")
+                message.reply_text("I don't have permission to delete messages here!")
                 return ""
             if not user_is_admin(chat, user.id, perm=AdminPerms.CAN_DELETE_MESSAGES):
-                message.reply_text("You dont't have permission to delete messages here!")
+                message.reply_text("You don't have permission to delete messages here!")
                 return ""
         else:
             delban = False
-        if message.text.startswith(('/ds','!ds','>ds')):
+        if message.text.startswith(('/ds', '!ds', '>ds')):
             delsilent = True
             if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
-                message.reply_text("I dont't have permission to delete messages here!")
+                message.reply_text("I don't have permission to delete messages here!")
                 return ""
             if not user_is_admin(chat, user.id, perm=AdminPerms.CAN_DELETE_MESSAGES):
-                message.reply_text("You dont't have permission to delete messages here!")
+                message.reply_text("You don't have permission to delete messages here!")
                 return ""
 
         r = bot.ban_chat_sender_chat(chat_id=chat.id, sender_chat_id=message.reply_to_message.sender_chat.id)
@@ -116,9 +111,8 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
                 message.reply_to_message.delete() 
             message.delete()
             return logmsg
-        if delban:
-            if message.reply_to_message:
-                message.reply_to_message.delete()
+        if delban and message.reply_to_message:
+            message.reply_to_message.delete()
         context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         if r:
             message.reply_text("Channel {} was banned successfully from {}".format(
@@ -157,17 +151,17 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     if message.text.startswith(('/s','!s','>s')):
         silent = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
-            message.reply_text("I dont't have permission to delete messages here!")
+            message.reply_text("I don't have permission to delete messages here!")
             return ""
     else:
         silent = False
-    if message.text.startswith(('/d','!d','>d')):
+    if message.text.startswith(('/d', '!d', '>d')):
         delban = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
-            message.reply_text("I dont't have permission to delete messages here!")
+            message.reply_text("I don't have permission to delete messages here!")
             return ""
         if not user_is_admin(chat, user.id, perm=AdminPerms.CAN_DELETE_MESSAGES):
-            message.reply_text("You dont't have permission to delete messages here!")
+            message.reply_text("You don't have permission to delete messages here!")
             return ""
     else:
         delban = False
@@ -177,7 +171,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
             message.reply_text("I dont't have permission to delete messages here!")
             return ""
         if not user_is_admin(chat, user.id, perm=AdminPerms.CAN_DELETE_MESSAGES):
-            message.reply_text("You dont't have permission to delete messages here!")
+            message.reply_text("You don't have permission to delete messages here!")
             return ""
     else:
         delsilent = False
@@ -195,12 +189,11 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
         if silent:
             if delsilent and message.reply_to_message:
-                message.reply_to_message.delete() 
+                message.reply_to_message.delete()
             message.delete()
             return log
-        if delban:
-            if message.reply_to_message:
-                message.reply_to_message.delete()
+        if delban and message.reply_to_message:
+            message.reply_to_message.delete()
         context.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         if reason:
             context.bot.sendMessage(

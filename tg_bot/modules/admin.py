@@ -4,8 +4,8 @@ from telegram import ParseMode, Update
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-from telegram.utils.helpers import escape_markdown, mention_html
-from telethon import events
+from telegram.utils.helpers import mention_html
+from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.types import ChannelParticipantsAdmins
 from telethon.tl.types import ChannelParticipantCreator
 from tg_bot import telethn
@@ -148,7 +148,7 @@ def promote(update: Update, context: CallbackContext) -> Optional[str]:
         return
 
     # set same perms as bot - bot can't assign higher perms than itself!
-    bot_member = get_bot_member(bot.id)
+    bot_member = get_bot_member(chat.id)
 
     try:
         bot.promoteChatMember(
@@ -426,13 +426,15 @@ async def adminList(event):
             bots.append("\nㅤㅤ• {}".format(name))
 
         else:
-
-            if user.status.anonymous:
-                continue
+            try:
+                if user.participant.admin_rights.is_anonymous:
+                    continue
+            except:
+                pass
 
             try:
-                if user.first_name == "":
-                    name = "☠ Zombie"
+                if not user.first_name or user.deleted:
+                    continue
                 else:
                     name = "[{}](tg://user?id={})".format(user.first_name, user.id)
             except AttributeError:
@@ -465,3 +467,4 @@ def get_help(chat):
 
 
 __mod_name__ = "Admin"
+

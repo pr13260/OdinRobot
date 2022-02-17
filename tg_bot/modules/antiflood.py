@@ -144,7 +144,7 @@ def check_channel_flood(update: Update, _: CallbackContext) -> Optional[str]:
 
     try:
         chat.ban_sender_chat(user.id)
-        execstrings = "Banned Channel"
+        execstrings = "Banned Channel: " + user.title
         tag = "BANNED"
         send_message(
             update.effective_message, "*Anti Flood Triggered!\n{}!".format(execstrings)
