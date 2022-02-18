@@ -90,8 +90,9 @@ def broadcast(update: Update, context: CallbackContext):
             f"Broadcast complete.\nGroups failed: {failed}.\nUsers failed: {failed_user}."
         )
 
+
 @kigmsg((Filters.all & Filters.chat_type.groups), group=USERS_GROUP)
-def log_user(update: Update, context: CallbackContext):
+def log_user(update: Update, _: CallbackContext):
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -114,6 +115,13 @@ def log_user(update: Update, context: CallbackContext):
                 update_user(x.user.id, x.user.username)
             except AttributeError:
                 pass
+
+    if msg.sender_chat:
+        update_user(msg.sender_chat.id, msg.sender_chat.username, chat.id, chat.title)
+
+    if msg.reply_to_message.sender_chat:
+        update_user(msg.reply_to_message.sender_chat.id, msg.reply_to_message.sender_chat.username, chat.id, chat.title)
+
 
 @kigcmd(command='chatlist')
 @spamcheck
