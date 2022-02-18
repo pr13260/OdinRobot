@@ -9,10 +9,10 @@ from telegram.ext import CallbackContext
 
 from .helper_funcs.chat_status import connection_status
 from .log_channel import loggable
+from .sql.approve_sql import is_approved
 from ..modules.helper_funcs.admin_status import user_admin_check, bot_admin_check, AdminPerms, bot_is_admin
 import html
 from ..modules.sql.antichannel_sql import antichannel_status, disable_antichannel, enable_antichannel
-
 
 @kigcmd(command="antichannel", group=100)
 @connection_status
@@ -64,6 +64,11 @@ def eliminate_channel(update: Update, context: CallbackContext):
     bot = context.bot
     if not antichannel_status(chat.id):
         return
+
+    # ignore approved users
+    if is_approved(chat.id, message.sender_chat.id):
+        return
+
     message.delete()
     sender_chat = message.sender_chat
     try:
