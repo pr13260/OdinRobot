@@ -138,6 +138,11 @@ def check_channel_flood(update: Update, _: CallbackContext) -> Optional[str]:
     if not user:  # only for channels
         return ""
 
+    # ignore approved users
+    if is_approved(chat.id, user.id):
+        sql.update_flood(chat.id, None)
+        return
+
     should_ban = sql.update_flood(chat.id, user.id)
     if not should_ban:
         return ""

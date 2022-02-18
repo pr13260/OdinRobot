@@ -13,7 +13,6 @@ import tg_bot.modules.sql.locks_sql as sql
 from tg_bot import dispatcher, SUDO_USERS, log, spamcheck
 
 from .log_channel import loggable
-from .connection import connected
 
 from .helper_funcs.alternate import send_message, typing_action
 
@@ -231,7 +230,7 @@ def unlock(update, context) -> str:  # sourcery no-metrics
     args = context.args
     chat = update.effective_chat
     user = update.effective_user
-    if user_is_admin(update, message.from_user.id, allow_moderators=True):
+    if user_is_admin(update, user.id, allow_moderators=True):
         if len(args) >= 1:
             ltype = args[0].lower()
             if ltype in LOCK_TYPES:
@@ -289,7 +288,7 @@ def unlock(update, context) -> str:  # sourcery no-metrics
 def del_lockables(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
-    user = update.effective_user
+    user = message.sender_chat or update.effective_user
     if is_approved(chat.id, user.id):
         return
     for lockable, filter in LOCK_TYPES.items():

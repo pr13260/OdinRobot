@@ -350,7 +350,7 @@ def del_blackliststicker(update: Update, context: CallbackContext):
     bot = context.bot
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
-    user = update.effective_user
+    user = message.sender_chat or update.effective_user
     to_match = message.sticker
     if not to_match or not to_match.set_name:
         return

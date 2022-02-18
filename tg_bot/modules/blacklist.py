@@ -1,8 +1,8 @@
 import html
 import re
-from telegram import ChatPermissions
+from telegram import ChatPermissions, Update
 from telegram.error import BadRequest
-from telegram.ext import Filters
+from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
 import tg_bot.modules.sql.blacklist_sql as sql
 from .. import SUDO_USERS, log, spamcheck
@@ -406,10 +406,10 @@ def findall(p, s):
 
 @kigmsg(((Filters.text | Filters.command | Filters.sticker | Filters.photo) & Filters.chat_type.groups), group=BLACKLIST_GROUP)
 @user_not_admin_check
-def del_blacklist(update, context):  # sourcery no-metrics
+def del_blacklist(update: Update, context: CallbackContext):  # sourcery no-metrics
     chat = update.effective_chat
     message = update.effective_message
-    user = update.effective_user
+    user = message.sender_chat or update.effective_user
     bot = context.bot
     to_match = extract_text(message)
     # print("to_match")
