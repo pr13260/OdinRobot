@@ -91,7 +91,7 @@ def user_is_admin(update: Update,
 					) -> bool:
 	chat = update.effective_chat
 	message = update.effective_message
-	if chat.type == "private" or user_id in MOD_USERS if allow_moderators else SUDO_USERS:
+	if chat.type == "private" or user_id in (MOD_USERS if allow_moderators else SUDO_USERS):
 		return True
 
 	if channels and (message.sender_chat is not None and message.sender_chat.type != "channel"):
@@ -173,13 +173,14 @@ def user_not_admin_check(func):
 	@wraps(func)
 	def wrapped(update: Update, context: Ctx, *args, **kwargs):
 		message = update.effective_message
-		user = update.effective_user
+		user = message.sender_chat or update.effective_user
 		if (message.is_automatic_forward
 				or (message.sender_chat and message.sender_chat.type != "channel")
 				or not user):
 			return
 		elif not user_is_admin(update, user.id, channels = True):
 			return func(update, context, *args, **kwargs)
+		return
 	return wrapped
 
 

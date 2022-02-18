@@ -159,7 +159,7 @@ def demoteanon(update: Update, context: CallbackContext) -> Optional[str]:
         return
 
     # set same perms as bot - bot can't assign higher perms than itself!
-    bot_member = get_bot_member(bot.id)
+    bot_member = get_bot_member(chat.id)
     # set same perms as user -  to keep the other perms untouched!
     u_member = chat.get_member(user_id)
     # the perms may be not same as old ones if the bot doesn't have the rights to change them but can't do anything about it

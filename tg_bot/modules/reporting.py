@@ -71,23 +71,8 @@ def report(update: Update, context: CallbackContext) -> str:
         logsql.set_chat_setting(logsql.LogChannelSettings(chat.id, True, True, True, True, True))
         log_setting = logsql.get_chat_setting(chat.id)
 
-    admin_list = [i.user.id for i in A_CACHE[chat.id]]
-
-    if message.sender_chat:
-        reported = "Reported to admins."
-        for admin in admin_list:
-            if admin.user.is_bot:  # AI didnt take over yet
-                continue
-            try:
-                reported += f"<a href=\"tg://user?id={admin.user.id}\">\u2063</a>"
-            except BadRequest:
-                log.exception("Exception while reporting user")
-        message.reply_text(reported, parse_mode=ParseMode.HTML)
-
     if chat and message.reply_to_message and sql.chat_should_report(chat.id):
         reported_user = message.reply_to_message.from_user
-        message = update.effective_message
-
 
         if user.id == reported_user.id:
             message.reply_text("Uh yeah, Sure sure...maso much?")
@@ -101,9 +86,22 @@ def report(update: Update, context: CallbackContext) -> str:
             message.reply_text("Uh? You reporting a Super user?")
             return ""
 
+        admin_list = [i.user.id for i in A_CACHE[chat.id] if not (i.user.is_bot or i.is_anonymous)]
+
         if reported_user.id in admin_list:
             message.reply_text("Why are you reporting an admin?")
             return ""
+
+        if message.sender_chat:
+            reported = "Reported to admins."
+            for admin in admin_list:
+                try:
+                    reported += f"<a href=\"tg://user?id={admin}\">\u2063</a>"
+                except BadRequest:
+                    log.exception(f"Exception while reporting user: {user} in chat: {chat.id}")
+            message.reply_text(reported, parse_mode = ParseMode.HTML)
+
+        message = update.effective_message
         msg = (
             f"<b>⚠️ Report: </b>{html.escape(chat.title)}\n"
             f"<b> • Report by:</b> {mention_html(user.id, user.first_name)}(<code>{user.id}</code>)\n"
@@ -111,7 +109,7 @@ def report(update: Update, context: CallbackContext) -> str:
         )
         tmsg = ""
         for admin in admin_list:
-            link = mention_html(admin, "​") # contains 0 width chatacters
+            link = mention_html(admin, "​")  # contains 0 width chatacters
             tmsg += link
 
         keyboard2 = [
