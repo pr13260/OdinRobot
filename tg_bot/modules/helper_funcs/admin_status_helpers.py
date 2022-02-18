@@ -11,10 +11,10 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Mess
 from tg_bot import OWNER_ID, SYS_ADMIN, DEV_USERS, MOD_USERS, SUDO_USERS, SUPPORT_USERS, WHITELIST_USERS
 
 # stores admin in memory for 10 min.
-ADMINS_CACHE = TTLCache(maxsize = 512, ttl = 60 * 10)
+ADMINS_CACHE = TTLCache(maxsize = 512, ttl = 60 * 30)
 
 # stores bot admin status in memory for 10 min.
-BOT_ADMIN_CACHE = TTLCache(maxsize = 512, ttl = 60 * 10)
+BOT_ADMIN_CACHE = TTLCache(maxsize = 512, ttl = 60 * 30)
 
 DEV_USERS = DEV_USERS
 
