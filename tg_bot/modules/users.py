@@ -115,7 +115,10 @@ def log_user(update: Update, _: CallbackContext):
         if rep.entities:
             for entity in rep.entities:
                 if entity.type in ["text_mention", "mention"]:
-                    update_user(entity.user.id, entity.user.username)
+                    try:
+                        update_user(entity.user.id, entity.user.username)
+                    except AttributeError:
+                        pass
 
         if rep.sender_chat:
             update_user(
@@ -131,7 +134,10 @@ def log_user(update: Update, _: CallbackContext):
     if msg.entities:
         for entity in msg.entities:
             if entity.type in ["text_mention", "mention"]:
-                update_user(entity.user.id, entity.user.username)
+                try:
+                    update_user(entity.user.id, entity.user.username)
+                except AttributeError:
+                    pass
 
     if msg.sender_chat:
         update_user(msg.sender_chat.id, msg.sender_chat.username, chat.id, chat.title)
