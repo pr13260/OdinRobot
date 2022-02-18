@@ -98,29 +98,49 @@ def log_user(update: Update, _: CallbackContext):
 
     update_user(msg.from_user.id, msg.from_user.username, chat.id, chat.title)
 
-    if msg.reply_to_message:
+    if rep := msg.reply_to_message:
         update_user(
-            msg.reply_to_message.from_user.id,
-            msg.reply_to_message.from_user.username,
+            rep.from_user.id,
+            rep.from_user.username,
             chat.id,
             chat.title,
         )
 
+        if rep.forward_from:
+            update_user(
+                rep.forward_from.id,
+                rep.forward_from.username,
+            )
+
+        if rep.entities:
+            for entity in rep.entities:
+                if entity.type in ["text_mention", "mention"]:
+                    update_user(entity.user.id, entity.user.username)
+
+        if rep.sender_chat:
+            update_user(
+                rep.sender_chat.id,
+                rep.sender_chat.username,
+                chat.id,
+                chat.title,
+            )
+
     if msg.forward_from:
         update_user(msg.forward_from.id, msg.forward_from.username)
-    
+
     if msg.entities:
-        for x in msg.entities:
-            try:
-                update_user(x.user.id, x.user.username)
-            except AttributeError:
-                pass
+        for entity in msg.entities:
+            if entity.type in ["text_mention", "mention"]:
+                update_user(entity.user.id, entity.user.username)
 
     if msg.sender_chat:
         update_user(msg.sender_chat.id, msg.sender_chat.username, chat.id, chat.title)
 
-    if msg.reply_to_message.sender_chat:
-        update_user(msg.reply_to_message.sender_chat.id, msg.reply_to_message.sender_chat.username, chat.id, chat.title)
+    if msg.new_chat_members:
+        for user in msg.new_chat_members:
+            if user.id == msg.from_user.id:  # we already added that in the first place
+                continue
+            update_user(user.id, user.username, chat.id, chat.title)
 
 
 @kigcmd(command='chatlist')
