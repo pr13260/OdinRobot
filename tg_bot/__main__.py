@@ -41,6 +41,10 @@ from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
 from tg_bot.modules.language import gs
 
+from tg_bot.modules.helper_funcs.admin_status import (
+    user_is_admin
+)
+
 bot_firstname = dispatcher.bot.first_name.split(" ")[0]
 
 IMPORTED = {}
