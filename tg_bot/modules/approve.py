@@ -1,6 +1,6 @@
 import html
 
-from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton, Update, User
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
@@ -13,13 +13,13 @@ from .log_channel import loggable
 from tg_bot import SUDO_USERS, spamcheck
 from .helper_funcs.admin_status import (
     user_admin_check,
-    bot_admin_check,
     AdminPerms,
-    get_bot_member,
-    user_is_admin
 )
 
-# TODO: approve channels
+
+def build_mention(user) -> str:
+    return mention_html(user.user.id, user.user.first_name) if user.first_name \
+        else f'<a href="t.me/{user.username}">{html.escape(user.title)}</a>'
 
 
 @kigcmd(command='approve', filters=Filters.chat_type.groups)
@@ -32,6 +32,7 @@ def approve(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     args = context.args
     user = update.effective_user
+    bot = context.bot
 
     user_id = extract_user(message, args)
     if not user_id:
@@ -39,32 +40,41 @@ def approve(update: Update, context: CallbackContext) -> str:
             "I don't know who you're talking about, you're going to need to specify a user!"
         )
         return ""
+    member = None
+    chan = None
     try:
         member = chat.get_member(user_id)
     except BadRequest:
-        return ""
-    if member.status == "administrator" or member.status == "creator":
+        try:
+            chan = bot.get_chat(user_id)
+        except BadRequest as excp:
+            if excp.message != "Chat not found":
+                raise
+            message.reply_text("Can't seem to find this person.")
+            return ""
+    if member and (member.status == "administrator" or member.status == "creator"):
         message.reply_text(
             "User is already admin - locks, blocklists, and antiflood already don't apply to them."
         )
         return ""
+    user_mention = build_mention(member or chan)
     if sql.is_approved(message.chat_id, user_id):
         message.reply_text(
-            f"[{member.user['first_name']}](tg://user?id={member.user['id']}) is already approved in {chat_title}",
-            parse_mode=ParseMode.MARKDOWN,
+            f"{user_mention} is already approved in {html.escape(chat_title)}",
+            parse_mode=ParseMode.HTML,
         )
         return ""
     sql.approve(message.chat_id, user_id)
     message.reply_text(
-        f"[{member.user['first_name']}](tg://user?id={member.user['id']}) has been approved in {chat_title}! They "
+        f"{user_mention} has been approved in {html.escape(chat_title)}! They "
         f"will now be ignored by automated admin actions like locks, blocklists, and antiflood.",
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.HTML,
     )
     log_message = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#APPROVED\n"
         f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
-        f"<b>User:</b> {mention_html(member.user.id, member.user.first_name)}")
+        f"<b>User:</b> {user_mention}")
 
     return log_message
 
@@ -79,30 +89,38 @@ def disapprove(update: Update, context: CallbackContext):
     chat = update.effective_chat
     args = context.args
     user = update.effective_user
+    bot = context.bot
     user_id = extract_user(message, args)
-    if not user_id:
-        message.reply_text(
-            "I don't know who you're talking about, you're going to need to specify a user!"
-        )
-        return ""
+
+    member = None
+    chan = None
     try:
         member = chat.get_member(user_id)
     except BadRequest:
+        try:
+            chan = bot.get_chat(user_id)
+        except BadRequest as excp:
+            if excp.message != "Chat not found":
+                raise
+            message.reply_text("Can't seem to find this person.")
+            return ""
+    if member and (member.status == "administrator" or member.status == "creator"):
+        message.reply_text(
+            "User is already admin - locks, blocklists, and antiflood already don't apply to them."
+        )
         return ""
-    if member.status == "administrator" or member.status == "creator":
-        message.reply_text("This user is an admin, they can't be unapproved.")
-        return ""
+    user_mention = build_mention(member or chan)
     if not sql.is_approved(message.chat_id, user_id):
-        message.reply_text(f"{member.user['first_name']} isn't approved yet!")
+        message.reply_text(f"{user_mention} isn't approved yet!", parse_mode = ParseMode.HTML)
         return ""
     sql.disapprove(message.chat_id, user_id)
     message.reply_text(
-        f"{member.user['first_name']} is no longer approved in {chat_title}.")
+        f"{user_mention} is no longer approved in {chat_title}.", parse_mode = ParseMode.HTML)
     log_message = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#UNAPPROVED\n"
         f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
-        f"<b>User:</b> {mention_html(member.user.id, member.user.first_name)}")
+        f"<b>User:</b> {user_mention}")
 
     return log_message
 
@@ -110,15 +128,19 @@ def disapprove(update: Update, context: CallbackContext):
 @kigcmd(command='approved', filters=Filters.chat_type.groups)
 @spamcheck
 @user_admin_check()
-def approved(update: Update, _: CallbackContext):
+def approved(update: Update, context: CallbackContext):
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
+    bot = context.bot
     msg = "The following users are approved.\n"
     approved_users = sql.list_approved(message.chat_id)
     for i in approved_users:
-        member = chat.get_member(int(i.user_id))
-        msg += f"- `{i.user_id}`: {member.user['first_name']}\n"
+        try:
+            member = chat.get_member(int(i.user_id))
+        except:
+            member = bot.get_chat(int(i.user_id))
+        msg += f"- `{i.user_id}`: {member.user['first_name'] or member.title}\n"
     if msg.endswith("approved.\n"):
         message.reply_text(f"No users are approved in {chat_title}.")
         return ""
@@ -129,25 +151,47 @@ def approved(update: Update, _: CallbackContext):
 @kigcmd(command='approval', filters=Filters.chat_type.groups)
 @spamcheck
 @user_admin_check()
-def approval(update, context):
-    message = update.effective_message
+def approval(update: Update, context: CallbackContext):
+    message = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat
     args = context.args
+    bot = context.bot
     user_id = extract_user(message, args)
     if not user_id:
         message.reply_text(
             "I don't know who you're talking about, you're going to need to specify a user!"
         )
         return ""
-    member = chat.get_member(int(user_id))
+
+    member = None
+    chan = None
+    try:
+        member = chat.get_member(user_id)
+    except BadRequest:
+        try:
+            chan = bot.get_chat(user_id)
+        except BadRequest as excp:
+            if excp.message != "Chat not found":
+                raise
+            message.reply_text("Can't seem to find this person.")
+            return ""
+
+    if member and member.status in ["administrator", "creator"]:
+        message.reply_text(
+            "User is already admin - locks, blocklists, and antiflood already don't apply to them."
+        )
+        return ""
+    user_mention = build_mention(member or chan)
 
     if sql.is_approved(message.chat_id, user_id):
         message.reply_text(
-            f"{member.user['first_name']} is an approved user. Locks, antiflood, and blocklists won't apply to them."
+            f"{user_mention} is an approved user. Locks, antiflood, and blocklists won't apply to them.",
+                parse_mode = ParseMode.HTML
         )
     else:
         message.reply_text(
-            f"{member.user['first_name']} is not an approved user. They are affected by normal commands."
+            f"{user_mention} is not an approved user. They are affected by normal commands.",
+                parse_mode = ParseMode.HTML
         )
 
 
