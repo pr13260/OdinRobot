@@ -1,6 +1,7 @@
 import html
 from typing import Optional
 
+from telegram.error import TelegramError
 from telegram.chat import Chat
 from telegram.chatmember import ChatMember
 from .helper_funcs.admin_status import A_CACHE, B_CACHE
@@ -410,8 +411,10 @@ def admincacheupdates(update: Update, _: CallbackContext):
 
 def botstatchanged(update: Update, _: CallbackContext):
     if update.effective_chat.type != "private":
-        B_CACHE[update.effective_chat.id] = update.effective_chat.get_member(dispatcher.bot.id)
-
+        try:
+            B_CACHE[update.effective_chat.id] = update.effective_chat.get_member(dispatcher.bot.id)
+        except TelegramError:
+            pass
 
 dispatcher.add_handler(ChatMemberHandler(chatmemberupdates, ChatMemberHandler.CHAT_MEMBER, run_async=True), group=-21)
 dispatcher.add_handler(ChatMemberHandler(mychatmemberupdates, ChatMemberHandler.MY_CHAT_MEMBER, run_async=True), group=-20)
