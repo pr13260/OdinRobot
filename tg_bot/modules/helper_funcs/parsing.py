@@ -2,10 +2,11 @@ import re
 from enum import IntEnum, unique
 from typing import Optional, Union
 
-from telegram import Message
+from telegram import InlineKeyboardButton, Message
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 
 from tg_bot.modules.sql.notes_sql import Buttons
+from tg_bot import dispatcher
 
 
 BTN_LINK_REGEX = re.compile(
@@ -25,6 +26,31 @@ class Types(IntEnum):
     VIDEO = 7
     VIDEO_NOTE = 8
 
+
+ENUM_FUNC_MAP = {
+    Types.TEXT.value: dispatcher.bot.send_message,
+    Types.BUTTON_TEXT.value: dispatcher.bot.send_message,
+    Types.STICKER.value: dispatcher.bot.send_sticker,
+    Types.DOCUMENT.value: dispatcher.bot.send_document,
+    Types.PHOTO.value: dispatcher.bot.send_photo,
+    Types.AUDIO.value: dispatcher.bot.send_audio,
+    Types.VOICE.value: dispatcher.bot.send_voice,
+    Types.VIDEO.value: dispatcher.bot.send_video,
+}
+
+VALID_FORMATTERS = [
+    "first",
+    "last",
+    "fullname",
+    "username",
+    "id",
+    "chatname",
+    "mention",
+    "user",
+    "admin",
+    "preview",
+    "protect",
+]
 
 def get_data(
         msg: Message, welcome: bool = False
@@ -48,7 +74,7 @@ def get_data(
 
     elif msg.reply_to_message:
         msgtext = msg.reply_to_message.text_html or msg.reply_to_message.caption_html
-        if len(args) >= 2 and msg.reply_to_message.text_html:  # not caption, text
+        if len(args) >= (2 if not welcome else 1) and msg.reply_to_message.text_html:  # not caption, text
             text, buttons = parser(msgtext, reply_markup=msg.reply_to_message.reply_markup)
             data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
         elif msg.reply_to_message.sticker:
@@ -206,3 +232,14 @@ def revertMd2HTML(text: str, buttons: Buttons) -> str:
         text = _buttons_repl(text, buttons)
 
     return text
+
+
+def build_keyboard_from_list(buttons) -> list[list[InlineKeyboardButton]]:
+    kb = []
+    for btn in buttons:
+        if btn[2] and kb:
+            kb[-1].append(InlineKeyboardButton(btn[0], url=btn[1]))
+        else:
+            kb.append([InlineKeyboardButton(btn[0], url=btn[1])])
+
+    return kb

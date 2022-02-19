@@ -1,7 +1,7 @@
 import html
+from typing import Optional
 
-
-from telegram import Update, ParseMode
+from telegram import Bot, Update, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 from telegram.ext.filters import Filters
@@ -10,32 +10,28 @@ from telegram.utils.helpers import mention_html
 from tg_bot import SUDO_USERS, spamcheck, dispatcher
 
 from .helper_funcs.chat_status import connection_status
+from .helper_funcs.string_handling import escape_invalid_curly_brackets
 from .log_channel import loggable
 from .language import gs
-from .helper_funcs.decorators import kigcmd, kigmsg, kigcallback
-from .helper_funcs.misc import get_message_type,\
-    build_keyboard_alternate
+from .helper_funcs.decorators import kigcmd, kigcallback
+from .helper_funcs.parsing import Types, VALID_FORMATTERS, get_data, ENUM_FUNC_MAP, build_keyboard_from_list
+from .sql.antilinkedchannel_sql import enable_linked
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
-from .connection import connected
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
-from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from telegram.parsemode import ParseMode
 
 from .helper_funcs.admin_status import (
     user_admin_check,
     bot_admin_check,
     AdminPerms,
-    get_bot_member,
-    bot_is_admin,
     user_is_admin,
-    user_not_admin_check,
 )
+
 
 @kigcmd(command="pinned", can_disable=False)
 @spamcheck
-@loggable
-@bot_admin
-def pinned(update: Update, context: CallbackContext) -> str:
+@bot_admin_check(AdminPerms.CAN_PIN_MESSAGES)
+def pinned(update: Update, context: CallbackContext):
     bot = context.bot
     msg = update.effective_message
     msg_id = (
@@ -47,15 +43,10 @@ def pinned(update: Update, context: CallbackContext) -> str:
     chat = bot.getChat(chat_id=msg.chat.id)
     if chat.pinned_message:
         pinned_id = chat.pinned_message.message_id
-        if msg.chat.username:
-            link_chat_id = msg.chat.username
-            message_link = f"https://t.me/{link_chat_id}/{pinned_id}"
-        elif (str(msg.chat.id)).startswith("-100"):
-            link_chat_id = (str(msg.chat.id)).replace("-100", "")
-            message_link = f"https://t.me/c/{link_chat_id}/{pinned_id}"
+        message_link = f"https://t.me/c/{str(chat.id)[4:]}/{pinned_id}"
 
         msg.reply_text(
-            f"📌 Pinned the message on {html.escape(chat.title)}.",
+            f"Click the button below to go to the pinned message in {html.escape(chat.title)}.",
             reply_to_message_id=msg_id,
             parse_mode=ParseMode.HTML,
             disable_web_page_preview=True,
@@ -63,8 +54,8 @@ def pinned(update: Update, context: CallbackContext) -> str:
                 [
                     [
                         InlineKeyboardButton(
-                            text="Pinned Messages",
-                            url=f"https://t.me/{link_chat_id}/{pinned_id}",
+                            text="📌 Pinned Message",
+                            url=message_link,
                         )
                     ]
                 ]
@@ -73,30 +64,24 @@ def pinned(update: Update, context: CallbackContext) -> str:
 
     else:
         msg.reply_text(
-            f"There is no pinned message on <b>{html.escape(chat.title)}!</b>",
+            f"There is no pinned message in <b>{html.escape(chat.title)}!</b>",
             parse_mode=ParseMode.HTML,
         )
+
 
 @kigcmd(command="pin", can_disable=False)
 @spamcheck
 @bot_admin_check(AdminPerms.CAN_PIN_MESSAGES)
 @user_admin_check(AdminPerms.CAN_PIN_MESSAGES, allow_mods = True)
 @loggable
-def pin(update: Update, context: CallbackContext) -> str:
+def pin(update: Update, context: CallbackContext) -> Optional[str]:
     bot, args = context.bot, context.args
     user = update.effective_user
     chat = update.effective_chat
     msg = update.effective_message
     msg_id = msg.reply_to_message.message_id if msg.reply_to_message else msg.message_id
 
-    if msg.chat.username:
-        # If chat has a username, use this format
-        link_chat_id = msg.chat.username
-        message_link = f"https://t.me/{link_chat_id}/{msg_id}"
-    elif (str(msg.chat.id)).startswith("-100"):
-        # If chat does not have a username, use this
-        link_chat_id = (str(msg.chat.id)).replace("-100", "")
-        message_link = f"https://t.me/c/{link_chat_id}/{msg_id}"
+    message_link = f"https://t.me/c/{str(chat.id)[4:]}/{msg_id}"
 
     is_group = chat.type not in ("private", "channel")
     prev_message = update.effective_message.reply_to_message
@@ -109,8 +94,8 @@ def pin(update: Update, context: CallbackContext) -> str:
     if len(args) >= 1:
         is_silent = (
             args[0].lower() != "notify"
-            or args[0].lower() == "loud"
-            or args[0].lower() == "violent"
+            or args[0].lower() != "loud"
+            or args[0].lower() != "violent"
         )
 
     if prev_message and is_group:
@@ -119,15 +104,12 @@ def pin(update: Update, context: CallbackContext) -> str:
                 chat.id, prev_message.message_id, disable_notification=is_silent
             )
             msg.reply_text(
-                "Success! Pinned this message on this group",
+                "I have pinned this message in <b>{}</b>!".format(html.escape(chat.title)),
                 reply_markup=InlineKeyboardMarkup(
                     [
                         [
                             InlineKeyboardButton(
-                                text="📝 View Messages", url=f"{message_link}"
-                            ),
-                            InlineKeyboardButton(
-                                text="❌ Delete", callback_data="close2"
+                                text="📝 View Message", url=f"{message_link}"
                             ),
                         ]
                     ]
@@ -143,14 +125,10 @@ def pin(update: Update, context: CallbackContext) -> str:
             f"<b>{html.escape(chat.title)}:</b>\n"
             f"PINNED\n"
             f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+            f"\n<b>Message:</b> <a href='{message_link}'>Pinned Message</a>\n"
         )
 
         return log_message
-
-
-close_keyboard = InlineKeyboardMarkup(
-    [[InlineKeyboardButton("❌ Delete", callback_data="close2")]]
-)
 
 
 @kigcmd(command="unpin", can_disable=False)
@@ -162,14 +140,10 @@ def unpin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat
     user = update.effective_user
-
     message = update.effective_message
-
-
 
     reply_msg = message.reply_to_message
     if not reply_msg:
-        print("not rp")
         try:
             bot.unpinChatMessage(chat.id)
             dispatcher.bot.sendMessage(chat.id, "Unpinned the last pinned message successfully!", parse_mode=ParseMode.MARKDOWN)
@@ -188,17 +162,24 @@ def unpin(update: Update, context: CallbackContext) -> str:
         return log_message
 
     else:
-        print("rp")
         unpinthis = reply_msg.message_id
         try:
             bot.unpinChatMessage(chat.id, unpinthis)
 
-            if chat.username:
-                pinmsg = "https://t.me/{}/{}".format(chat.username, unpinthis)
-            else:
-                pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], unpinthis)
+            pinmsg = "https://t.me/c/{}/{}".format(str(chat.id)[4:], unpinthis)
 
-            dispatcher.bot.sendMessage(chat.id, "I have unpinned [this message]({})".format(pinmsg), parse_mode=ParseMode.MARKDOWN)
+            message.reply_text(
+                "I have unpinned this message in <b>{}</b>!".format(html.escape(chat.title)),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                text="📝 View Message", url=f"{pinmsg}"
+                            ),
+                        ]
+                    ]
+                )
+            )
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 dispatcher.bot.sendMessage(chat.id, f"I couldn't unpin the message from some reason.")
@@ -212,6 +193,7 @@ def unpin(update: Update, context: CallbackContext) -> str:
             f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
         )
         return log_message
+
 
 @kigcmd(command="unpinall", filters=Filters.chat_type.groups)
 @spamcheck
@@ -242,6 +224,7 @@ def rmall_filters(update, context):
             reply_markup=buttons,
             parse_mode=ParseMode.MARKDOWN,
         )
+
 
 @kigcallback(pattern=r"pinned_.*")
 @loggable
@@ -284,62 +267,130 @@ def unpin_callback(update, context: CallbackContext) -> str:
             return ""
 
 
-
-
-# cherry-picked from emilia hikari (https://github.com/AyraHikari/EmiliaHikari)
-# commits:
-# 4ad807aa1d9615993db0e135d910d70bc4cbf767
-# 049e735dd51694ae736749b9c9523499aaca8862
-# cb9194dffc588c564f3dd6bdf75c1e712dc05e59
-# ab26b958adca851eb749398d1683280896cfb633
-# 94348c615c5364c13d32393d588838eaf1501f59
-# ab26b958adca851eb749398d1683280896cfb633
-
-
-ENUM_FUNC_MAP = {
-	'Types.TEXT': dispatcher.bot.send_message,
-	'Types.BUTTON_TEXT': dispatcher.bot.send_message,
-	'Types.STICKER': dispatcher.bot.send_sticker,
-	'Types.DOCUMENT': dispatcher.bot.send_document,
-	'Types.PHOTO': dispatcher.bot.send_photo,
-	'Types.AUDIO': dispatcher.bot.send_audio,
-	'Types.VOICE': dispatcher.bot.send_voice,
-	'Types.VIDEO': dispatcher.bot.send_video
-}
-
-@kigcmd(command="permapin", filters=Filters.chat_type.groups, run_async=True)
+@kigcmd(command="permapin", run_async = True)
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_PIN_MESSAGES)
-@user_admin_check(AdminPerms.CAN_PIN_MESSAGES, allow_mods = True)
-def permapin(update, context):
+@user_admin_check(AdminPerms.CAN_PIN_MESSAGES)
+@loggable
+def permapin(update: Update, ctx: CallbackContext) -> Optional[str]:
+    msg = update.effective_message  # type: Optional[Message]
+    chat = update.effective_chat  # type: Optional[Chat]
+    user = update.effective_user  # type: Optional[User]
+    bot = ctx.bot  # type: Optional[Bot]
+    preview = True
+    protect = False
 
-    message = update.effective_message  # type: Optional[Message]
+    m = msg.text.split(' ', 1)
+    if len(m) == 1 and not msg.reply_to_message:
+        msg.reply_text("Provide something to pin.")
+        return
+    _, text, data_type, content, buttons = get_data(msg, True)
+    if text == "":
+        msg.reply_text("Should I pin... nothing?")
+        return
+    msg.delete()
+    keyboard = InlineKeyboardMarkup(build_keyboard_from_list(buttons))
 
-    chat_id = update.effective_chat.id
-
-    text, data_type, content, buttons = get_message_type(message)
-    tombol = build_keyboard_alternate(buttons)
-    try:
-        message.delete()
-    except BadRequest:
-        pass
-    if str(data_type) in ('Types.BUTTON_TEXT', 'Types.TEXT'):
-        try:
-            sendingmsg = context.bot.send_message(chat_id, text, parse_mode=ParseMode.MARKDOWN,
-                                 disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
-        except BadRequest:
-            context.bot.send_message(chat_id, "Incorrect markdown text!\nIf you don't know what markdown is, please send `/markdownhelp` in PM.", parse_mode=ParseMode.MARKDOWN)
+    if escape_invalid_curly_brackets(text, VALID_FORMATTERS):
+        if "{admin}" in text and user_is_admin(update, user.id):
             return
+        if "{user}" in text and not user_is_admin(update, user.id):
+            return
+        if "{preview}" in text:
+            preview = False
+        if "{protect}" in text:
+            protect = True
+        text = text.format(
+                first = html.escape(msg.from_user.first_name),
+                last = html.escape(
+                        msg.from_user.last_name
+                        or msg.from_user.first_name,
+                ),
+                fullname = html.escape(
+                        " ".join(
+                                [
+                                    msg.from_user.first_name,
+                                    msg.from_user.last_name or "",
+                                ]
+                        ),
+                ),
+                username = f'@{msg.from_user.username}'
+                if msg.from_user.username
+                else mention_html(
+                        msg.from_user.id,
+                        msg.from_user.first_name,
+                ),
+                mention = mention_html(
+                        msg.from_user.id,
+                        msg.from_user.first_name,
+                ),
+                chatname = html.escape(
+                        msg.chat.title
+                        if msg.chat.type != "private"
+                        else msg.from_user.first_name,
+                ),
+                id = msg.from_user.id,
+                user = "",
+                admin = "",
+                preview = "",
+                protect = "",
+        )
+
     else:
-        sendingmsg = ENUM_FUNC_MAP[str(data_type)](chat_id, content, caption=text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(tombol))
-    if sendingmsg is None:
-        context.bot.send_message(chat_id, "Specify what to pin!")
-        
+        text = ""
+
     try:
-        context.bot.pinChatMessage(chat_id, sendingmsg.message_id)
-    except BadRequest:
-        context.bot.send_message(chat_id, "I don't have access to message pins!")
+        if data_type in (Types.BUTTON_TEXT, Types.TEXT):
+            pin_this = bot.send_message(
+                chat.id,
+                text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=keyboard,
+                disable_web_page_preview=bool(preview),
+                protect_content=bool(protect)
+            )
+        elif ENUM_FUNC_MAP[data_type] == dispatcher.bot.send_sticker:
+            pin_this = ENUM_FUNC_MAP[data_type](
+                chat.id,
+                content,
+                reply_markup=keyboard,
+            )
+        else:
+            pin_this = ENUM_FUNC_MAP[data_type](
+                chat.id,
+                content,
+                caption=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=keyboard,
+                protect_content=bool(protect)
+            )
+
+        bot.pinChatMessage(chat.id, pin_this.message_id, disable_notification=False)
+
+        enable_linked(chat.id)  # enable cleanlinked for this chat
+        log_message = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"PINNED\n"
+            f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+            f"\n<b>Message:</b> <a href='t.me/c/{str(chat.id)[4:]}''>Pinned Message</a>\n"
+        )
+        return log_message
+
+    except BadRequest as excp:
+        if excp.message == "Entity_mention_user_invalid":
+            msg.reply_text(
+                "Looks like you tried to mention someone I've never seen before. If you really "
+                "want to mention them, forward one of their messages to me, and I'll be able "
+                "to tag them!"
+            )
+        else:
+            msg.reply_text(
+                "Could not pin the message. Error: <code>{}</code>".format(
+                    excp.message
+                )
+            )
+        return
 
 
 def get_help(chat):
