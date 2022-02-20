@@ -124,7 +124,7 @@ def unban_user(bot: Bot, who: User, where_chat_id, reason=None) -> Union[str, bo
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, allow_mods = True)
 @loggable
-def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
+def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -135,29 +135,32 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
         silent = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("I don't have permission to delete messages here!")
-            return ""
+            return
     else:
         silent = False
     if message.text.startswith(('/d', '!d', '>d')):
         delban = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("I don't have permission to delete messages here!")
-            return ""
+            return
         if not user_is_admin(chat, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("You don't have permission to delete messages here!")
-            return ""
+            return
     else:
         delban = False
     if message.text.startswith(('/ds', '!ds', '>ds')):
         delsilent = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("I don't have permission to delete messages here!")
-            return ""
+            return
         if not user_is_admin(chat, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("You don't have permission to delete messages here!")
-            return ""
+            return
 
-    if message.reply_to_message and message.reply_to_message.sender_chat:
+    if rep := message.reply_to_message and message.reply_to_message.sender_chat:
+        if rep.is_automatic_forward:
+            message.reply_text("This is a pretty bad idea, isn't it?")
+            return
 
         if did_ban := ban_chat(bot, message.reply_to_message.sender_chat, chat.id, reason = " ".join(args) or None):
             logmsg  = (
@@ -187,7 +190,7 @@ def ban(update: Update, context: CallbackContext):  # sourcery no-metrics
     chan = None
     try:
         member = chat.get_member(user_id)
-    except BadRequest as excp:
+    except BadRequest:
         try:
             chan = bot.get_chat(user_id)
         except BadRequest as excp:
@@ -453,19 +456,22 @@ def kickme(update: Update, _: CallbackContext) -> Optional[str]:
 
 
 @kigcmd(command='unban', pass_args=True)
-@connection_status
 @spamcheck
+@connection_status
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, allow_mods = True)
 @loggable
-def unban(update: Update, context: CallbackContext):  # sourcery no-metrics
+def unban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
     args = context.args
     bot = context.bot
 
-    if message.reply_to_message and message.reply_to_message.sender_chat:
+    if rep := message.reply_to_message and message.reply_to_message.sender_chat:
+        if rep.is_automatic_forward:
+            message.reply_text("This command doesn't work like this!")
+            return
 
         if did_ban := unban_chat(bot, message.reply_to_message.sender_chat, chat.id, reason = " ".join(args) or None):
             logmsg  = (
@@ -495,7 +501,7 @@ def unban(update: Update, context: CallbackContext):  # sourcery no-metrics
     chan = None
     try:
         member = chat.get_member(user_id)
-    except BadRequest as excp:
+    except BadRequest:
         try:
             chan = bot.get_chat(user_id)
         except BadRequest as excp:
