@@ -1,7 +1,7 @@
 import html
 from typing import Optional, Union
 
-from telegram import Bot, Chat, Update, ParseMode, User
+from telegram import Bot, Chat, ChatMember, Update, ParseMode, User
 from telegram.error import BadRequest
 from telegram.ext import Filters, CallbackContext
 from telegram.utils.helpers import mention_html
@@ -71,18 +71,18 @@ def ban_chat(bot: Bot, who: Chat, where_chat_id, reason=None) -> Union[str, bool
     )
 
 
-def ban_user(bot: Bot, who: User, where_chat_id, reason=None) -> Union[str, bool]:
+def ban_user(bot: Bot, who: ChatMember, where_chat_id, reason=None) -> Union[str, bool]:
     try:
-        bot.banChatMember(where_chat_id, who.id)
+        bot.banChatMember(where_chat_id, who.user.id)
     except BadRequest as excp:
         if excp.message != "Reply message not found":
             log.warning("error banning user {}:{} in {} because: {}".format(
-                    who.title, who.id, where_chat_id, excp.message))
+                    who.user.first_name, who.user.id, where_chat_id, excp.message))
             return False
 
     return (
-        f"<b>User:</b> <a href=\"tg://user?id={who.id}\">{html.escape(who.first_name)}</a>"
-        f"<b>User ID:</b> {who.id}"
+        f"<b>User:</b> <a href=\"tg://user?id={who.user.id}\">{html.escape(who.user.first_name)}</a>"
+        f"<b>User ID:</b> {who.user.id}"
         "" if reason is None else f"<b>Reason:</b> {reason}"
     )
 
@@ -102,18 +102,18 @@ def unban_chat(bot: Bot, who: Chat, where_chat_id, reason=None) -> Union[str, bo
     )
 
 
-def unban_user(bot: Bot, who: User, where_chat_id, reason=None) -> Union[str, bool]:
+def unban_user(bot: Bot, who: ChatMember, where_chat_id, reason=None) -> Union[str, bool]:
     try:
-        bot.unbanChatMember(where_chat_id, who.id)
+        bot.unbanChatMember(where_chat_id, who.user.id)
     except BadRequest as excp:
         if excp.message != "Reply message not found":
             log.warning("error banning user {}:{} in {} because: {}".format(
-                    who.title, who.id, where_chat_id, excp.message))
+                    who.user.first_name, who.user.id, where_chat_id, excp.message))
             return False
 
     return (
-        f"<b>User:</b> <a href=\"tg://user?id={who.id}\">{html.escape(who.first_name)}</a>"
-        f"<b>User ID:</b> {who.id}"
+        f"<b>User:</b> <a href=\"tg://user?id={who.user.id}\">{html.escape(who.user.first_name)}</a>"
+        f"<b>User ID:</b> {who.user.id}"
         "" if reason is None else f"<b>Reason:</b> {reason}"
     )
 
