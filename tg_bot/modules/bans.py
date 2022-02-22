@@ -226,7 +226,7 @@ def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery 
         cannot_ban(user_id, message)
         return ''
 
-    elif did_ban := ban_user(bot, member, chat, reason = " ".join(args) or None):
+    elif did_ban := ban_user(bot, member, chat.id, reason = " ".join(args) or None):
         logmsg  = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#BANNED\n"
@@ -234,7 +234,7 @@ def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery 
         logmsg += did_ban
 
         message.reply_text("User {} was banned successfully from {}".format(
-            html.escape(message.reply_to_message.sender_chat.title),
+            html.escape(message.reply_to_message.from_user.first_name),
             html.escape(chat.title)
         ),
             parse_mode="html"
@@ -537,7 +537,7 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcer
         cannot_ban(user_id, message)
         return ''
 
-    elif did_ban := unban_user(bot, member, chat, reason = " ".join(args) or None):
+    elif did_ban := unban_user(bot, member, chat.id, reason = " ".join(args) or None):
         logmsg  = (
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#UNBANNED\n"
@@ -545,7 +545,7 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcer
         logmsg += did_ban
 
         message.reply_text("User {} was unbanned successfully from {}".format(
-            html.escape(message.reply_to_message.sender_chat.title),
+            html.escape(message.reply_to_message.from_user.first_name),
             html.escape(chat.title)
         ),
             parse_mode="html"
