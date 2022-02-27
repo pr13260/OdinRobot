@@ -72,39 +72,40 @@ def get_data(
 
         data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
 
-    elif msg.reply_to_message:
+    elif rep := msg.reply_to_message:
         msgtext = msg.reply_to_message.text_html or msg.reply_to_message.caption_html
         if len(args) >= (2 if not welcome else 1) and msg.reply_to_message.text_html:  # not caption, text
             text, buttons = parser(msgtext, reply_markup=msg.reply_to_message.reply_markup)
             data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
-        elif msg.reply_to_message.sticker:
-            content = msg.reply_to_message.sticker.file_id
-            data_type = Types.STICKER
+        match rep:
+            case rep.sticker:
+                content = msg.reply_to_message.sticker.file_id
+                data_type = Types.STICKER
 
-        elif msg.reply_to_message.document:
-            content = msg.reply_to_message.document.file_id
-            text, buttons = parser(msgtext)
-            data_type = Types.DOCUMENT
+            case rep.document:
+                content = msg.reply_to_message.document.file_id
+                text, buttons = parser(msgtext)
+                data_type = Types.DOCUMENT
 
-        elif msg.reply_to_message.photo:
-            content = msg.reply_to_message.photo[-1].file_id  # last elem = best quality
-            text, buttons = parser(msgtext)
-            data_type = Types.PHOTO
+            case rep.photo:
+                content = msg.reply_to_message.photo[-1].file_id  # last elem = best quality
+                text, buttons = parser(msgtext)
+                data_type = Types.PHOTO
 
-        elif msg.reply_to_message.audio:
-            content = msg.reply_to_message.audio.file_id
-            text, buttons = parser(msgtext)
-            data_type = Types.AUDIO
+            case rep.audio:
+                content = msg.reply_to_message.audio.file_id
+                text, buttons = parser(msgtext)
+                data_type = Types.AUDIO
 
-        elif msg.reply_to_message.voice:
-            content = msg.reply_to_message.voice.file_id
-            text, buttons = parser(msgtext)
-            data_type = Types.VOICE
+            case rep.voice:
+                content = msg.reply_to_message.voice.file_id
+                text, buttons = parser(msgtext)
+                data_type = Types.VOICE
 
-        elif msg.reply_to_message.video:
-            content = msg.reply_to_message.video.file_id
-            text, buttons = parser(msgtext)
-            data_type = Types.VIDEO
+            case rep.video:
+                content = msg.reply_to_message.video.file_id
+                text, buttons = parser(msgtext)
+                data_type = Types.VIDEO
 
     if buttons and not text:
         text = note_name
