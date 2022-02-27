@@ -38,8 +38,7 @@ from tg_bot import (
 # needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
 from tg_bot.modules import ALL_MODULES
- 
-from tg_bot.modules.helper_funcs.misc import paginate_modules
+
 from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
 from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.language import gs

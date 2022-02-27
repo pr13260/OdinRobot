@@ -18,10 +18,6 @@ from .helper_funcs.admin_status import (
     user_admin_check,
     bot_admin_check,
     AdminPerms,
-    get_bot_member,
-    bot_is_admin,
-    user_is_admin,
-    user_not_admin_check,
 )
 import tg_bot.modules.sql.welcome_sql as sql
 
