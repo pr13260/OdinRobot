@@ -15,10 +15,7 @@ def afk(update: Update, _: CallbackContext):
     args = update.effective_message.text.split(None, 1)
     user = update.effective_user
 
-    if not user:  # ignore channels
-        return
-
-    if user.id in (777000, 1087968824, 136817688):
+    if not user or user.id in (777000, 1087968824, 136817688):  # ignore channels
         return
 
     notice = ""
@@ -43,7 +40,7 @@ def no_longer_afk(update: Update, _: CallbackContext):
     user = update.effective_user
     message = update.effective_message
 
-    if not user:  # ignore channels
+    if not user or user.id in (777000, 1087968824, 136817688):  # ignore channels
         return
 
     if sql.rm_afk(user.id):
