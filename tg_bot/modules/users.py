@@ -120,7 +120,7 @@ def log_user(update: Update, _: CallbackContext):
                     except AttributeError:
                         pass
 
-        if rep.sender_chat:
+        if rep.sender_chat and not rep.is_automatic_forward:
             update_user(
                 rep.sender_chat.id,
                 rep.sender_chat.username,
@@ -139,7 +139,7 @@ def log_user(update: Update, _: CallbackContext):
                 except AttributeError:
                     pass
 
-    if msg.sender_chat:
+    if msg.sender_chat and not msg.is_automatic_forward:
         update_user(msg.sender_chat.id, msg.sender_chat.username, chat.id, chat.title)
 
     if msg.new_chat_members:
@@ -205,4 +205,3 @@ def __migrate__(old_chat_id, new_chat_id):
 __help__ = ""  # no help string
 
 __mod_name__ = "Users"
-
