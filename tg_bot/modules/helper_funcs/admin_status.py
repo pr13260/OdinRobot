@@ -103,7 +103,7 @@ def user_is_admin(update: Update,
 		return False
 
 	if perm:  # check perm if its required
-		return getattr(member, perm.value)
+		return getattr(member, perm.value) or member.status == "creator"
 
 	return member.status in ["administrator", "creator"]  # check if user is admin
 
