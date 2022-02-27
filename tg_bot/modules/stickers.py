@@ -75,6 +75,7 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
     user = update.effective_user
     args = context.args
     is_animated = False
+    is_video = False
     file_id = None
     sticker_emoji = "🤔"
     sticker_data = None
@@ -104,11 +105,16 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
                     packnum += 1
                     if is_animated:
                         packname = f"animated{packnum}_{user.id}_by_{context.bot.username}"
+                        ppref = "animated"
+                    elif is_video:
+                        packname = f"vid{packnum}_{user.id}_by_{context.bot.username}"
+                        ppref = "vid"
                     else:
                         packname = f"a{packnum}_{user.id}_by_{context.bot.username}"
+                        ppref = ""
                 else:
                     last_set = True
-                packs += f"[{'animated ' if is_animated else ''}pack{packnum if packnum != 0 else ''}](t.me/addstickers/{packname})\n"
+                packs += f"[{ppref}pack{packnum if packnum != 0 else ''}](t.me/addstickers/{packname})\n"
             except TelegramError as e:
                 if e.message == "Stickerset_invalid":
                     last_set = True
@@ -142,17 +148,26 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
         return
 
     # User sent /kang in reply to a message
-    if msg.reply_to_message:
-        if msg.reply_to_message.sticker:
-            is_animated = msg.reply_to_message.sticker.is_animated
-            file_id = msg.reply_to_message.sticker.file_id
+    if rep := msg.reply_to_message:
+        if rep.sticker:
+            is_animated = rep.sticker.is_animated
+            is_video = rep.sticker.is_video
+            file_id = rep.sticker.file_id
             # also grab the emoji if the user wishes
             if not args:
-                sticker_emoji = msg.reply_to_message.sticker.emoji
-        elif msg.reply_to_message.photo:
-            file_id = msg.reply_to_message.photo[-1].file_id
-        elif msg.reply_to_message.document:
-            file_id = msg.reply_to_message.document.file_id
+                sticker_emoji = rep.sticker.emoji
+        elif rep.photo:
+            file_id = rep.photo[-1].file_id
+        elif rep.video:
+            file_id = rep.video.file_id
+            is_video = True
+        elif rep.animation:
+            file_id = rep.animation.file_id
+            is_video = True
+        elif doc := rep.document:
+            file_id = rep.document.file_id
+            if doc.mime_type == 'video/webm':
+                is_video = True
         else:
             msg.reply_text("Yea, I can't steal that.")
             return
@@ -166,7 +181,7 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
         sticker_data = kang_file.download(out=BytesIO())
         # move to the front of the buffer.
         sticker_data.seek(0)
-    else: # user sent /kang with url
+    else:  # user sent /kang with url
         url = args[0]
         # set the emoji if they specify it.
         if len(args) >= 2:
@@ -207,6 +222,9 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
     if is_animated:
         packname = f"animated_{user.id}_by_{context.bot.username}"
         max_stickers = 50
+    elif is_video:
+        packname = f"vid_{user.id}_by_{context.bot.username}"
+        max_stickers = 50
     else:
         packname = f"a{user.id}_by_{context.bot.username}"
         max_stickers = 120
@@ -219,6 +237,8 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
                 packnum += 1
                 if is_animated:
                     packname = f"animated{packnum}_{user.id}_by_{context.bot.username}"
+                elif is_video:
+                    packname = f"vid{packnum}_{user.id}_by_{context.bot.username}"
                 else:
                     packname = f"a{packnum}_{user.id}_by_{context.bot.username}"
             else:
@@ -230,7 +250,7 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
                 invalid = True
 
     # if the image isn't animated, ensure it's the right size/format with PIL
-    if not is_animated:
+    if not is_animated and not is_video:
         # handle non-animated stickers.
         try:
             im = Image.open(sticker_data)
@@ -271,8 +291,9 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
         context.bot.add_sticker_to_set(
             user_id=user.id,
             name=packname,
-            png_sticker=sticker_data if not is_animated else None,
-            tgs_sticker=sticker_data if is_animated else None,
+                tgs_sticker = sticker_data if is_animated else None,
+                webm_sticker = sticker_data if is_video else None,
+                png_sticker = sticker_data if not is_animated and not is_video else None,
             emojis=sticker_emoji,
         )
         msg.reply_text(
@@ -293,12 +314,20 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
                 packname,
                 packnum,
                 tgs_sticker=sticker_data if is_animated else None,
-                png_sticker=sticker_data if not is_animated else None,
+                webm_sticker=sticker_data if is_video else None,
+                png_sticker=sticker_data if not is_animated and not is_video else None,
             )
         elif e.message == "Stickers_too_much":
             msg.reply_text("Max packsize reached. Press F to pay respecc.")
         elif e.message == "Invalid sticker emojis":
             msg.reply_text("I can't kang with that emoji!")
+        elif e.message == "Sticker_video_nowebm":
+            msg.reply_text(
+                "This media format isn't supported, I need it in a webm format, "
+                "[see this guide](https://core.telegram.org/stickers/webm-vp9-encoding).",
+                parse_mode=ParseMode.MARKDOWN,
+                disable_web_page_preview = True,
+            )
         elif e.message == "Internal Server Error: sticker set not found (500)":
             msg.reply_text(
                 f"Sticker successfully added to [pack](t.me/addstickers/{packname})\n"
@@ -317,6 +346,7 @@ def makepack_internal(
     packname,
     packnum,
     png_sticker=None,
+    webm_sticker=None,
     tgs_sticker=None,
 ):
     name = user.first_name[:50]
@@ -327,8 +357,9 @@ def makepack_internal(
         success = context.bot.create_new_sticker_set(
             user.id,
             packname,
-            f"{name}s {'animated ' if tgs_sticker else ''}kang pack{extra_version}",
+            f"{name}s {'animated ' if tgs_sticker else 'video ' if webm_sticker else ''}kang pack{extra_version}",
             tgs_sticker=tgs_sticker or None,
+            webm_sticker=webm_sticker or None,
             png_sticker=png_sticker or None,
             emojis=emoji,
         )
@@ -364,12 +395,20 @@ def makepack_internal(
             == 'Internal Server Error: created sticker set not found (500)'
         ):
             success = True
+        elif e.message == 'Sticker_video_nowebm':
+            msg.reply_text(
+                "This media format isn't supported, I need it in a webm format, "
+                "[see this guide](https://core.telegram.org/stickers/webm-vp9-encoding).",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
         else:
             success = False
     if success:
         msg.reply_text(
             f"Sticker pack successfully created. Get it [here](t.me/addstickers/{packname})",
             parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview = True,
         )
     else:
         msg.reply_text("Failed to create sticker pack. Possibly due to blek mejik.")
