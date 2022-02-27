@@ -102,53 +102,54 @@ def markdown_parser_v2(
             start -= count
             end -= count
 
-            if ent.type == "url":
-                for match in LINK_REGEX_v2.finditer(txt):
-                    if match.start(2) <= start and end <= match.end(2) and not match.group(2).startswith("buttonurl"):
-                        print(match.group(2))
-                        mt = match.group(1).center(count)
-                        res += _selective_escape_v2(txt[prev:start - (len(mt) + 3)] + '[{}]({})'.format(_selective_escape_v2(match.group(1)), match.group(2)))
-                        print(res)
-                        end +=1
-                        break
-                    continue
-                else:
-                    if txt[start - 10:start] or txt[start - 12:start] in ['buttonurl:', 'buttonurl://']:
+            match ent.type:
+                case "url":
+                    for match in LINK_REGEX_v2.finditer(txt):
+                        if match.start(2) <= start and end <= match.end(2) and not match.group(2).startswith("buttonurl"):
+                            print(match.group(2))
+                            mt = match.group(1).center(count)
+                            res += _selective_escape_v2(txt[prev:start - (len(mt) + 3)] + '[{}]({})'.format(_selective_escape_v2(match.group(1)), match.group(2)))
+                            print(res)
+                            end +=1
+                            break
                         continue
-                    # TODO: investigate possible offset bug when lots of emoji are present
-                    res += _selective_escape_v2(txt[prev:start] or "") + escape_markdown(
-                        ent_text, version=2
+                    else:
+                        if txt[start - 10:start] or txt[start - 12:start] in ['buttonurl:', 'buttonurl://']:
+                            continue
+                        # TODO: investigate possible offset bug when lots of emoji are present
+                        res += _selective_escape_v2(txt[prev:start] or "") + escape_markdown(
+                            ent_text, version=2
+                        )
+
+                # code handling
+                case "code":
+                    res += _selective_escape_v2(txt[prev:start]) + "`" + ent_text + "`"
+
+                # bold handling
+                case "bold":
+                    res += _selective_escape_v2(txt[prev:start]) + "*" + ent_text + "*"
+
+                # italic handling
+                case "italic":
+                    res += _selective_escape_v2(txt[prev:start]) + "_" + ent_text + "_"
+
+                # underline handling
+                case "underline":
+                    res += _selective_escape_v2(txt[prev:start]) + "__" + ent_text + "__"
+
+                # strikethrough handling
+                case "strikethrough":
+                    res += _selective_escape_v2(txt[prev:start]) + "~" + ent_text + "~"
+
+                # spoiler handling
+                case "spoiler":
+                    res += _selective_escape_v2(txt[prev:start]) + "||" + ent_text + "||"
+
+                # handle markdown/html links
+                case "text_link":
+                    res += _selective_escape_v2(txt[prev:start]) + "[{}]({})".format(
+                        _selective_escape_v2(ent_text), ent.url
                     )
-
-            # code handling
-            elif ent.type == "code":
-                res += _selective_escape_v2(txt[prev:start]) + "`" + ent_text + "`"
-
-            # bold handling
-            elif ent.type == "bold":
-                res += _selective_escape_v2(txt[prev:start]) + "*" + ent_text + "*"
-
-            # italic handling
-            elif ent.type == "italic":
-                res += _selective_escape_v2(txt[prev:start]) + "_" + ent_text + "_"
-
-            # underline handling
-            elif ent.type == "underline":
-                res += _selective_escape_v2(txt[prev:start]) + "__" + ent_text + "__"
-
-            # strikethrough handling
-            elif ent.type == "strikethrough":
-                res += _selective_escape_v2(txt[prev:start]) + "~" + ent_text + "~"
-
-            # spoiler handling
-            elif ent.type == "spoiler":
-                res += _selective_escape_v2(txt[prev:start]) + "||" + ent_text + "||"
-
-            # handle markdown/html links
-            elif ent.type == "text_link":
-                res += _selective_escape_v2(txt[prev:start]) + "[{}]({})".format(
-                    _selective_escape_v2(ent_text), ent.url
-                )
 
             end += 1
 
