@@ -226,9 +226,9 @@ def filters(update, context) -> None:  # sourcery no-metrics
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
         logmsg = (
-        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"<b>{escape(chat.title)}:</b>\n"
         f"#ADDFILTER\n"
-        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+        f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}\n"
         f"<b>Note:</b> {keyword}"
         )
         return logmsg
@@ -273,9 +273,9 @@ def stop_filter(update, context) -> str:
                 parse_mode=telegram.ParseMode.MARKDOWN,
             )
             logmsg = (
-                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"<b>{escape(chat.title)}:</b>\n"
                     f"#STOPFILTER\n"
-                    f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+                    f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}\n"
                     f"<b>Filter:</b> {keyword}"
                 )
             try:
@@ -307,12 +307,8 @@ def reply_filter(update, context):  # sourcery no-metrics
         if re.search(pattern, to_match, flags=re.IGNORECASE):
             filt = sql.get_filter(chat.id, keyword)
 
-            # print(keyword)
-            # print(pattern)
-            # print(to_match)
-            if to_match.endswith("raw") and to_match.lower() == (keyword + (" raw" or " noformat")):
+            if to_match.endswith(("raw", "noformat")) and to_match.lower() == keyword + (" raw" or " noformat"):
                 no_format = True
-                # print(" aaaa raw")
             else:
                 no_format = False
 
@@ -609,9 +605,9 @@ def rmall_callback(update, context) -> str:
             msg.edit_text(f"Cleaned {count} filters in {chat.title}")
 
             log_message = (
-                f"<b>{html.escape(chat.title)}:</b>\n"
+                f"<b>{escape(chat.title)}:</b>\n"
                 f"#CLEAREDALLFILTERS\n"
-                f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+                f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}"
             )
             return log_message
 
