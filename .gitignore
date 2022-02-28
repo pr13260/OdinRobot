@@ -28,5 +28,8 @@ updates.txt
 # tg_bot/antispam.py
 # tg_bot/modules/announcements.py
 *.pytempp
-tg_bot/modules/spamcheck.py
 backups
+.venv
+.vscode/settings.json
+.idea/dataSources*
+.idea/dataSources.xml
