@@ -19,6 +19,7 @@ def translate(update: Update, context: CallbackContext):
     bot = context.bot
     message = update.effective_message
     reply_msg = message.reply_to_message
+    to_translate = ""
     if not reply_msg:
         message.reply_text("Reply to a message to translate it!")
         return
@@ -26,6 +27,9 @@ def translate(update: Update, context: CallbackContext):
         to_translate = reply_msg.caption
     elif reply_msg.text:
         to_translate = reply_msg.text
+    if not to_translate:
+        message.reply_text("Reply to a message to translate it!")
+        return
     try:
         args = message.text.split()[1].lower()
         if "//" in args:
