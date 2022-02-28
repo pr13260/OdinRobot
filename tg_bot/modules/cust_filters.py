@@ -550,7 +550,7 @@ def reply_filter(update, context):  # sourcery no-metrics
             break
 
 
-@kigcmd(command="removeallfilters", filters=Filters.chat_type.groups)
+@kigcmd(command=["removeallfilters", "stopall"], filters=Filters.chat_type.groups)
 @spamcheck
 def rmall_filters(update, context):
     chat = update.effective_chat
