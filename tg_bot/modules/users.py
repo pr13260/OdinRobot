@@ -148,6 +148,9 @@ def log_user(update: Update, _: CallbackContext):
                 continue
             update_user(user.id, user.username, chat.id, chat.title)
 
+    if req := update.chat_join_request:
+        update_user(req.from_user.id, req.from_user.username, chat.id, chat.title)
+
 
 @kigcmd(command='chatlist')
 @spamcheck
