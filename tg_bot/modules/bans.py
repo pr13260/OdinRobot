@@ -1,7 +1,7 @@
 import html
 from typing import Optional, Union
 
-from telegram import Bot, Chat, ChatMember, Update, ParseMode, User
+from telegram import Bot, Chat, ChatMember, Message, Update, ParseMode, User
 from telegram.error import BadRequest
 from telegram.ext import Filters, CallbackContext
 from telegram.utils.helpers import mention_html
@@ -17,7 +17,6 @@ from tg_bot import (
     SYS_ADMIN,
     WHITELIST_USERS,
     spamcheck,
-    dispatcher,
     log
 )
 
@@ -125,6 +124,7 @@ def unban_user(bot: Bot, who: ChatMember, where_chat_id, reason=None) -> Union[s
 @user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, allow_mods = True)
 @loggable
 def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery no-metrics
+    global delsilent
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -143,7 +143,7 @@ def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery 
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("I don't have permission to delete messages here!")
             return
-        if not user_is_admin(chat, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
+        if not user_is_admin(update, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("You don't have permission to delete messages here!")
             return
     else:
@@ -153,7 +153,7 @@ def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery 
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("I don't have permission to delete messages here!")
             return
-        if not user_is_admin(chat, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
+        if not user_is_admin(update, user.id, perm = AdminPerms.CAN_DELETE_MESSAGES):
             message.reply_text("You don't have permission to delete messages here!")
             return
 
@@ -266,7 +266,6 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
     user = update.effective_user
     message = update.effective_message
     log_message = ""
-    reason = ""
     bot, args = context.bot, context.args
     
 
@@ -367,7 +366,7 @@ def kick(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     log_message = ""
     bot, args = context.bot, context.args
-    
+
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -389,8 +388,7 @@ def kick(update: Update, context: CallbackContext) -> str:
         cannot_ban(user_id, message)
         return log_message
 
-    res = chat.unban_member(user_id)  # unban on current user = kick
-    if res:
+    if chat.unban_member(user_id):
         bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
 
         if reason:
