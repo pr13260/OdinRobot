@@ -5,12 +5,11 @@ import time
 from typing import List
 import spamwatch
 import telegram.ext as tg
-from telegram.ext import Dispatcher
+from telegram.ext import Dispatcher, Updater
 from telethon import TelegramClient
 from telethon.sessions import MemorySession
 from configparser import ConfigParser
 from ptbcontrib.postgres_persistence import PostgresPersistence
-from logging.config import fileConfig
 from functools import wraps
 from SibylSystem import PsychoPass
 StartTime = time.time()
@@ -21,19 +20,35 @@ def get_user_list(key):
     royals = nation_sql.get_royals(key)
     return [a.user_id for a in royals]
 
-# enable logging
+# setup loggers
 
-fileConfig('logging.ini')
 
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s -- < - %(name)s - > -- %(message)s')
+stream_formatter = logging.Formatter('< - %(name)s - > -- %(message)s')
+
+file_handler = logging.FileHandler('logs.txt', 'w', encoding='utf-8')
+debug_handler = logging.FileHandler('debug.log', 'w', encoding='utf-8')
+stream_handler = logging.StreamHandler()
+
+file_handler.setFormatter(file_formatter)
+stream_handler.setFormatter(stream_formatter)
+debug_handler.setFormatter(file_formatter)
+
+file_handler.setLevel(logging.INFO)
+stream_handler.setLevel(logging.WARNING)
+debug_handler.setLevel(logging.DEBUG)
+
+logging.basicConfig(handlers = [file_handler, stream_handler, debug_handler], level = logging.DEBUG)
 log = logging.getLogger('[Enterprise]')
+
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
-log.info("[LOGGER] LOGGER is starting. | Licensed under GPLv3.")
-log.info("[LOGGER] Project maintained by: github.com/itsLuuke (t.me/itsLuuke)")
+
+log.info("LOGGER is starting. | Project maintained by: github.com/itsLuuke (t.me/itsLuuke)")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     log.error(
-        "[LOGGER] You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
+        "You MUST have a python version of at least 3.7! Multiple features depend on this. Bot quitting."
     )
     quit(1)
 
@@ -163,11 +178,11 @@ sibylClient: PsychoPass = None
 
 if SIBYL_KEY:
     try:
-        sibylClient = PsychoPass(SIBYL_KEY)
-        logging.info("Connected to Sibyl System, NONA Tower")
+        sibylClient = PsychoPass(SIBYL_KEY, show_license=False)
+        log.info("Connected to Sibyl System, NONA Tower")
     except Exception as e:
         sibylClient = None
-        logging.warning(
+        log.warning(
             f"Failed to load SibylSystem due to {e.with_traceback(e.__traceback__)}",
         )
 
@@ -188,13 +203,14 @@ sw = KInit.init_sw()
 from tg_bot.modules.sql import SESSION
 
 if not KInit.DROP_UPDATES:
-    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
+    updater: Updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
     
 else:
     updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
     
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher: Dispatcher = updater.dispatcher
+j: Updater.job_queue = updater.job_queue
 
 
 
@@ -227,30 +243,29 @@ def spamcheck(func):
     def check_user(update, context, *args, **kwargs):
         try:
             chat = update.effective_chat
-            user = update.effective_user
+            user = update.effective_message.sender_chat or update.effective_user
             message = update.effective_message
         except AttributeError:
             return
+        if IS_DEBUG:
+            print("{} | {} | {} | {}".format(message.text or message.caption, user.id, message.chat.title, chat.id))
         # If msg from self, return True
         if user.id == context.bot.id:
             return False
-        if user.id == "777000":
+        elif user.id == "777000":
             return False
-        if IS_DEBUG:
-            print("{} | {} | {} | {}".format(message.text or message.caption, user.id, message.chat.title, chat.id))
-        if antispam_module and ANTISPAM_TOGGLE:
+        elif antispam_module and ANTISPAM_TOGGLE:
             parsing_date = time.mktime(message.date.timetuple())
-            detecting = detect_user(user.id, chat.id, message, parsing_date)
-            if detecting:
+            if detect_user(user.id, chat.id, message, parsing_date):
                 return False
             antispam_restrict_user(user.id, parsing_date)
-        if int(user.id) in SPAMMERS:
-            if IS_DEBUG:
-                print("^ This user is a spammer!")
+        elif int(user.id) in SPAMMERS:
             return False
         elif str(chat.id) in GROUP_BLACKLIST:
-            dispatcher.bot.sendMessage(chat.id, "This group is blacklisted, i'm outa here...")
+            dispatcher.bot.sendMessage(chat.id, "This group is blacklisted, I'm outa here...")
             dispatcher.bot.leaveChat(chat.id)
             return False
         return func(update, context, *args, **kwargs)
     return check_user
+
+

@@ -694,21 +694,24 @@ def main():
     else:
         dispatcher.bot.sendMessage(OWNER_ID, "Master, I'm awake!")
         # if SUPPORT_GROUP:
-        #     dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
-        log.info(f"{dispatcher.bot.first_name} started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
+            # dispatcher.bot.sendMessage(SUPPORT_GROUP, "I'm up!")
         KigyoINIT.bot_id = dispatcher.bot.id
         KigyoINIT.bot_username = dispatcher.bot.username
         KigyoINIT.bot_name = dispatcher.bot.first_name
 
-        updater.start_polling(timeout=15, read_latency=4, allowed_updates=Update.ALL_TYPES, drop_pending_updates=KInit.DROP_UPDATES)
-    if len(argv) not in (1, 3, 4):
-        telethn.disconnect()
-    else:
+        allowed_updates = ['message', 'edited_message', 'callback_query', 'callback_query', 'my_chat_member',
+                           'chat_member', 'chat_join_request', 'channel_post', 'edited_channel_post', 'inline_query']
+        updater.start_polling(
+                timeout=15, read_latency=4, allowed_updates=allowed_updates, drop_pending_updates=KInit.DROP_UPDATES)
+        print(f"Updater started! Using long polling. | BOT: [@{dispatcher.bot.username}]")
+    if len(argv) in {1, 3, 4}:
         telethn.run_until_disconnected()
+    else:
+        telethn.disconnect()
     updater.idle()
 
 
 if __name__ == "__main__":
-    log.info(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))
+    log.debug(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
     threading.Thread(target=main).start()
