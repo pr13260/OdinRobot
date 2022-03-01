@@ -377,17 +377,17 @@ def dwarn(
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, noreply=True)
 @loggable
-def button(update: Update, context: CallbackContext) -> str:
+def button(update: Update, _: CallbackContext) -> str:
     query: Optional[CallbackQuery] = update.callback_query
     user: Optional[User] = update.effective_user
-    match = re.match(r"rm_warn\((.+?)\)", query.data)
-    if match:
+    if match := re.match(r"rm_warn\((.+?)\)", query.data):
         user_id = match.group(1)
         chat: Optional[Chat] = update.effective_chat
-        res = sql.remove_warn(user_id, chat.id)
-        if res:
+        if sql.remove_warn(user_id, chat.id):
             update.effective_message.edit_text(
-                "Warn removed by {}.".format(mention_html(user.id, user.first_name) if not is_anon(user, chat) else "anon admin"),
+                "Warn removed by {}.".format(
+                        mention_html(user.id, user.first_name) if not
+                        user_is_admin(update, user.id, perm = AdminPerms.IS_ANONYMOUS) else "anon admin"),
                 parse_mode=ParseMode.HTML,
             )
             user_member = chat.get_member(user_id)
@@ -397,7 +397,7 @@ def button(update: Update, context: CallbackContext) -> str:
                 f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
                 f"<b>User:</b> {mention_html(user_member.user.id, user_member.user.first_name)}\n"
                 f"<b>User ID:</b> <code>{user_member.user.id}</code>"
-                
+
             )
         else:
             update.effective_message.edit_text(
