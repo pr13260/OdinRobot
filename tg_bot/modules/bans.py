@@ -157,8 +157,8 @@ def ban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcery 
             message.reply_text("You don't have permission to delete messages here!")
             return
 
-    if rep := message.reply_to_message and message.reply_to_message.sender_chat:
-        if rep.is_automatic_forward:
+    if message.reply_to_message and message.reply_to_message.sender_chat:
+        if message.reply_to_message.is_automatic_forward:
             message.reply_text("This is a pretty bad idea, isn't it?")
             return
 
@@ -367,6 +367,10 @@ def kick(update: Update, context: CallbackContext) -> str:
     log_message = ""
     bot, args = context.bot, context.args
 
+    if message.reply_to_message.sender_chat:
+        message.reply_text("This command doesn't work on channels, but I can ban them if u want.")
+        return log_message
+
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -466,8 +470,8 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcer
     args = context.args
     bot = context.bot
 
-    if rep := message.reply_to_message and message.reply_to_message.sender_chat:
-        if rep.is_automatic_forward:
+    if message.reply_to_message and message.reply_to_message.sender_chat:
+        if message.reply_to_message.is_automatic_forward:
             message.reply_text("This command doesn't work like this!")
             return
 
