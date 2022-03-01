@@ -56,12 +56,14 @@ def error_callback(update: Update, context: CallbackContext):
         "Message: {}\n\n"
         "Full Traceback: {}"
     ).format(
-        update.effective_user.id,
-        update.effective_chat.title if update.effective_chat else "",
-        update.effective_chat.id if update.effective_chat else "",
-        update.callback_query.data if update.callback_query else "None",
-        update.effective_message.text if update.effective_message else "No message",
-        tb,
+            update.effective_user.id if update.effective_user else
+            update.effective_message.sender_chat.id if update.effective_message and update.effective_message.sender_chat
+            else None,
+            update.effective_chat.title if update.effective_chat else "",
+            update.effective_chat.id if update.effective_chat else "",
+            update.callback_query.data if update.callback_query else "None",
+            update.effective_message.text if update.effective_message else "No message",
+            tb,
     )
     paste_url = upload_text(pretty_message)
 

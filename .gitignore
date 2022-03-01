@@ -33,3 +33,4 @@ backups
 .vscode/settings.json
 .idea/dataSources*
 .idea/dataSources.xml
+logs.txt

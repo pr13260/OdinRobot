@@ -14,6 +14,7 @@ from statistics import mean
 from time import monotonic as time
 from telethon import events
 from .helper_funcs.decorators import kigcmd, register, kigcallback
+from tg_bot.antispam import IGNORED_CHATS, IGNORED_USERS
 
 @kigcmd(command='leave')
 @dev_plus
@@ -195,6 +196,8 @@ def get_chat_by_id(update: Update, context: CallbackContext):
         if data.username:
             m += "<b>Username</b>: {}\n".format(html.escape(data.username))
         m += "<b>ID</b>: {}\n".format(data.id)
+        if args[0] in IGNORED_CHATS:
+            m += "<b>Ignored</b>: True\n"
         m += "\n<b>Permissions</b>:\n <code>{}</code>\n".format(data.permissions)
 
         if data.invite_link:
@@ -202,6 +205,17 @@ def get_chat_by_id(update: Update, context: CallbackContext):
 
         msg.reply_text(text=m, parse_mode=ParseMode.HTML)
 
+
+@kigcmd(command='ignored')
+@dev_plus
+def get_whos_ignored(update: Update, _: CallbackContext):
+    txt = "<b>Ignored chats:</b>\n`"
+    txt += "`, `".join(["<code>{}</code>".format(chat) for chat in IGNORED_CHATS])
+    txt += "`\n\n"
+    txt += "<b>Ignored users:</b>\n`"
+    txt += "`, `".join(["<code>{}</code>".format(chat) for chat in IGNORED_USERS])
+    txt += "`"
+    update.effective_message.reply_text(txt, parse_mode=ParseMode.MARKDOWN)
 
 
 __mod_name__ = "Dev"
