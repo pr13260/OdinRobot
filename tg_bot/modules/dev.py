@@ -209,13 +209,13 @@ def get_chat_by_id(update: Update, context: CallbackContext):
 @kigcmd(command='ignored')
 @dev_plus
 def get_whos_ignored(update: Update, _: CallbackContext):
-    txt = "<b>Ignored chats:</b>\n`"
-    txt += "`, `".join(["<code>{}</code>".format(chat) for chat in IGNORED_CHATS])
-    txt += "`\n\n"
-    txt += "<b>Ignored users:</b>\n`"
-    txt += "`, `".join(["<code>{}</code>".format(chat) for chat in IGNORED_USERS])
-    txt += "`"
-    update.effective_message.reply_text(txt, parse_mode=ParseMode.MARKDOWN)
+    txt = "<b>Ignored chats:</b>\n<code>"
+    txt += "</code>, <code>".join(["{}".format(chat) for chat in IGNORED_CHATS])
+    txt += "</code>\n\n"
+    txt += "<b>Ignored users:</b>\n<code>"
+    txt += "</code>, <code>".join(["{}".format(chat) for chat in IGNORED_USERS])
+    txt += "</code>"
+    update.effective_message.reply_text(txt, parse_mode=ParseMode.HTML)
 
 
 __mod_name__ = "Dev"
