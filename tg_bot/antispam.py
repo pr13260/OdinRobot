@@ -152,7 +152,7 @@ def detect_user(user_id, chat_id, message, parsing_date):
 
 						def unignore_chat(_):
 							IGNORED_CHATS.remove(chat_id)
-						j.run_once(unignore_chat, 600)
+						j.run_once(unignore_chat, 300)
 
 					return True
 				else:
@@ -170,7 +170,7 @@ def detect_user(user_id, chat_id, message, parsing_date):
 
 			def unignore_user(_):
 				IGNORED_USERS.remove(user_id)
-			j.run_once(unignore_user, 300)
+			j.run_once(unignore_user, 600)
 
 		return True
 
