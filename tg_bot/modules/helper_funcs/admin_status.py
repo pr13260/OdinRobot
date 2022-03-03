@@ -153,7 +153,7 @@ def user_admin_check(permission: AdminPerms = None, allow_mods: bool = False, no
 
 			# not anon so just check for admin/perm
 			else:
-				user_id = message.from_user.id
+				user_id = message.from_user.id if not noreply else update.effective_user.id
 				if user_is_admin(
 						update,
 						user_id,
