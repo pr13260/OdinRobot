@@ -226,7 +226,7 @@ def filters(update, context) -> None:  # sourcery no-metrics
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
         logmsg = (
-        f"<b>{escape(chat.title)}:</b>\n"
+        f"<b>{escape(chat.title or chat.id)}:</b>\n"
         f"#ADDFILTER\n"
         f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}\n"
         f"<b>Note:</b> {keyword}"
@@ -273,7 +273,7 @@ def stop_filter(update, context) -> str:
                 parse_mode=telegram.ParseMode.MARKDOWN,
             )
             logmsg = (
-                    f"<b>{escape(chat.title)}:</b>\n"
+                    f"<b>{escape(chat.title or chat.id)}:</b>\n"
                     f"#STOPFILTER\n"
                     f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}\n"
                     f"<b>Filter:</b> {keyword}"
@@ -605,7 +605,7 @@ def rmall_callback(update, context) -> str:
             msg.edit_text(f"Cleaned {count} filters in {chat.title}")
 
             log_message = (
-                f"<b>{escape(chat.title)}:</b>\n"
+                f"<b>{escape(chat.title or chat.id)}:</b>\n"
                 f"#CLEAREDALLFILTERS\n"
                 f"<b>Admin:</b> {mention_html(user.id, escape(user.first_name))}"
             )
