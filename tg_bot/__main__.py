@@ -704,10 +704,7 @@ def main():
         updater.start_polling(
                 timeout=15, read_latency=4, allowed_updates=allowed_updates, drop_pending_updates=KInit.DROP_UPDATES)
         print(f"Updater started! Using long polling. | BOT: [@{dispatcher.bot.username}]")
-    if len(argv) in {1, 3, 4}:
-        telethn.run_until_disconnected()
-    else:
-        telethn.disconnect()
+    telethn.run_until_disconnected()
     updater.idle()
 
 
