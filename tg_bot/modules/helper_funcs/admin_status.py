@@ -70,7 +70,7 @@ def bot_admin_check(permission: AdminPerms = None):
 					func(update, context, *args, **kwargs)
 					return
 				return update.effective_message.reply_text(
-						f"I can't perform this action due to missing the following permission: `{permission.name}`\n"
+						f"I can't perform this action due to missing permissions;\n"
 						f"Make sure i am an admin and {permission.name.lower().replace('is_', 'am ').replace('_', ' ')}!")
 
 			if bot_member.status == "administrator":  # if no perm is required, check for admin-ship only
@@ -161,7 +161,7 @@ def user_admin_check(permission: AdminPerms = None, allow_mods: bool = False, no
 						perm = permission):
 					return func(update, context, *args, **kwargs)
 
-				return u_na_errmsg(message, permission, noreply)
+				return u_na_errmsg(message, permission, update.callback_query)
 
 		return wrapped
 
@@ -214,5 +214,6 @@ def perm_callback_check(upd: Update, _: Ctx):
 	setattr(cb[0][0], "_effective_message", cb[2][0])
 
 	return cb[1](cb[0][0], cb[0][1])  # return func(update, context)
+
 
 dispatcher.add_handler(CBHandler(perm_callback_check, pattern = "anonCB", run_async=True))

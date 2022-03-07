@@ -6,7 +6,7 @@
 from enum import Enum
 from cachetools import TTLCache
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Message
+from telegram import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Message, message
 
 from tg_bot import OWNER_ID, SYS_ADMIN, DEV_USERS, MOD_USERS, SUDO_USERS, SUPPORT_USERS, WHITELIST_USERS
 
@@ -75,11 +75,11 @@ def edit_anon_msg(msg: Message, text: str):
 	msg.edit_text(text, parse_mode = ParseMode.MARKDOWN, reply_markup = None)
 
 
-def user_is_not_admin_errmsg(message: Message, permission: AdminPerms = None, noreply: bool = False):
+def user_is_not_admin_errmsg(msg: Message, permission: AdminPerms = None, cb: CallbackQuery = None):
 	errmsg = f"You lack the following permission for this command:\n`{permission.value}`!"
-	if noreply:
-		return message.callback_query.answer(errmsg, show_alert = True)
-	return message.reply_text(errmsg, parse_mode = ParseMode.MARKDOWN)
+	if cb:
+		return cb.answer(errmsg, show_alert = True)
+	return msg.reply_text(errmsg, parse_mode = ParseMode.MARKDOWN)
 
 
 anon_callbacks = {}
