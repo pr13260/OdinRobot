@@ -520,15 +520,7 @@ def get_user_info(user, chat, full_info=False):
 ##################################################################
 
     # else:
-    if user.id == OWNER_ID:
-        text += f""
-    if user.id == SYS_ADMIN:
-        text += f""
-    elif user.id in [777000, 1087968824]:
-        text += ""
-    elif user.id is bot.id:
-        text += ""
-    else:
+    if user.id not in [OWNER_ID, SYS_ADMIN, 777000, 1087968824, bot.id]:
         num_chats = sql.get_user_num_chats(user.id)
         text += f"\nㅤ<b>Chats:</b> <code>{num_chats}</code>"
 
