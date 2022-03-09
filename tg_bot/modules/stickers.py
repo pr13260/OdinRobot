@@ -71,6 +71,7 @@ def getsticker(update: Update, context: CallbackContext):
 @kigcmd(command=["steal", "kang"])
 @spamcheck
 def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
+    global ppref
     msg = update.effective_message
     user = update.effective_user
     args = context.args
@@ -120,7 +121,7 @@ def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
                     last_set = True
                 else:
                     print(e)
-                    break # something went wrong, leave the loop and send what we have.
+                    break  # something went wrong, leave the loop and send what we have.
 
             # If we're done checking bot animated and non-animated packs
             # exit the loop and send our pack message.
