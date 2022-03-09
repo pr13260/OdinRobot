@@ -6,7 +6,6 @@ Dank-del
 
 import importlib
 import re
-import threading
 from sys import argv
 from typing import Optional
 
@@ -711,4 +710,4 @@ def main():
 if __name__ == "__main__":
     log.debug(f"[{dispatcher.bot.username}] Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
-    threading.Thread(target=main).start()
+    main()
