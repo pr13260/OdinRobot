@@ -18,7 +18,7 @@ from .helper_funcs.admin_status import (
 
 
 def build_mention(user) -> str:
-    return mention_html(user.user.id, user.user.first_name) if user.first_name \
+    return mention_html(user.user.id, user.user.first_name) if user.user \
         else f'<a href="t.me/{user.username}">{html.escape(user.title)}</a>'
 
 
