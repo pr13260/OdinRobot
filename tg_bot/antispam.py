@@ -76,9 +76,9 @@ def antispam_cek_user(user_id, time):
 						status = True
 						GLOBAL_USER_DATA["AntiSpam"] = \
 							{user_id: {"status"  : status, "user": user_id,
-							           "value"   : GLOBAL_USER_DATA["AntiSpam"][user_id]['value'],
-							           "restrict": restrict_time,
-							           "level"   : GLOBAL_USER_DATA["AntiSpam"][user_id]['level']}}
+									"value"   : GLOBAL_USER_DATA["AntiSpam"][user_id]['value'],
+									"restrict": restrict_time,
+									"level"   : GLOBAL_USER_DATA["AntiSpam"][user_id]['level']}}
 					else:
 						restrict_time = None
 						number += 1
@@ -91,7 +91,7 @@ def antispam_cek_user(user_id, time):
 					return value
 				GLOBAL_USER_DATA["AntiSpamHard"] = {
 					user_id: {"status": status, "user": user_id, "value": number, "restrict": restrict_time,
-					          "level" : level}}
+							"level" : level}}
 		return value
 	except KeyError:
 		return {"status": False, "user": user_id, "value": 0, "restrict": None, "level": 1}
@@ -119,7 +119,7 @@ def detect_user(user_id, chat_id, message, parsing_date):
 	if check_spam['status']:
 		if check_user['status_hard']:
 			if chat_id not in IGNORED_CHATS:
-    				chat = dispatcher.bot.get_chat(chat_id)
+				chat = dispatcher.bot.get_chat(chat_id)
 				if bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
 					try:
 						if str(user_id).startswith("-100"):
