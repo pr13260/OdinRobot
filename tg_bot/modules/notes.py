@@ -1,26 +1,27 @@
-import re, ast, random
-from io import BytesIO
-from typing import Optional
-from tg_bot.modules.log_channel import loggable
+import re
+import ast
+import random
 import html
 
-import tg_bot.modules.sql.notes_sql as sql
-from tg_bot import log, dispatcher, SUDO_USERS, spamcheck
+from io import BytesIO
+from typing import Optional
+
+from .. import log, dispatcher, SUDO_USERS, spamcheck
+from .log_channel import loggable
+from .helper_funcs.parsing import parse_filler, revertMd2HTML
+from .helper_funcs.chat_status import connection_status
+from .helper_funcs.misc import build_keyboard
+from .helper_funcs.parsing import get_data, ENUM_FUNC_MAP
+from .helper_funcs.handlers import MessageHandlerChecker
+from .helper_funcs.string_handling import escape_invalid_curly_brackets
+
 from .helper_funcs.admin_status import (
     user_admin_check,
-    bot_admin_check,
     AdminPerms,
-    get_bot_member,
-    bot_is_admin,
-    user_is_admin,
-    user_not_admin_check,
 )
-from .helper_funcs.decorators import *
-from .helper_funcs.chat_status import connection_status
-from tg_bot.modules.helper_funcs.misc import build_keyboard, revert_buttons
-from tg_bot.modules.helper_funcs.msg_types import get_note_type
-from tg_bot.modules.helper_funcs.handlers import MessageHandlerChecker
-from tg_bot.modules.helper_funcs.string_handling import escape_invalid_curly_brackets
+
+from .helper_funcs.decorators import kigcmd, kigmsg, kigcallback
+import tg_bot.modules.sql.notes_sql as sql
 from telegram import (
     MAX_MESSAGE_LENGTH,
     InlineKeyboardMarkup,
@@ -30,14 +31,13 @@ from telegram import (
     InlineKeyboardButton,
 )
 from telegram.error import BadRequest
-from telegram.utils.helpers import escape_markdown, mention_markdown, mention_html
+from telegram.utils.helpers import mention_html
 from telegram.ext import (
     CallbackContext,
     Filters,
 )
 
 
-JOIN_LOGGER = None
 FILE_MATCHER = re.compile(r"^###file_id(!photo)?###:(.*?)(?:\s|$)")
 STICKER_MATCHER = re.compile(r"^###sticker(!photo)?###:")
 BUTTON_MATCHER = re.compile(r"^###button(!photo)?###:(.*?)(?:\s|$)")
@@ -47,17 +47,6 @@ MYAUDIO_MATCHER = re.compile(r"^###audio(!photo)?###:")
 MYVOICE_MATCHER = re.compile(r"^###voice(!photo)?###:")
 MYVIDEO_MATCHER = re.compile(r"^###video(!photo)?###:")
 MYVIDEONOTE_MATCHER = re.compile(r"^###video_note(!photo)?###:")
-
-ENUM_FUNC_MAP = {
-    sql.Types.TEXT.value: dispatcher.bot.send_message,
-    sql.Types.BUTTON_TEXT.value: dispatcher.bot.send_message,
-    sql.Types.STICKER.value: dispatcher.bot.send_sticker,
-    sql.Types.DOCUMENT.value: dispatcher.bot.send_document,
-    sql.Types.PHOTO.value: dispatcher.bot.send_photo,
-    sql.Types.AUDIO.value: dispatcher.bot.send_audio,
-    sql.Types.VOICE.value: dispatcher.bot.send_voice,
-    sql.Types.VIDEO.value: dispatcher.bot.send_video,
-}
 
 
 # Do not async
@@ -71,6 +60,7 @@ def get(update: Update, context: CallbackContext, notename: str, show_none: bool
     user = update.effective_user
     preview = True
     protect = False
+    parseMode = ParseMode.HTML
 
     if note:
         if MessageHandlerChecker.check_user(update.effective_user.id):
@@ -93,65 +83,25 @@ def get(update: Update, context: CallbackContext, notename: str, show_none: bool
             "preview",
             "protect",
         ]
-        valid_format = escape_invalid_curly_brackets( # replace the curly brackets with their non escaped version because we will format them
-            note.value.replace("\\{first\\}", '{first}').replace("\\{last\\}", '{last}').replace("\\{fullname\\}", '{fullname}').replace("\\{username\\}", '{username}').replace("\\{id\\}", '{id}').replace("\\{chatname\\}", '{chatname}').replace("\\{mention\\}", '{mention}').replace("\\{user\\}", '{user}').replace("\\{admin\\}", '{admin}').replace("\\{preview\\}", '{preview}').replace("\\{protect\\}", '{protect}')
-            , VALID_NOTE_FORMATTERS, # this is a terrible way, i need to fix this
-        )
-        if valid_format:
+        if valid_format := escape_invalid_curly_brackets(note.value, VALID_NOTE_FORMATTERS):
             if not no_format and "%%%" in valid_format:
                 split = valid_format.split("%%%")
                 text = random.choice(split) if all(split) else valid_format
             else:
                 text = valid_format
-            if "{admin}" in text and user_is_admin(update, user.id):
+
+            dont_send, preview, protect, text = parse_filler(update, user.id, text)
+
+            if dont_send:
                 return
-            if "{user}" in text and not user_is_admin(update, user.id):
-                return
-            if "{preview}" in text:
-                preview = False
-            if "{protect}" in text:
-                protect = True
-            text = text.format(
-                first=escape_markdown(message.from_user.first_name),
-                last=escape_markdown(
-                    message.from_user.last_name or message.from_user.first_name,
-                ),
-                fullname=escape_markdown(
-                    " ".join(
-                        [message.from_user.first_name, message.from_user.last_name]
-                        if message.from_user.last_name
-                        else [message.from_user.first_name],
-                    ),
-                ),
-                username="@" + message.from_user.username
-                if message.from_user.username
-                else mention_markdown(
-                    message.from_user.id, message.from_user.first_name,
-                ),
-                mention=mention_markdown(
-                    message.from_user.id, message.from_user.first_name,
-                ),
-                chatname=escape_markdown(
-                    message.chat.title
-                    if message.chat.type != "private"
-                    else message.from_user.first_name,
-                ),
-                id=message.from_user.id,
-                user="",
-                admin="",
-                preview="",
-                protect="",
-            )
+
         else:
             text = ""
 
         keyb = []
-        parseMode = ParseMode.MARKDOWN_V2
         buttons = sql.get_buttons(note_chat_id, notename)
         if no_format:
-            parseMode = None # need to fix this too
-            text = text.replace("\*", "*").replace("\[", "[").replace("\]", "]").replace("\(", "(").replace("\)", ")").replace("\+", "+").replace("\|", "|").replace("\{", "{").replace("\}", "}").replace("\.", ".").replace("\-", "-").replace("\'", "'").replace("\_", "_").replace("\~", "~").replace("\`", "`").replace("\>", ">").replace("\#", "#").replace("\-", "-").replace("\=", "=").replace("\!", "!").replace("\\\\", "\\")
-            text += revert_buttons(buttons)
+            text = revertMd2HTML(text, buttons)
         else:
             keyb = build_keyboard(buttons)
 
@@ -160,87 +110,56 @@ def get(update: Update, context: CallbackContext, notename: str, show_none: bool
         try:
             if note.msgtype in (sql.Types.BUTTON_TEXT, sql.Types.TEXT):
                 bot.send_message(
-                    chat_id,
-                    text,
-                    reply_to_message_id=reply_id,
-                    parse_mode=parseMode,
-                    reply_markup=keyboard,
-                    disable_web_page_preview=bool(preview),
-                    protect_content=bool(protect)
+                        chat_id,
+                        text,
+                        reply_to_message_id=reply_id,
+                        parse_mode=parseMode,
+                        reply_markup=keyboard,
+                        disable_web_page_preview=bool(preview),
+                        protect_content=bool(protect)
                 )
             elif ENUM_FUNC_MAP[note.msgtype] == dispatcher.bot.send_sticker:
                 ENUM_FUNC_MAP[note.msgtype](
-                    chat_id,
-                    note.file,
-                    reply_to_message_id=reply_id,
-                    reply_markup=keyboard,
+                        chat_id,
+                        note.file,
+                        reply_to_message_id=reply_id,
+                        reply_markup=keyboard,
                 )
             else:
                 ENUM_FUNC_MAP[note.msgtype](
-                    chat_id,
-                    note.file,
-                    caption=text,
-                    reply_to_message_id=reply_id,
-                    parse_mode=parseMode,
-                    reply_markup=keyboard,
-                    protect_content=bool(protect)
+                        chat_id,
+                        note.file,
+                        caption=text,
+                        reply_to_message_id=reply_id,
+                        parse_mode=parseMode,
+                        reply_markup=keyboard,
+                        protect_content=bool(protect)
                 )
 
         except BadRequest as excp:
             if excp.message == "Entity_mention_user_invalid":
                 message.reply_text(
-                    "Looks like you tried to mention someone I've never seen before. If you really "
+                        "Looks like you tried to mention someone I've never seen before. If you really "
                     "want to mention them, forward one of their messages to me, and I'll be able "
                     "to tag them!"
                 )
             elif FILE_MATCHER.match(note.value):
                 message.reply_text(
-                    "This note was an incorrectly imported file from another bot - I can't use "
+                        "This note was an incorrectly imported file from another bot - I can't use "
                     "it. If you really need it, you'll have to save it again. In "
                     "the meantime, I'll remove it from your notes list."
                 )
                 sql.rm_note(chat_id, notename)
             else:
-                
 
-                try: # untill i fix it just use markdown v1 
-                    text = text.replace("\[", "[").replace("\]", "]").replace("\(", "(").replace("\)", ")").replace("\+", "+").replace("\|", "|").replace("\{", "{").replace("\}", "}").replace("\.", ".").replace("\-", "-").replace("\'", "'").replace("\~", "~").replace("\>", ">").replace("\#", "#").replace("\-", "-").replace("\=", "=").replace("\!", "!").replace("\\\\", "\\")
-                    if note.msgtype in (sql.Types.BUTTON_TEXT, sql.Types.TEXT):
-                        bot.send_message(
-                            chat_id,
-                            text,
-                            reply_to_message_id=reply_id,
-                            parse_mode=ParseMode.MARKDOWN,
-                            reply_markup=keyboard,
-                            disable_web_page_preview=bool(preview),
-                            protect_content=bool(protect)
-                        )
-                    elif ENUM_FUNC_MAP[note.msgtype] == dispatcher.bot.send_sticker:
-                        ENUM_FUNC_MAP[note.msgtype](
-                            chat_id,
-                            note.file,
-                            reply_to_message_id=reply_id,
-                            reply_markup=keyboard,
-                        )
-                    else:
-                        ENUM_FUNC_MAP[note.msgtype](
-                            chat_id,
-                            note.file,
-                            caption=text,
-                            reply_to_message_id=reply_id,
-                            parse_mode=ParseMode.MARKDOWN,
-                            reply_markup=keyboard,
-                            protect_content=bool(protect)
-                        )
-                except:
-                    
-                    message.reply_text(
-                        "This note could not be sent, as it is incorrectly formatted. Ask in @TheBotsSupport if you can't figure out why!"
-                    )
-                    log.exception(
-                        "Could not parse message #%s in chat %s", notename, str(note_chat_id)
-                    )
-                    log.warning("Message was: %s", str(note.value))
+                message.reply_text(
+                        "This note could not be sent, as it is incorrectly formatted. "
+                    "Try getting the noformat version or ask in @TheBotsSupport if you can't figure out why!"
+                )
+                log.exception(
+                        "Could not parse message #%s in chat %s\n\nare you sure it's using the new format?",
+                        notename, str(note_chat_id))
+                log.warning("Message was: %s", str(note.value))
         return
     elif show_none:
         message.reply_text("This note doesn't exist")
@@ -297,8 +216,6 @@ def save(update: Update, _: CallbackContext) -> Optional[str]:
     msg = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat
     user = update.effective_user
-    message = update.effective_message
-
 
     m = msg.text.split(' ', 1)
     if len(m) == 1:
@@ -346,10 +263,6 @@ def clear(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     chat_id = chat.id
     user = update.effective_user
-
-    message = update.effective_message
-
-
 
     if len(args) >= 1:
         notename = args[0].lower()

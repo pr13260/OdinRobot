@@ -1,10 +1,13 @@
 import re
 from enum import IntEnum, unique
 from typing import Optional, Union
+from html import escape
 
-from telegram import InlineKeyboardButton, Message
+from telegram import InlineKeyboardButton, Message, Update
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
+from telegram.utils.helpers import mention_html
 
+from tg_bot.modules.helper_funcs.admin_status import user_is_admin
 from tg_bot.modules.sql.notes_sql import Buttons
 from tg_bot import dispatcher
 
@@ -51,6 +54,7 @@ VALID_FORMATTERS = [
     "preview",
     "protect",
 ]
+
 
 def get_data(
         msg: Message, welcome: bool = False
@@ -132,7 +136,7 @@ def parser(
             note_data += f"<a href=\"{match.group(2)}\">{match.group(1)}</a>"
             prev = match.end(2) + 1
         else:
-            buttons.append((match.group(4), match.group(5), bool(match.group(5))))
+            buttons.append((match.group(4), match.group(5), bool(match.group(6))))
             note_data += markdown_note[prev: match.start(3)].rstrip()
             prev = match.end(3)
 
@@ -143,35 +147,41 @@ def parser(
 
 
 def Md2HTML(text: str) -> str:
-    _pre_re = re.compile(r'`{3}(.*?[^\s].*?)`{3}', re.DOTALL)
-    _code_re = re.compile(r'`(.*?[^\s].*?)`')
-    _bold_re = re.compile(r'\*(.*?[^\s].*?)\*')
-    _underline_re = re.compile(r'__(.*?[^\s].*?)__')
-    _italic_re = re.compile(r'_(.*?[^\s].*?)_')
-    _strike_re = re.compile(r'~(.*?[^\s].*?)~')
-    _spoiler_re = re.compile(r'\|\|(.*?[^\s].*?)\|\|')
+    _whitespace_re = re.compile(
+            r"(?<!<)(?P<t_b><[^></]*?>)(?P<str>[^<>](?:.*?\s*?)*?(?P<ws>\s*?))(?P<t_e></[^<>]*?>)(?!>)")
+    _pre_re = re.compile(r'`{3}(.*?[^\s].*?)(\s*?)`{3}', re.DOTALL)
+    _code_re = re.compile(r'`(.*?[^\s].*?)(\s*?)`', re.DOTALL)
+    _bold_re = re.compile(r'\*(.*?[^\s].*?)(\s*?)\*', re.DOTALL)
+    _underline_re = re.compile(r'(?<!_)__(.*?[^\s].*?)(\s*?)__(?!_)', re.DOTALL)
+    _italic_re = re.compile(r'_(.*?[^\s].*?)(\s*?)_', re.DOTALL)
+    _strike_re = re.compile(r'~(.*?[^\s].*?)(\s*?)~', re.DOTALL)
+    _spoiler_re = re.compile(r'\|\|(.*?[^\s].*?)(\s*?)\|\|', re.DOTALL)
+
+    def repl_whitespace(match):
+        return f"{match.group('t_b')}{match.group('str')}{match.group('t_e')}{match.group('ws')}"
 
     def _pre_repl(match):
-        return f'<pre>{match.group(1)}</pre>'
+        return f'<pre>{match.group(1)}</pre>{match.group(2)}'
 
     def _code_repl(match):
-        return f'<code>{match.group(1)}</code>'
+        return f'<code>{match.group(1)}</code>{match.group(2)}'
 
     def _bold_repl(match):
-        return f'<b>{match.group(1)}</b>'
+        return f'<b>{match.group(1)}</b>{match.group(2)}'
 
     def _underline_repl(match):
-        return f'<u>{match.group(1)}</u>'
+        return f'<u>{match.group(1)}</u>{match.group(2)}'
 
     def _italic_repl(match):
-        return f'<i>{match.group(1)}</i>'
+        return f'<i>{match.group(1)}</i>{match.group(2)}'
 
     def _strike_repl(match):
-        return f'<s>{match.group(1)}</s>'
+        return f'<s>{match.group(1)}</s>{match.group(2)}'
 
     def _spoiler_repl(match):
-        return f'<span class="tg-spoiler">{match.group(1)}</span>'
+        return f'<span class="tg-spoiler">{match.group(1)}</span>{match.group(2)}'
 
+    text = _whitespace_re.sub(repl_whitespace, text)
     text = _pre_re.sub(_pre_repl, text)
     text = _code_re.sub(_code_repl, text)
     text = _bold_re.sub(_bold_repl, text)
@@ -184,35 +194,35 @@ def Md2HTML(text: str) -> str:
 
 
 def revertMd2HTML(text: str, buttons: Buttons) -> str:
-    _pre_re = re.compile(r'<pre>(.*?[^\s].*?)</pre>', re.DOTALL)
-    _code_re = re.compile(r'<code>(.*?[^\s].*?)</code>')
-    _bold_re = re.compile(r'<b>(.*?[^\s].*?)</b>')
-    _underline_re = re.compile(r'<u>(.*?[^\s].*?)</u>')
-    _italic_re = re.compile(r'<i>(.*?[^\s].*?)</i>')
-    _strike_re = re.compile(r'<s>(.*?[^\s].*?)</s>')
-    _spoiler_re = re.compile(r'<span class="tg-spoiler">(.*?[^\s].*?)</span>')
-    _link_re = re.compile(r'<a href="(.*?[^\s].*?)">(.*?[^\s].*?)</a>')
+    _pre_re = re.compile(r'<pre>(.*?[^\s].*?)(\s*?)</pre>', re.DOTALL)
+    _code_re = re.compile(r'<code>(.*?[^\s].*?)(\s*?)</code>')
+    _bold_re = re.compile(r'<b>(.*?[^\s].*?)(\s*?)</b>')
+    _underline_re = re.compile(r'<u>(.*?[^\s].*?)(\s*?)</u>')
+    _italic_re = re.compile(r'<i>(.*?[^\s].*?)(\s*?)</i>')
+    _strike_re = re.compile(r'<s>(.*?[^\s].*?)(\s*?)</s>')
+    _spoiler_re = re.compile(r'<span class="tg-spoiler">(.*?[^\s].*?)(\s*?)</span>')
+    _link_re = re.compile(r'<a href=(?:"(.*?[^\s].*?)"|\'(.*?[^\s].*?)\')>(.*?[^\s].*?)</a>')
 
     def _pre_repl(match):
-        return f'```{match.group(1)}```'
+        return f'```{match.group(1)}```{match.group(2)}'
 
     def _code_repl(match):
-        return f'`{match.group(1)}`'
+        return f'`{match.group(1)}`{match.group(2)}'
 
     def _bold_repl(match):
-        return f'*{match.group(1)}*'
+        return f'*{match.group(1)}*{match.group(2)}'
 
     def _underline_repl(match):
-        return f'__{match.group(1)}__'
+        return f'__{match.group(1)}__{match.group(2)}'
 
     def _italic_repl(match):
-        return f'_{match.group(1)}_'
+        return f'_{match.group(1)}_{match.group(2)}'
 
     def _strike_repl(match):
-        return f'~{match.group(1)}~'
+        return f'~{match.group(1)}~{match.group(2)}'
 
     def _spoiler_repl(match):
-        return f'||{match.group(1)}||'
+        return f'||{match.group(1)}||{match.group(2)}'
 
     def _link_repl(match):
         return f"[{match.group(2)}]({match.group(1)})"
@@ -244,3 +254,51 @@ def build_keyboard_from_list(buttons) -> list[list[InlineKeyboardButton]]:
             kb.append([InlineKeyboardButton(btn[0], url=btn[1])])
 
     return kb
+
+
+def parse_filler(update: Update, user_id: int, text: str) -> (bool, bool, bool, str):
+    message = update.effective_message
+
+    if "{admin}" in text and user_is_admin(update, user_id):
+        return True, False, False, ""
+    if "{user}" in text and not user_is_admin(update, user_id):
+        return True, False, False, ""
+    preview = "{preview}" not in text
+    protect ="{protect}" in text
+    text = text.format(
+            first = escape(message.from_user.first_name),
+            last = escape(
+                    message.from_user.last_name
+                    or message.from_user.first_name,
+                    ),
+            fullname = escape(
+                    " ".join(
+                            [
+                                message.from_user.first_name,
+                                message.from_user.last_name or "",
+                                ]
+                    ),
+            ),
+            username = f'@{message.from_user.username}'
+            if message.from_user.username
+            else mention_html(
+                    message.from_user.id,
+                    message.from_user.first_name,
+            ),
+            mention = mention_html(
+                    message.from_user.id,
+                    message.from_user.first_name,
+            ),
+            chatname = escape(
+                    message.chat.title
+                    if message.chat.type != "private"
+                    else message.from_user.first_name,
+            ),
+            id = message.from_user.id,
+            user = "",
+            admin = "",
+            preview = "",
+            protect = "",
+    )
+
+    return False, preview, protect, text
