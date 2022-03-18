@@ -51,7 +51,7 @@ import tg_bot.modules.sql.log_channel_sql as logsql
 from ..import sibylClient
 from .sql.sibylsystem_sql import does_chat_sibylban
 from SibylSystem import GeneralException
-
+from .cron_jobs import j
 
 VALID_WELCOME_FORMATTERS = [
     "first",
@@ -170,6 +170,7 @@ def send(update, message, keyboard, backup_message):
     return msg
 
 @kigmsg((Filters.status_update.new_chat_members), group=WELCOME_GROUP)
+
 #@loggable
 def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot, job_queue = context.bot, context.job_queue
@@ -235,7 +236,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Give the owner a special welcome
             if new_mem.id == OWNER_ID:
                 update.effective_message.reply_text(
-                    "Oh hi, my creator.", reply_to_message_id=reply
+                    "Hey master, May The Force Be With You!", reply_to_message_id=reply
                 )
                 welcome_log = (
                     f"{html.escape(chat.title)}\n"
@@ -247,7 +248,7 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
             # Welcome Devs
             elif new_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "Whoa! A member of my Devs just joined!",
+                    "Whoa! A developer user just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -567,6 +568,14 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
 
                 if sent:
                     sql.set_clean_welcome(chat.id, sent.message_id)
+
+                    def clean_welc(_):
+                        try:
+                            bot.delete_message(chat.id, sent.message_id)
+                        except:
+                            pass
+
+                    j.run_once(clean_welc, 300)
 
         if not log_setting.log_joins:
             return ""
@@ -1014,8 +1023,7 @@ def clean_welcome(update: Update, context: CallbackContext) -> str:
 
 
     if not args:
-        clean_pref = sql.get_clean_pref(chat.id)
-        if clean_pref:
+        if clean_pref := sql.get_clean_pref(chat.id):
             update.effective_message.reply_text(
                 "I should be deleting welcome messages up to two days old."
             )
@@ -1141,6 +1149,14 @@ def user_button(update: Update, context: CallbackContext):
                 if sent:
                     sql.set_clean_welcome(chat.id, sent.message_id)
 
+                    def clean_welc(_):
+                        try:
+                            bot.delete_message(chat.id, sent.message_id)
+                        except:
+                            pass
+
+                    j.run_once(clean_welc, 300)
+
     else:
         query.answer(text="You're not allowed to do this!")
 
@@ -1211,6 +1227,13 @@ def user_captcha_button(update: Update, context: CallbackContext):
 
                     if sent:
                         sql.set_clean_welcome(chat.id, sent.message_id)
+
+                        def clean_welc(_):
+                            try:
+                                bot.delete_message(chat.id, sent.message_id)
+                            except:
+                                pass
+                        j.run_once(clean_welc, 300)
         else:
             try:
                 bot.deleteMessage(chat.id, message.message_id)
