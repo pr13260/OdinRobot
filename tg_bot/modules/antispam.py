@@ -185,12 +185,13 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
     if GBAN_LOGS:
         try:
-            bot.send_message(GBAN_LOGS, log_message, parse_mode=ParseMode.HTML)
+            bot.send_message(GBAN_LOGS, log_message, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
         except BadRequest:
             bot.send_message(
-                GBAN_LOGS,
-                log_message
-                + "\n\nFormatting has been disabled due to an unexpected error.",
+                    GBAN_LOGS,
+                    log_message
+                    + "\n\nFormatting has been disabled due to an unexpected error.",
+                    disable_web_page_preview=True
             )
 
     else:
