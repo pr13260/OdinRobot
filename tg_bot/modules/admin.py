@@ -178,7 +178,7 @@ def promote(update: Update, context: CallbackContext) -> Optional[str]:
         if err.message == "User_not_mutual_contact":
             message.reply_text("How am I mean to promote someone who isn't in the group?")
         else:
-            message.reply_text("An error occurred while promoting.")
+            message.reply_text(f"An error occurred while promoting:\n{err.message}")
         return
 
     log_message = (
