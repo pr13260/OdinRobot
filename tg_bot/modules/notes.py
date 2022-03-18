@@ -8,7 +8,7 @@ from typing import Optional
 
 from .. import log, dispatcher, SUDO_USERS, spamcheck
 from .log_channel import loggable
-from .helper_funcs.parsing import parse_filler, revertMd2HTML
+from .helper_funcs.parsing import Types, parse_filler, revertMd2HTML
 from .helper_funcs.chat_status import connection_status
 from .helper_funcs.misc import build_keyboard
 from .helper_funcs.parsing import get_data, ENUM_FUNC_MAP
@@ -223,7 +223,7 @@ def save(update: Update, _: CallbackContext) -> Optional[str]:
         return
     note_name, text, data_type, content, buttons = get_data(msg)
     note_name = note_name.lower()
-    if text == "":
+    if data_type == Types.TEXT and len(text.strip()) == 0:
         msg.reply_text("Should i save... nothing?")
         return
 
