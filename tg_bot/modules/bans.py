@@ -539,6 +539,10 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:  # sourcer
         cannot_ban(user_id, message)
         return ''
 
+    elif member.status not in ["banned", "kicked"]:
+        message.reply_text("This user isn't banned!")
+        return ''
+
     elif did_ban := unban_user(bot, member, chat.id, reason = " ".join(args) or None):
         logmsg  = (
         f"<b>{html.escape(chat.title)}:</b>\n"
