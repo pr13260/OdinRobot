@@ -35,7 +35,7 @@ from typing import Optional
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
-@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS, allow_mods = True)
+@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
 @loggable
 def fullpromote(update: Update, context: CallbackContext) -> Optional[str]:
     bot = context.bot
@@ -115,7 +115,7 @@ def fullpromote(update: Update, context: CallbackContext) -> Optional[str]:
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
-@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS, allow_mods = True)
+@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
 @loggable
 def promote(update: Update, context: CallbackContext) -> Optional[str]:
     bot = context.bot
@@ -195,7 +195,7 @@ def promote(update: Update, context: CallbackContext) -> Optional[str]:
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
-@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS, allow_mods = True)
+@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
 @loggable
 def demote(update: Update, context: CallbackContext) -> Optional[str]:
     bot = context.bot
@@ -273,7 +273,7 @@ def demote(update: Update, context: CallbackContext) -> Optional[str]:
 @spamcheck
 @connection_status
 @bot_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
-@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS, allow_mods = True)
+@user_admin_check(AdminPerms.CAN_PROMOTE_MEMBERS)
 @loggable
 def set_title(update: Update, context: CallbackContext) -> Optional[str]:
     bot = context.bot
