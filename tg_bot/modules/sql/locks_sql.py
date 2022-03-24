@@ -6,6 +6,18 @@ from sqlalchemy import Column, String, Boolean
 from tg_bot.modules.sql import SESSION, BASE
 
 
+# If u have a database error after cherrypicking some recent commits then try running this query as it should mostly solve ur issue
+
+# ALTER TABLE permissions ADD COLUMN apk boolean default false;
+# ALTER TABLE permissions ADD COLUMN doc boolean default false;
+# ALTER TABLE permissions ADD COLUMN exe boolean default false;
+# ALTER TABLE permissions ADD COLUMN jpg boolean default false;
+# ALTER TABLE permissions ADD COLUMN mp3 boolean default false;
+# ALTER TABLE permissions ADD COLUMN pdf boolean default false;
+# ALTER TABLE permissions ADD COLUMN txt boolean default false;
+# ALTER TABLE permissions ADD COLUMN xml boolean default false;
+# ALTER TABLE permissions ADD COLUMN zip boolean default false;
+
 class Permissions(BASE):
     __tablename__ = "permissions"
     chat_id = Column(String(14), primary_key=True)
