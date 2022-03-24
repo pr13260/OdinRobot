@@ -155,7 +155,7 @@ def report(update: Update, context: CallbackContext) -> str:
 
 @kigcallback(pattern=r"reported_")
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
-@user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, allow_mods=True)
+@user_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS, allow_mods=True, noreply = True)
 def buttons(update: Update, context: CallbackContext):
     bot = context.bot
     query = update.callback_query
