@@ -9,6 +9,7 @@ AntiSpamValue = 25
 GLOBAL_USER_DATA = {}
 IGNORED_USERS = []
 IGNORED_CHATS = []
+ERRORS = []
 
 
 def antispam_restrict_user(user_id, time):
@@ -121,26 +122,30 @@ def detect_user(user_id, chat_id, message, parsing_date):
 			if chat_id not in IGNORED_CHATS:
 				chat = dispatcher.bot.get_chat(chat_id)
 				if bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
-					try:
-						if str(user_id).startswith("-100"):
-							dispatcher.bot.ban_chat_sender_chat(chat_id, user_id)
-						else:
-							dispatcher.bot.ban_chat_member(chat_id, user_id)
-						dispatcher.bot.sendMessage(
-								chat_id,
-								"This user was spamming the chat, so I banned him!",
-								reply_to_message_id = message.message_id)
-						dispatcher.bot.sendMessage(
-								Owner,
-								"I've banned this user!\n ID: `{}`\nChat: `{}`".format(
-										user_id, chat_id), parse_mode = "markdown")
-						return True
-					except Exception as e:
-						dispatcher.bot.sendMessage(
-								Owner,
-								"Error banning user!\n ID: `{}`\nChat: `{}`\n\n{}".format(
-										user_id, chat_id, e), parse_mode = "markdown")
+					if (user_id, chat_id) in ERRORS:
 						pass
+					else:
+						try:
+							if str(user_id).startswith("-100"):
+								dispatcher.bot.ban_chat_sender_chat(chat_id, user_id)
+							else:
+								dispatcher.bot.ban_chat_member(chat_id, user_id)
+							dispatcher.bot.sendMessage(
+									chat_id,
+									"This user was spamming the chat, so I banned him!",
+									reply_to_message_id = message.message_id)
+							dispatcher.bot.sendMessage(
+									Owner,
+									"I've banned this user!\n ID: `{}`\nChat: `{}`".format(
+											user_id, chat_id), parse_mode = "markdown")
+							return True
+						except Exception as e:
+							dispatcher.bot.sendMessage(
+									Owner,
+									"Error banning user!\n ID: `{}`\nChat: `{}`\n\n{}".format(
+											user_id, chat_id, e), parse_mode = "markdown")
+							ERRORS.append((user_id, chat_id))  # don't spam that it failed
+							pass
 				elif message.chat.type != 'private':
 
 					if chat_id not in IGNORED_CHATS:
