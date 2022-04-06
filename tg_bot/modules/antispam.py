@@ -157,7 +157,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
 
         return
 
-    message.reply_text("Blowing the dust off the BANHAMMER!")
+    logmsg = message.reply_text("Blowing the dust off the BANHAMMER!")
 
     start_time = time.time()
     datetime_fmt = "%Y-%m-%dT%H:%M"
@@ -234,7 +234,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
             pass
 
     if GBAN_LOGS:
-        log.edit_text(
+        logmsg.edit_text(
             log_message + f"\n<b>Chats affected:</b> <code>{gbanned_chats}</code>",
             parse_mode=ParseMode.HTML,
         )
