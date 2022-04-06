@@ -99,7 +99,7 @@ def sibyl_ban(update: Update, context: CallbackContext) -> Optional[str]:
             handle_sibyl_banned(user.id, data)
 
 
-@kigmsg(Filters.status_update.new_chat_members, group=102)
+@kigmsg(Filters.status_update.new_chat_members, group=103)
 @loggable
 def sibyl_ban_alert(update: Update, context: CallbackContext) -> Optional[str]:
     message = update.effective_message
@@ -193,7 +193,7 @@ Connection to <a href="https://t.me/SibylSystem/2">Sibyl System</a> can be turne
 
 
 @kigcb(pattern="sibyl_connect", run_async=True)
-@kigcmd(command="sibyl", group=110, run_async = True)
+@kigcmd(command="sibyl", group=115, run_async = True)
 @connection_status
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @user_admin_check(AdminPerms.CAN_CHANGE_INFO)
@@ -315,7 +315,7 @@ def sibyltoggle(update: Update, _: CallbackContext):
         pass
 
 
-@kigcmd(command="start", group=113, run_async = True)
+@kigcmd(command="start", group=106, run_async = True)
 def sibyl_banned(update: Update, ctx: CallbackContext):
     chat = update.effective_chat
     args = ctx.args

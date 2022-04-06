@@ -50,7 +50,7 @@ ENUM_FUNC_MAP = {
     sql.Types.VIDEO.value: dispatcher.bot.send_video,
     # sql.Types.VIDEO_NOTE.value: dispatcher.bot.send_video_note
 }
-CUSTFILTERS_GROUP = -2
+CUSTFILTERS_GROUP = 50
 
 @kigcmd(command='filters', admin_ok=True)
 @spamcheck
@@ -101,7 +101,7 @@ def list_handlers(update, context):
 
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
-@kigcmd(command='filter', run_async=False)
+@kigcmd(command='filter', run_async=False, group=55)
 @spamcheck
 @typing_action
 @user_admin_check(AdminPerms.CAN_CHANGE_INFO)

@@ -1,3 +1,4 @@
+import contextlib
 from io import BytesIO
 from time import sleep
 
@@ -115,11 +116,8 @@ def log_user(update: Update, _: CallbackContext):
         if rep.entities:
             for entity in rep.entities:
                 if entity.type in ["text_mention", "mention"]:
-                    try:
+                    with contextlib.suppress(AttributeError):
                         update_user(entity.user.id, entity.user.username)
-                    except AttributeError:
-                        pass
-
         if rep.sender_chat and not rep.is_automatic_forward:
             update_user(
                 rep.sender_chat.id,
@@ -134,11 +132,8 @@ def log_user(update: Update, _: CallbackContext):
     if msg.entities:
         for entity in msg.entities:
             if entity.type in ["text_mention", "mention"]:
-                try:
+                with contextlib.suppress(AttributeError):
                     update_user(entity.user.id, entity.user.username)
-                except AttributeError:
-                    pass
-
     if msg.sender_chat and not msg.is_automatic_forward:
         update_user(msg.sender_chat.id, msg.sender_chat.username, chat.id, chat.title)
 

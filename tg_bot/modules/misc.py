@@ -414,7 +414,7 @@ def info(update: Update, context: CallbackContext):  # sourcery no-metrics
         or (
             len(args) >= 1
             and not args[0].startswith("@")
-            and not args[0].isdigit()
+            and not args[0].lstrip("-").isdigit()
             and not message.parse_entities([MessageEntity.TEXT_MENTION])
         )
     ):

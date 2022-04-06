@@ -417,6 +417,6 @@ def botstatchanged(update: Update, _: CallbackContext):
             pass
 
 dispatcher.add_handler(ChatMemberHandler(chatmemberupdates, ChatMemberHandler.CHAT_MEMBER, run_async=True), group=-21)
-dispatcher.add_handler(ChatMemberHandler(mychatmemberupdates, ChatMemberHandler.MY_CHAT_MEMBER, run_async=True), group=-20)
+dispatcher.add_handler(ChatMemberHandler(mychatmemberupdates, ChatMemberHandler.MY_CHAT_MEMBER, run_async=True), group=-23)
 dispatcher.add_handler(ChatMemberHandler(botstatchanged, ChatMemberHandler.MY_CHAT_MEMBER, run_async=True), group=-25)
 dispatcher.add_handler(ChatMemberHandler(admincacheupdates, ChatMemberHandler.CHAT_MEMBER, run_async=True), group=-22)
