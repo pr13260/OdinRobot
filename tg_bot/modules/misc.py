@@ -502,9 +502,13 @@ def stats(update, context):
            InlineKeyboardButton('Ping', callback_data='pingCB')
           ]
     ]
-    #repo = git.Repo(search_parent_directories=True)
-    #sha = repo.head.object.hexsha
-    #status += f"*• Commit*: `{sha[0:9]}`\n"
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        status += f"*• Commit*: `{sha[:9]}`\n"
+    except Exception as e:
+        status += f"*• Commit*: `{str(e)}`\\n"
+
     try:
         update.effective_message.reply_text(status +
             "\n*╒═══「 Bot statistics: 」*\n"
