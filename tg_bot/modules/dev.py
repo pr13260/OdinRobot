@@ -71,8 +71,7 @@ def gitpull(update: Update, context: CallbackContext):
 
     sent_msg.edit_text("Restarted.")
 
-    os.system("restart.bat")
-    os.execv("start.bat", sys.argv)
+    os.system("pm2 restart odin")
 
 @kigcmd(command='restart')
 @dev_plus
@@ -81,7 +80,7 @@ def restart(update: Update, context: CallbackContext):
         "Starting a new instance and shutting down this one"
     )
 
-    os.execv(sys.executable, ['python3', '-m', 'tg_bot', '2>&1', '|', 'tee', 'logs.txt'])
+    os.system("pm2 restart odin")
 
 
 class Store:
