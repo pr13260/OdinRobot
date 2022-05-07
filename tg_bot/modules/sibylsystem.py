@@ -1,24 +1,20 @@
-import os
-import threading
 from enum import Enum
 from typing import Optional
 
+from SibylSystem import GeneralException
 from telegram import Bot, Chat, Message, MessageEntity, Update, InlineKeyboardButton, InlineKeyboardMarkup, User
-from telegram.ext.commandhandler import CommandHandler
-from telegram.ext import CallbackQueryHandler, CallbackContext
+from telegram.error import BadRequest
+from telegram.ext import CallbackContext
 from telegram.ext.filters import Filters
-from telegram.error import BadRequest, TelegramError
-from telegram.utils import helpers
 from telegram.parsemode import ParseMode
+from telegram.utils import helpers
 from telegram.utils.helpers import mention_html
 
-from SibylSystem import GeneralException
-
-from ..import dispatcher, sibylClient, log as LOGGER
-
+from .helper_funcs.admin_status import user_admin_check, bot_admin_check, AdminPerms, user_is_admin
+from .helper_funcs.chat_status import connection_status
+from .helper_funcs.decorators import kigcmd, kigmsg, kigcallback as kigcb
+from .helper_funcs.extraction import extract_user
 from .log_channel import loggable
-from .sql.users_sql import get_user_com_chats
-
 from .sql.sibylsystem_sql import (
     SIBYLBAN_SETTINGS,
     does_chat_sibylban,
@@ -27,14 +23,10 @@ from .sql.sibylsystem_sql import (
     toggle_sibyl_log,
     toggle_sibyl_mode,
 )
+from .sql.users_sql import get_user_com_chats
+from .. import dispatcher, sibylClient, log
 
-from .helper_funcs.chat_status import connection_status
-from .helper_funcs.admin_status import user_admin_check, bot_admin_check, AdminPerms, user_is_admin
-from .helper_funcs.decorators import kigcmd, kigmsg, kigcallback as kigcb
-from .helper_funcs.extraction import extract_user
-
-
-LOGGER.info("For support reach out to @PublicSafetyBureau on Telegram | Powered by @Kaizoku")
+log.info("For support reach out to @PublicSafetyBureau on Telegram | Powered by @Kaizoku")
 
 
 def get_sibyl_setting(chat_id):
@@ -71,7 +63,7 @@ def sibyl_ban(update: Update, context: CallbackContext) -> Optional[str]:
             return
 
         except BaseException as e:
-            LOGGER.error(e)
+            log.error(e)
             return
 
         if data.banned and act in {1, 2}:
@@ -80,13 +72,13 @@ def sibyl_ban(update: Update, context: CallbackContext) -> Optional[str]:
             except BadRequest:
                 return
             except BaseException as e:
-                LOGGER.error(f"Failed to ban {user.id} in {chat.id} due to {e}")
+                log.error(f"Failed to ban {user.id} in {chat.id} due to {e}")
 
             txt = '''{} has a <a href="https://t.me/SibylSystem/3">Crime Coefficient</a> of {}\n'''.format(
-                    user.mention_html(), data.crime_coefficient,
+                user.mention_html(), data.crime_coefficient,
             )
             txt += "<b>Enforcement Mode:</b> {}".format(
-                    "Lethal Eliminator" if not data.is_bot else "Destroy Decomposer",
+                "Lethal Eliminator" if not data.is_bot else "Destroy Decomposer",
             )
             log_msg = "#SIBYL_BAN #{}".format(", #".join(data.ban_flags)) if data.ban_flags else "#SIBYL_BAN"
             log_msg += f"\n • <b>User:</b> {user.mention_html()}\n"
@@ -126,12 +118,12 @@ def sibyl_ban_alert(update: Update, context: CallbackContext) -> Optional[str]:
             except GeneralException:
                 return
             except BaseException as e:
-                LOGGER.error(e)
+                log.error(e)
                 return
 
             if data.banned:
                 txt = '''{} has a <a href="https://t.me/SibylSystem/3">Crime Coefficient</a> of {}\n'''.format(
-                        user.mention_html(), data.crime_coefficient,
+                    user.mention_html(), data.crime_coefficient,
                 )
                 txt += "<b>Enforcement Mode:</b> None"
                 url = helpers.create_deep_linked_url(bot.username, f"sibyl_banned-{user.id}")
@@ -160,9 +152,12 @@ def handle_sibyl_banned(user, data):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
-        bot.send_message(user.id, "You have been added to Sibyl Database", parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+        bot.send_message(
+            user.id,
+            "You have been added to Sibyl Database",
+            parse_mode=ParseMode.HTML, reply_markup=reply_markup)
     except BaseException as e:
-        LOGGER.error(e)
+        log.error(e)
 
     for c in chat:
         if does_chat_sibylban(c):
@@ -197,7 +192,7 @@ Connection to <a href="https://t.me/SibylSystem/2">Sibyl System</a> can be turne
 
 
 @kigcb(pattern="sibyl_connect", run_async=True)
-@kigcmd(command="sibyl", group=115, run_async = True)
+@kigcmd(command="sibyl", group=115, run_async=True)
 @connection_status
 @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @user_admin_check(AdminPerms.CAN_CHANGE_INFO)
@@ -208,7 +203,7 @@ def sibylmain(update: Update, _: CallbackContext):
     user = update.effective_user
     if update.callback_query:
         if update.callback_query.data == "sibyl_connect=toggle":
-            if not is_user_admin(chat, user.id):
+            if not user_is_admin(update, user.id, perm=AdminPerms.CAN_CHANGE_INFO):
                 update.callback_query.answer()
                 return
 
@@ -221,7 +216,7 @@ def sibylmain(update: Update, _: CallbackContext):
             update.callback_query.answer(f'Sibyl System has been {"Enabled!" if stat else "Disabled!"}')
 
         elif update.callback_query.data == "sibyl_connect=close":
-            if not is_user_admin(chat, user.id):
+            if not user_is_admin(update, user.id, perm=AdminPerms.CAN_CHANGE_INFO):
                 update.callback_query.answer()
             message.delete()
             return
@@ -230,22 +225,22 @@ def sibylmain(update: Update, _: CallbackContext):
     keyboard = [
         [
             InlineKeyboardButton(
-                    "✤ Disconnect" if stat else "✤ Connect",
-                    callback_data="sibyl_connect=toggle",
+                "✤ Disconnect" if stat else "✤ Connect",
+                callback_data="sibyl_connect=toggle",
             ),
             InlineKeyboardButton(
-                    "♡ Modes",
-                    callback_data='sibyl_toggle=main',
+                "♡ Modes",
+                callback_data='sibyl_toggle=main',
             ),
         ],
         [
             InlineKeyboardButton(
-                    "❖ API",
-                    url="https://t.me/PsychoPass/4",
+                "❖ API",
+                url="https://t.me/PsychoPass/4",
             ),
             InlineKeyboardButton(
-                    "？What is Sibyl",
-                    url="https://t.me/SibylSystem/2",
+                "？What is Sibyl",
+                url="https://t.me/SibylSystem/2",
             ),
         ],
     ]
@@ -269,7 +264,7 @@ def sibyltoggle(update: Update, _: CallbackContext):
     chat: Chat = update.effective_chat
     message: Message = update.effective_message
     user: User = update.effective_user
-    if not is_user_admin(chat, user.id):
+    if not user_is_admin(update, user.id, perm=AdminPerms.CAN_CHANGE_INFO):
         update.callback_query.answer("Only admins can toggle this!")
         return
 
@@ -289,26 +284,26 @@ def sibyltoggle(update: Update, _: CallbackContext):
     keyboard = [
         [
             InlineKeyboardButton(
-                    SibylMode(2).name if act != 2 else SibylMode(1).name,
-                    callback_data=f"sibyl_toggle={int(2 if not act==2 else 1)}",
+                SibylMode(2).name if act != 2 else SibylMode(1).name,
+                callback_data=f"sibyl_toggle={int(2 if not act == 2 else 1)}",
             ),
             InlineKeyboardButton(
-                    SibylMode(3).name + " Only" if act != 3 else SibylMode(1).name,
-                    callback_data=f'sibyl_toggle={int(3 if act != 3 else 1)}',
+                SibylMode(3).name + " Only" if act != 3 else SibylMode(1).name,
+                callback_data=f'sibyl_toggle={int(3 if act != 3 else 1)}',
             ),
         ],
         [
             InlineKeyboardButton(
-                    "🔙",
-                    callback_data="sibyl_connect",
+                "🔙",
+                callback_data="sibyl_connect",
             ),
             InlineKeyboardButton(
-                    "Disable Log" if log_stat else "Enable Log",
-                    callback_data="sibyl_toggle=log",
+                "Disable Log" if log_stat else "Enable Log",
+                callback_data="sibyl_toggle=log",
             ),
             InlineKeyboardButton(
-                    "✖️",
-                    callback_data="sibyl_connect=close",
+                "✖️",
+                callback_data="sibyl_connect=close",
             ),
         ],
     ]
@@ -320,13 +315,13 @@ def sibyltoggle(update: Update, _: CallbackContext):
         pass
 
 
-@kigcmd(command="start", group=106, run_async = True)
+@kigcmd(command="start", group=106, run_async=True)
 def sibyl_banned(update: Update, ctx: CallbackContext):
     chat: Chat = update.effective_chat
     args = ctx.args
     bot: Bot = ctx.bot
 
-    if not(chat.type == "private" and args):
+    if not (chat.type == "private" and args):
         return
 
     if not args[0].startswith("sibyl_banned-"):
@@ -341,11 +336,11 @@ def sibyl_banned(update: Update, ctx: CallbackContext):
     txt, reply_markup = get_sibyl_info(bot, user, True)
 
     update.effective_message.reply_text(
-            txt, parse_mode=ParseMode.HTML, reply_markup=reply_markup, disable_web_page_preview=True,
+        txt, parse_mode=ParseMode.HTML, reply_markup=reply_markup, disable_web_page_preview=True,
     )
 
 
-@kigcmd("check", run_async = True, pass_args = True)
+@kigcmd("check", run_async=True, pass_args=True)
 def sibyl_info(update: Update, context: CallbackContext):
     bot: Bot = context.bot
     args = context.args
@@ -372,13 +367,13 @@ def sibyl_info(update: Update, context: CallbackContext):
         return
 
     msg = message.reply_text(
-            "<code>Performing a Cymatic Scan...</code>",
-            parse_mode=ParseMode.HTML,
+        "<code>Performing a Cymatic Scan...</code>",
+        parse_mode=ParseMode.HTML,
     )
 
     txt, reply_markup = get_sibyl_info(bot, user)
 
-    msg.edit_text(text = txt, reply_markup = reply_markup, parse_mode = ParseMode.HTML, disable_web_page_preview = True)
+    msg.edit_text(text=txt, reply_markup=reply_markup, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 def get_sibyl_info(bot: Bot, user: User, detailed: bool = False) -> (str, Optional[InlineKeyboardMarkup]):
@@ -392,12 +387,12 @@ def get_sibyl_info(bot: Bot, user: User, detailed: bool = False) -> (str, Option
     except GeneralException:
         data = None
     except BaseException as e:
-        LOGGER.error(e)
+        log.error(e)
         data = None
 
     if data:
         txt += f"\n • <b>Banned:</b> <code>{'No' if not data.banned else 'Yes'}</code>"
-        cc = data.crime_coefficient or"?"
+        cc = data.crime_coefficient or "?"
         txt += f"\n • <b>Crime Coefficient:</b> <code>{cc}</code> [<a href='https://t.me/SibylSystem/3'>?</a>]"
         hue = data.hue_color or "?"
         txt += f"\n • <b>Hue Color:</b> <code>{hue}</code> [<a href='https://t.me/SibylSystem/5'>?</a>]"
@@ -437,15 +432,15 @@ def get_sibyl_info(bot: Bot, user: User, detailed: bool = False) -> (str, Option
         keyboard = [[]]
         if not detailed:
             url = helpers.create_deep_linked_url(bot.username, f"sibyl_banned-{user.id}")
-            keyboard[0].append(InlineKeyboardButton("More info", url = url))
-        keyboard[0].append(InlineKeyboardButton("Appeal", url = "https://t.me/SibylRobot"))
+            keyboard[0].append(InlineKeyboardButton("More info", url=url))
+        keyboard[0].append(InlineKeyboardButton("Appeal", url="https://t.me/SibylRobot"))
         reply_markup = InlineKeyboardMarkup(keyboard)
     return txt, reply_markup
 
 
 __help__ = """
 [Sibyl System](https://t.me/SibylSystem/14) is an anti-spam module designed off the anime "[PsychoPass]". 
-This module is capable of interactively or silently handling bad users that Sibyl has recognised to be maliciuos in nature.
+This module is capable of interactively or silently handling bad users that Sibyl has recognised to be malicious in nature.
 
 The module is on by default and comes with 2 commands. 
 
@@ -463,21 +458,22 @@ Other Terminologies
 • [Report bad users](https://t.me/MinistryOfWelfare/8)
 """
 
-def get_help(chat):
+
+def get_help(_):
     return [__help__,
-    [
-        InlineKeyboardButton(text="Crime Coefficient", url="https://t.me/SibylSystem/3"),
-        InlineKeyboardButton(text="Ban Flags", url="https://t.me/SibylSystem/4"),
-    ],
-    [
-        InlineKeyboardButton(text="Hue Colors", url="https://t.me/SibylSystem/5"),
-        InlineKeyboardButton(text="API Help", url="https://t.me/SibylSystem/5"),
-    ],
-    [
-        InlineKeyboardButton(text="Support", url="https://t.me/PublicSafetyBureau"),
-        InlineKeyboardButton(text="Report Crime", url="https://t.me/MinistryOfWelfare/8"),
-    ],
-]
+            [
+                InlineKeyboardButton(text="Crime Coefficient", url="https://t.me/SibylSystem/3"),
+                InlineKeyboardButton(text="Ban Flags", url="https://t.me/SibylSystem/4"),
+            ],
+            [
+                InlineKeyboardButton(text="Hue Colors", url="https://t.me/SibylSystem/5"),
+                InlineKeyboardButton(text="API Help", url="https://t.me/SibylSystem/5"),
+            ],
+            [
+                InlineKeyboardButton(text="Support", url="https://t.me/PublicSafetyBureau"),
+                InlineKeyboardButton(text="Report Crime", url="https://t.me/MinistryOfWelfare/8"),
+            ],
+            ]
 
 
 __mod_name__ = "SibylSystem"
