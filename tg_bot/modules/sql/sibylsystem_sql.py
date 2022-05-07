@@ -7,7 +7,6 @@ from ..sql import BASE, SESSION
 #     Silent = 2
 #     Alerts = 3
 
-
 class SibylSettings(BASE):
     __tablename__ = "chat_sibyl_settings"
     chat_id = Column(String(14), primary_key=True)
@@ -41,6 +40,8 @@ def toggle_sibyl_log(chat_id):
         SESSION.commit()
         if str(chat_id) in SIBYLBAN_SETTINGS:
             SIBYLBAN_SETTINGS[f'{chat_id}'] = (chat.do_log, SIBYLBAN_SETTINGS[f'{chat_id}'][1])
+            return
+        SIBYLBAN_SETTINGS[f'{chat_id}'] = (True, 1)
 
 
 def toggle_sibyl_mode(chat_id, mode):
@@ -53,6 +54,8 @@ def toggle_sibyl_mode(chat_id, mode):
         SESSION.commit()
         if str(chat_id) in SIBYLBAN_SETTINGS:
             SIBYLBAN_SETTINGS[f'{chat_id}'] = (SIBYLBAN_SETTINGS[f'{chat_id}'][0], mode)
+            return
+        SIBYLBAN_SETTINGS[f'{chat_id}'] = (True, 1)
 
 
 def enable_sibyl(chat_id):
