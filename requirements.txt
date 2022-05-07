@@ -36,5 +36,6 @@ base58~=2.1.1
 bs4
 pytz
 
-
+gtts
+wikipedia
 
