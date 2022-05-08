@@ -71,7 +71,7 @@ def getsticker(update: Update, context: CallbackContext):
 @kigcmd(command=["steal", "kang"])
 @spamcheck
 def kang(update: Update, context: CallbackContext):  # sourcery no-metrics
-    global ppref
+    ppref = ""
     msg = update.effective_message
     user = update.effective_user
     args = context.args

@@ -2,19 +2,13 @@ import html
 from typing import Optional
 
 from telegram.error import TelegramError
-from telegram.chat import Chat
-from telegram.chatmember import ChatMember
 from .helper_funcs.admin_status import A_CACHE, B_CACHE
 
-from .log_channel import loggable
-
 from telegram.chatmemberupdated import ChatMemberUpdated
-from telegram import Update
+from telegram import Update, ParseMode
 
 from telegram.ext import CallbackContext
 
-from tg_bot import OWNER_ID, dispatcher
-from .sql import log_channel_sql as logsql
 from telegram.ext.chatmemberhandler import ChatMemberHandler
 
 import tg_bot.modules.sql.log_channel_sql as logsql
@@ -375,7 +369,7 @@ def mychatmemberupdates(update: Update, _: CallbackContext):
     result = extract_status_change(update.my_chat_member)
     status_change, _1 = result
     chat = update.effective_chat
-    chatname = chatname = chat.title or chat.first_name or 'None'
+    chatname = chat.title or chat.first_name or 'None'
     cause_name = update.effective_user.mention_html() if update.effective_user else "Unknown"
     if status_change is not None:
         status = ','.join(status_change)

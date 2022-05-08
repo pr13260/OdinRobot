@@ -1,3 +1,4 @@
+"""
 from .helper_funcs.extraction import extract_user
 from .helper_funcs.decorators import kigcmd
 import requests, telegram, datetime, time
@@ -52,3 +53,4 @@ def lookup(update, context):
     else:
         message.reply_text("`cannot reach SpamProtection API`", parse_mode=telegram.ParseMode.MARKDOWN)
         time.sleep(3)
+"""
