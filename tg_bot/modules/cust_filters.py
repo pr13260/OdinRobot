@@ -397,11 +397,11 @@ def reply_filter(update, context):  # sourcery no-metrics
                 else:
                     filtext = ""
 
-                if "{admin}" in filt.reply_text:
+                if "{user}" in filt.reply_text:
                     if user_is_admin(update, user.id):
                         return
 
-                if "{user}" in filt.reply_text:
+                if "{admin}" in filt.reply_text:
                     if not user_is_admin(update, user.id):
                         return
 
