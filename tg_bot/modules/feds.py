@@ -1043,7 +1043,7 @@ def unfban(update, context):
         return
 
     message.reply_text(
-        "I'll give {} another chance in this federation".format(user_chat.first_name)
+        "I'll give {} another chance in this federation".format(fban_user_name)
     )
 
     chat_list = sql.all_fed_chats(fed_id)
