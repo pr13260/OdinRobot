@@ -119,6 +119,8 @@ def whitelist_plus(func):
 def connection_status(func):
     @wraps(func)
     def connected_status(update: Update, context: CallbackContext, *args, **kwargs):
+        if not (update.effective_chat or update.effective_user):
+            return
         if conn := connected(
                 context.bot,
                 update,
