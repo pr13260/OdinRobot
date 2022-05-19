@@ -633,7 +633,7 @@ def fed_ban(update, context):  # sourcery no-metrics
         if not str(user_id).isdigit():
             send_message(update.effective_message, excp.message)
             return
-        elif not len(str(user_id)) == 9:
+        elif not len(str(user_id)) in [9, 10]:
             send_message(update.effective_message, "That's not a user!")
             return
         isvalid = False
@@ -1019,7 +1019,7 @@ def unfban(update, context):
         if not str(user_id).isdigit():
             send_message(update.effective_message, excp.message)
             return
-        elif not len(str(user_id)) == 9:
+        elif not len(str(user_id)) in [9, 10]:
             send_message(update.effective_message, "That's so not a user!")
             return
         isvalid = False
