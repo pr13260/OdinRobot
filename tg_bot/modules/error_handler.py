@@ -4,7 +4,8 @@ import random
 from .helper_funcs.misc import upload_text
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from tg_bot import KInit, dispatcher, DEV_USERS, OWNER_ID, log
+from tg_bot import KInit, dispatcher, DEV_USERS, OWNER_ID, log, DB_URI, TOKEN, APP_ID, API_HASH, spamwatch_api, \
+    BACKUP_PASS
 from .helper_funcs.decorators import kigcmd
 
 class ErrorsDict(dict):
@@ -32,9 +33,14 @@ def error_callback(update: Update, context: CallbackContext):
 
     e = html.escape(f"{context.error}")
     if e.find(KInit.TOKEN) != -1:
-        e = e.replace(KInit.TOKEN, "TOKEN")
+        e = e.replace(str(DB_URI), '$DATABASE')\
+            .replace(str(TOKEN), '$TOKEN')\
+            .replace(str(APP_ID), '$APP_ID')\
+            .replace(str(API_HASH), '$API_HASH')\
+            .replace(str(spamwatch_api), '$spamwatch_api')\
+            .replace(str(BACKUP_PASS), '$BACKUP_PASS')
 
-    if update.effective_chat.type != "channel" and KInit.DEBUG:
+    if update.effective_chat.type != "channel":
         try:
             if str(context.error).find(str(ConnectionResetError)) == "-1":
                 context.bot.send_message(update.effective_chat.id, 
