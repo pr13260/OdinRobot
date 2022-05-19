@@ -10,7 +10,7 @@ from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
 
 from .feds import welcome_fed
-from .helper_funcs.admin_status import user_admin_check, user_is_admin, AdminPerms, u_na_errmsg
+from .helper_funcs.admin_status import user_admin_check, user_is_admin, AdminPerms, u_na_errmsg, bot_is_admin
 from .log_channel import loggable
 from .sql.users_sql import get_user_com_chats
 from .helper_funcs.extraction import extract_user, extract_user_and_text
@@ -469,27 +469,32 @@ def enforce_gban(update: Update, context: CallbackContext):
     chat = update.effective_chat
 
     try:
-        if (
-            sql.does_chat_gban(chat.id)
-            and chat.get_member(bot.id).can_restrict_members
-        ):
+        if sql.does_chat_gban(chat.id):
+            if not bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
+                from .sql.feds_sql import chat_leave_fed
+                chat_leave_fed(chat.id)
+                bot.send_message(
+                    chat.id,
+                    "I don't have rights to restrict users on this chat, left fed!",
+                )
+                return
 
             if user and not user_is_admin(update, user.id, channels = True):
                 check_and_ban(update, user.id)
-                welcome_fed(update, chat, user.id)
+                welcome_fed(context, msg, chat, user.id)
                 return
 
             if msg.new_chat_members:
                 new_members = msg.new_chat_members
                 for mem in new_members:
                     check_and_ban(update, mem.id)
-                    welcome_fed(update, chat, mem.id)
+                    welcome_fed(context, msg, chat, mem.id)
 
-            if msg.reply_to_message:
-                user = msg.reply_to_message.from_user
-                if user and not user_is_admin(update, user.id, channels = True):
-                    check_and_ban(update, user.id, should_message=False)
-                    welcome_fed(update, chat, user.id)
+            # if msg.reply_to_message:
+            #     user = msg.reply_to_message.from_user
+            #     if user and not user_is_admin(update, user.id, channels = True):
+            #         check_and_ban(update, user.id, should_message=False)
+            #         welcome_fed(update, chat, user.id)
     except Forbidden as e:
         err_msg = "\n".join([
             "An error has happened with enforce_gban:",

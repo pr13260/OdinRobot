@@ -17,10 +17,12 @@ from telegram import (
     MessageEntity,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    ChatAction,
+    ChatAction, Message,
 )
 from telegram.utils.helpers import mention_html, mention_markdown
-from .helper_funcs.admin_status import user_is_admin
+
+from .connection import AdminPerms
+from .helper_funcs.admin_status import user_is_admin, bot_is_admin
 
 import tg_bot.modules.sql.feds_sql as sql
 from tg_bot import (
@@ -2297,22 +2299,29 @@ def is_user_fed_owner(fed_id, user_id):
         return False
 
 
-def welcome_fed(update, chat, user_id):
+def welcome_fed(ctx: CallbackContext, msg: Message, chat: Chat, user_id: int):
 
     fed_id = sql.get_fed_id(chat.id)
+    if not fed_id:
+        return
+    if fed_id and not bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
+        sql.chat_leave_fed(chat.id)
+        ctx.bot.send_message(
+            chat.id,
+            "I don't have rights to restrict users on this chat, left fed!",
+        )
+        return
+
     fban, fbanreason, fbantime = sql.get_fban_user(fed_id, user_id)
     if fban:
         msgg ="This user is banned in current federation! I will remove him.\n"
         if fbanreason != "No reason given.":
             msgg += "**Reason:** " + str(fbanreason)
         try:
-            update.effective_message.reply_text(msgg, parse_mode="markdown")
+            msg.reply_text(msgg, parse_mode="markdown")
         except BadRequest:
             dispatcher.bot.send_message(chat.id, msgg, parse_mode="markdown")
-        update.effective_chat.ban_member(user_id)
-        return True
-    else:
-        return False
+        chat.ban_member(user_id)
 
 
 def __stats__():
