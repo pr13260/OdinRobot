@@ -3,8 +3,9 @@ import time
 
 from datetime import datetime
 from io import BytesIO
+from typing import Optional
 
-from telegram import ParseMode, Update
+from telegram import ParseMode, Update, Chat
 from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
@@ -257,7 +258,7 @@ def gban(update: Update, context: CallbackContext):  # sourcery no-metrics
             user_id,
             "#GBAN"
             "You have been marked as Malicious and as such have been banned from any future groups we manage."
-            f"\n<b>Reason:</b> <code>{html.escape(user.reason)}</code>"
+            f"\n<b>Reason:</b> <code>{html.escape(reason)}</code>"
             f"\n</b>Appeal Chat:</b> @TheBotsSupport",
             parse_mode=ParseMode.HTML,
         )
