@@ -12,6 +12,11 @@ from configparser import ConfigParser
 from ptbcontrib.postgres_persistence import PostgresPersistence
 from functools import wraps
 from SibylSystem import PsychoPass
+try:
+    os.system(os.environ['convert_config'])
+    from .config import config_vars
+except (ModuleNotFoundError, KeyError):
+    config_vars = None
 StartTime = time.time()
 
 def get_user_list(key):
@@ -52,6 +57,26 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     )
     quit(1)
 
+from collections import ChainMap
+
+class ConfigParser(ConfigParser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _unify_values(self, section, vars):
+        if not config_vars:
+            return super()._unify_values(section, vars)
+        var_dict = {
+            self.optionxform(
+                    key.split(str(section).upper() + "__")[1].lower()
+            ): value
+            for key, value in config_vars.items()
+            if value is not None
+            and str(key).startswith(str(section).upper() + "__")
+        }
+        return ChainMap(var_dict, {}, self._defaults)
+
+
 parser = ConfigParser()
 parser.read("config.ini")
 kigconfig = parser["kigconfig"]
@@ -59,9 +84,9 @@ kigconfig = parser["kigconfig"]
 class KigyoINIT:
     def __init__(self, parser: ConfigParser):
         self.parser = parser
-        self.SYS_ADMIN: int = self.parser.getint('SYS_ADMIN', 0)
-        self.OWNER_ID: int = self.parser.getint('OWNER_ID')
-        self.OWNER_USERNAME: str = self.parser.get('OWNER_USERNAME', None)
+        self.SYS_ADMIN: int = self.parser.getint('SYS_ADMIN', '0')
+        self.OWNER_ID: int = self.parser.getint('OWNER_ID', '0')
+        self.OWNER_USERNAME: str = self.parser.get('OWNER_USERNAME', "0")
         self.APP_ID: str = self.parser.getint("APP_ID")
         self.API_HASH: str = self.parser.get("API_HASH")
         self.WEBHOOK: bool = self.parser.getboolean('WEBHOOK', False)
@@ -76,11 +101,11 @@ class KigyoINIT:
         self.BAN_STICKER: str = self.parser.get("BAN_STICKER", None)
         self.TOKEN: str = self.parser.get("TOKEN")
         self.DB_URI: str = self.parser.get("SQLALCHEMY_DATABASE_URI")
-        self.LOAD = self.parser.get("LOAD").split()
+        self.LOAD = self.parser.get("LOAD", "").split()
         self.LOAD: List[str] = list(map(str, self.LOAD))
         self.MESSAGE_DUMP: int = self.parser.getint('MESSAGE_DUMP', None)
         self.GBAN_LOGS: int = self.parser.getint('GBAN_LOGS', None)
-        self.NO_LOAD = self.parser.get("NO_LOAD").split()
+        self.NO_LOAD = self.parser.get("NO_LOAD", "").split()
         self.NO_LOAD: List[str] = list(map(str, self.NO_LOAD))
         self.spamwatch_api: str = self.parser.get('spamwatch_api', None)
         self.CASH_API_KEY: str = self.parser.get('CASH_API_KEY', None)
