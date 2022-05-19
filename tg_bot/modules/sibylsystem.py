@@ -10,7 +10,7 @@ from telegram.parsemode import ParseMode
 from telegram.utils import helpers
 from telegram.utils.helpers import mention_html
 
-from .helper_funcs.admin_status import user_admin_check, bot_admin_check, AdminPerms, user_is_admin
+from .helper_funcs.admin_status import user_admin_check, bot_admin_check, AdminPerms, user_is_admin, bot_is_admin
 from .helper_funcs.chat_status import connection_status
 from .helper_funcs.decorators import kigcmd, kigmsg, kigcallback as kigcb
 from .helper_funcs.extraction import extract_user
@@ -40,6 +40,7 @@ def get_sibyl_setting(chat_id):
 
 
 @kigmsg(Filters.chat_type.groups, group=101)
+@bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @loggable
 def sibyl_ban(update: Update, context: CallbackContext) -> Optional[str]:
     message = update.effective_message
@@ -160,7 +161,7 @@ def handle_sibyl_banned(user, data):
         log.error(e)
 
     for c in chat:
-        if does_chat_sibylban(c):
+        if does_chat_sibylban(c) and bot_is_admin(c, AdminPerms.CAN_RESTRICT_MEMBERS):
             log_stat, act = get_sibyl_setting(c.id)
 
             if act in {1, 2}:
