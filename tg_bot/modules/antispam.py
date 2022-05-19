@@ -405,6 +405,8 @@ def gbanlist(update: Update, _):
 def check_and_ban(update, user_id, should_message=True):
     # from tg_bot import SPB_MODE
     chat = update.effective_chat  # type: Optional[Chat]
+    if not bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
+        return
     # if SPB_MODE:
     #     try:
     #         apst = requests.get(f'https://api.intellivoid.net/spamprotection/v1/lookup?query={user_id}')
@@ -468,34 +470,27 @@ def enforce_gban(update: Update, context: CallbackContext):
     msg = update.effective_message
     user = update.effective_user
     chat = update.effective_chat
-
+    do_gban = sql.does_chat_gban(chat.id)
     try:
-        if sql.does_chat_gban(chat.id):
-            if not bot_is_admin(chat, AdminPerms.CAN_RESTRICT_MEMBERS):
-                from .sql.feds_sql import chat_leave_fed
-                chat_leave_fed(chat.id)
-                bot.send_message(
-                    chat.id,
-                    "I don't have rights to restrict users on this chat, left fed!",
-                )
-                return
 
-            if user and not user_is_admin(update, user.id, channels = True):
+        if user and not user_is_admin(update, user.id, channels = True):
+            if do_gban:
                 check_and_ban(update, user.id)
-                welcome_fed(context, msg, chat, user.id)
-                return
+            welcome_fed(context, msg, chat, user.id)
+            return
 
-            if msg.new_chat_members:
-                new_members = msg.new_chat_members
-                for mem in new_members:
+        if msg.new_chat_members:
+            new_members = msg.new_chat_members
+            for mem in new_members:
+                if do_gban:
                     check_and_ban(update, mem.id)
-                    welcome_fed(context, msg, chat, mem.id)
+                welcome_fed(context, msg, chat, mem.id)
 
-            # if msg.reply_to_message:
-            #     user = msg.reply_to_message.from_user
-            #     if user and not user_is_admin(update, user.id, channels = True):
-            #         check_and_ban(update, user.id, should_message=False)
-            #         welcome_fed(update, chat, user.id)
+        # if msg.reply_to_message:
+        #     user = msg.reply_to_message.from_user
+        #     if user and not user_is_admin(update, user.id, channels = True):
+        #         check_and_ban(update, user.id, should_message=False)
+        #         welcome_fed(update, chat, user.id)
     except Forbidden as e:
         err_msg = "\n".join([
             "An error has happened with enforce_gban:",
