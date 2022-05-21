@@ -66,6 +66,7 @@ class ConfigParser(ConfigParser):
     def _unify_values(self, section, vars):
         if not config_vars:
             return super()._unify_values(section, vars)
+        log.debug("Using the supplied config vars!")
         var_dict = {
             self.optionxform(
                     key.split(str(section).upper() + "__")[1].lower()
@@ -197,6 +198,11 @@ BACKUP_PASS = KInit.BACKUP_PASS
 SIBYL_KEY = KInit.SIBYL_KEY
 
 BOT_ID = TOKEN.split(":")[0]
+
+
+if IS_DEBUG:
+    log.debug("Debug mode is on")
+    stream_handler.setLevel(logging.DEBUG)
 
 
 sibylClient: PsychoPass = None
