@@ -40,7 +40,7 @@ def get_sibyl_setting(chat_id):
 
 
 @kigmsg(Filters.chat_type.groups, group=101)
-@bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
+# @bot_admin_check(AdminPerms.CAN_RESTRICT_MEMBERS)
 @loggable
 def sibyl_ban(update: Update, context: CallbackContext) -> Optional[str]:
     message = update.effective_message
