@@ -690,6 +690,7 @@ def fed_ban(update, context):  # sourcery no-metrics
                 reason,
             ),
             parse_mode="HTML",
+            disable_web_page_preview = True
         )
         # Send message to owner if fednotif is enabled
         if getfednotif:
@@ -710,6 +711,7 @@ def fed_ban(update, context):  # sourcery no-metrics
                     reason,
                 ),
                 parse_mode="HTML",
+                disable_web_page_preview = True
             )
         # If fedlog is set, then send message, except fedlog is current chat
         get_fedlog = sql.get_fed_log(fed_id)
@@ -732,6 +734,7 @@ def fed_ban(update, context):  # sourcery no-metrics
                         reason,
                     ),
                     parse_mode="HTML",
+                    disable_web_page_preview = True
                 )
         chats = get_user_com_chats(user_id)
         for fedschat in (fed_chats and chats):
@@ -777,7 +780,7 @@ def fed_ban(update, context):  # sourcery no-metrics
         # "\n<b>Reason:</b> {}".format(fed_name, mention_html(user.id, user.first_name), user_target, fban_user_id, reason),
         # html=True)
 
-        # Fban for fed subscriber
+        # Fban for mention_htmlfed subscriber
         subscriber = list(sql.get_subscriber(fed_id))
         if len(subscriber) != 0:
             chats = get_user_com_chats(user_id)
@@ -852,6 +855,7 @@ def fed_ban(update, context):  # sourcery no-metrics
             reason,
         ),
         parse_mode="HTML",
+        disable_web_page_preview = True
     )
     # Send message to owner if fednotif is enabled
     if getfednotif:
@@ -872,6 +876,7 @@ def fed_ban(update, context):  # sourcery no-metrics
                 reason,
             ),
             parse_mode="HTML",
+            disable_web_page_preview = True
         )
     # If fedlog is set, then send message, except fedlog is current chat
     get_fedlog = sql.get_fed_log(fed_id)
@@ -894,6 +899,7 @@ def fed_ban(update, context):  # sourcery no-metrics
                     reason,
                 ),
                 parse_mode="HTML",
+                disable_web_page_preview = True
             )
     chats_in_fed = 0
     chats = get_user_com_chats(user_id)
@@ -1061,6 +1067,7 @@ def unfban(update, context):
             fban_user_id,
         ),
         parse_mode="HTML",
+        disable_web_page_preview = True
     )
     # Send message to owner if fednotif is enabled
     if getfednotif:
@@ -1079,6 +1086,7 @@ def unfban(update, context):
 		message.chat.title,
             ),
             parse_mode="HTML",
+            disable_web_page_preview = True
         )
     # If fedlog is set, then send message, except fedlog is current chat
     get_fedlog = sql.get_fed_log(fed_id)
@@ -1099,6 +1107,7 @@ def unfban(update, context):
 		    message.chat.title,
                 ),
                 parse_mode="HTML",
+                disable_web_page_preview = True
             )
     unfbanned_in_chats = 0
     for fedchats in chat_list:
