@@ -406,6 +406,7 @@ def button(update: Update, _: CallbackContext) -> str:
 
     return ""
 
+
 @kigcmd(command='swarn', filters=Filters.chat_type.groups)
 @kigcmd(command='dwarn', filters=Filters.chat_type.groups)
 @kigcmd(command='dswarn', filters=Filters.chat_type.groups)
@@ -421,6 +422,11 @@ def warn_user(update: Update, context: CallbackContext) -> str:
     warner: Optional[User] = update.effective_user
 
     user_id, reason = extract_user_and_text(message, args)
+
+    if (message.reply_to_message and message.reply_to_message.sender_chat) or user_id < 0:
+        message.reply_text("This command can't be used on channels, however you can ban them instead.")
+        return ""
+
     if message.text.startswith('/s') or message.text.startswith('!s') or message.text.startswith('>s'):
         silent = True
         if not bot_is_admin(chat, AdminPerms.CAN_DELETE_MESSAGES):
