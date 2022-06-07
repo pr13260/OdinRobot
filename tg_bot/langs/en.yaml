@@ -347,6 +347,7 @@ locks_help: |
       • `/lock <type>`*:* Lock items of a certain type (not available in private)
       • `/unlock <type>`*:* Unlock items of a certain type (not available in private)
       • `/locks`*:* The current list of locks in this chat.
+      • `/antichannel <on/off>`*:* Bans and deletes anyone who tries to talk as channel and forces em to talk as themselves
 
      Locks can be used to restrict a group's users.
      eg:
@@ -628,7 +629,6 @@ pins_help: |
     *Anti channel*
     Tired of telegram's stupidity? well here you go
     *Available commands:*
-    • /antichannel <on/off>: Bans and deletes anyone who tries to talk as channel and forces em to talk as themselves
     • /cleanlinked <on/off>: Automatically delete linked channel posts from chatroom
     • /antichannelpin <on/off>: Automatically unpins linked channel posts from chatroom
 
