@@ -6,7 +6,7 @@
 from enum import Enum
 from cachetools import TTLCache
 
-from telegram import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Message, message
+from telegram import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Message, Update, message
 
 from tg_bot import OWNER_ID, SYS_ADMIN, DEV_USERS, MOD_USERS, SUDO_USERS, SUPPORT_USERS, WHITELIST_USERS
 
@@ -80,6 +80,15 @@ def user_is_not_admin_errmsg(msg: Message, permission: AdminPerms = None, cb: Ca
 	if cb:
 		return cb.answer(errmsg, show_alert = True)
 	return msg.reply_text(errmsg, parse_mode = ParseMode.MARKDOWN)
+
+
+def button_expired_error(u: Update):
+	errmsg = f"This button has expired!"
+	if u.callback_query:
+		u.callback_query.answer(errmsg, show_alert = True)
+		u.effective_message.delete()
+		return
+	return u.effective_message.edit_text(errmsg, parse_mode = ParseMode.MARKDOWN)
 
 
 anon_callbacks = {}

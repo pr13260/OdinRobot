@@ -22,6 +22,7 @@ from .admin_status_helpers import (
 	anon_callbacks as a_cb,
 	user_is_not_admin_errmsg as u_na_errmsg,
 	edit_anon_msg as eam,
+	button_expired_error as bxp,
 )
 
 
@@ -103,7 +104,11 @@ def user_is_admin(update: Update,
 		return False
 
 	if perm:  # check perm if its required
-		return getattr(member, perm.value) or member.status == "creator"
+		try:
+			the_perm = perm.value
+		except AttributeError:
+			return bxp(update)
+		return getattr(member, the_perm) or member.status == "creator"
 
 	return member.status in ["administrator", "creator"]  # check if user is admin
 
