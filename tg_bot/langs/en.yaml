@@ -75,6 +75,8 @@ admin_help: |
    • `/setgdesc`*:* sets the group description
    • `/setgsticker`*:* sets the group sticker pack
    • `/setgstickers`*:* sets the group sticker pack
+   
+   • `/requests <on-off/yes-no/true-false>`*:* toggle the approve/decline join request menu
 
 afk_help: |
    - /afk <reason>: mark yourself as AFK(away from keyboard).
